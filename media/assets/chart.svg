@@ -1,0 +1,28 @@
+<svg viewBox="0 0 720 420" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, Helvetica, Arial, sans-serif">
+  <style>
+    :root { --bg: #ffffff; --text: #1a1a1a; --bar: #3b6ea5; --grid: #d7d7d7; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #16181d; --text: #eaeaea; --bar: #7ab3ef; --grid: #3a3d44; }
+    }
+    .bg { fill: var(--bg); }
+    .bar { fill: var(--bar); }
+    .grid-line { stroke: var(--grid); stroke-width: 1; }
+    .axis-label { fill: var(--text); font-size: 15px; }
+    .axis-sublabel { fill: var(--text); font-size: 12px; opacity: 0.65; }
+    .bar-value { fill: var(--text); font-size: 17px; font-weight: 600; }
+    .title { fill: var(--text); font-size: 20px; font-weight: 700; }
+    .subtitle { fill: var(--text); font-size: 13px; opacity: 0.7; }
+  </style>
+  <rect class="bg" x="0" y="0" width="720" height="420" />
+  <text x="70" y="26" class="title">Exact-quote rate by condition</text>
+  <text x="70" y="44" class="subtitle">Model: gloo-anthropic-claude-sonnet-4.5, gloo-google-gemini-2.5-flash · 2026-07-27</text>
+  <line x1="70" y1="330.0" x2="690" y2="330.0" class="grid-line" /><text x="58" y="334.0" text-anchor="end" class="axis-label">0%</text>
+  <line x1="70" y1="260.0" x2="690" y2="260.0" class="grid-line" /><text x="58" y="264.0" text-anchor="end" class="axis-label">25%</text>
+  <line x1="70" y1="190.0" x2="690" y2="190.0" class="grid-line" /><text x="58" y="194.0" text-anchor="end" class="axis-label">50%</text>
+  <line x1="70" y1="120.0" x2="690" y2="120.0" class="grid-line" /><text x="58" y="124.0" text-anchor="end" class="axis-label">75%</text>
+  <line x1="70" y1="50.0" x2="690" y2="50.0" class="grid-line" /><text x="58" y="54.0" text-anchor="end" class="axis-label">100%</text>
+  <rect x="116.5" y="148.8" width="113.7" height="181.2" class="bar" rx="4" /><text x="173.3" y="138.8" text-anchor="middle" class="bar-value">64.7%</text><text x="173.3" y="358.0" text-anchor="middle" class="axis-label">Ungrounded</text><text x="173.3" y="378.0" text-anchor="middle" class="axis-sublabel">(n=34)</text>
+  <rect x="323.2" y="50.0" width="113.7" height="280.0" class="bar" rx="4" /><text x="380.0" y="40.0" text-anchor="middle" class="bar-value">100.0%</text><text x="380.0" y="358.0" text-anchor="middle" class="axis-label">Grounded</text><text x="380.0" y="378.0" text-anchor="middle" class="axis-sublabel">(n=34)</text>
+  <rect x="529.8" y="50.0" width="113.7" height="280.0" class="bar" rx="4" /><text x="586.7" y="40.0" text-anchor="middle" class="bar-value">100.0%</text><text x="586.7" y="358.0" text-anchor="middle" class="axis-label">Grounded + verify</text><text x="586.7" y="378.0" text-anchor="middle" class="axis-sublabel">(n=34)</text>
+  <line x1="70" y1="330" x2="690" y2="330" class="grid-line" />
+</svg>
