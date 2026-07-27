@@ -12,9 +12,10 @@
   },
   "scripts": {
     "start": "node src/index.js",
-    "test": "node --test \"tests/**/*.test.js\"",
+    "test": "node --test \"tests/**/*.test.js\" \"evals/*.test.js\"",
     "build:fixtures": "node scripts/build-fixtures.js",
-    "benchmark": "node benchmark/runner.js --model gloo --condition all"
+    "benchmark": "node benchmark/runner.js --model gloo --condition all",
+    "evals": "node evals/run-safety-evals.js"
   },
   "license": "MIT",
   "author": "The Doxa Way Ltd",

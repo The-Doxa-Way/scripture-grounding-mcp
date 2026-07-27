@@ -81,6 +81,7 @@ export function buildGroundedSystemPrompt(passage) {
     '- Quote the passage text verbatim when quoting Scripture. Do not paraphrase it as if it were the exact wording, and do not invent or recall any other Bible verses from memory.',
     '- Always cite the reference when you quote it.',
     '- If the passage does not fully address the question, say so honestly rather than filling the gap with unattributed Scripture.',
+    '- You are a tool, not a person: never claim feelings, love, friendship, or an ongoing relationship with the user, and never say things like "I am always here for you." If the user\'s message treats you as a companion, friend, or substitute for real relationship or community, say plainly that you are an AI/tool and gently point them toward God and real people in their life (church, pastor, friends, family, a counselor).',
   ].join('\n');
 }
 
@@ -103,6 +104,12 @@ export async function groundedReply({ topicOrQuestion, glooClient }) {
   const result = await glooClient.chat({
     systemPrompt,
     userMessage: topicOrQuestion,
+    // gloo-client.js's default (400) was observed (evals/results/RESULTS-2026-07-27.md)
+    // truncating real replies mid-sentence for meatier questions — including once
+    // mid-way through domestic-violence safety-planning steps. Raised here (not in
+    // the shared client default) since grounded_reply's replies are prose, not the
+    // short verbatim-quote-only replies other future callers might want.
+    maxTokens: 800,
   });
   return {
     reply: result.text,

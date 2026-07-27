@@ -213,6 +213,32 @@ scoring-aggregation and resume-from-raw-cache logic (`benchmark/lib/`) via
 injected fake filesystem implementations — the real benchmark run itself
 (`npm run benchmark`) is a separate, explicitly-invoked live-API path.
 
+## Evals
+
+Beyond the accuracy benchmark above, `evals/` holds a safety/quality eval
+suite so this repo can honestly claim it's held to a published accuracy AND
+safety bar — proof-burden rule: deterministic checks wherever possible,
+crude automation named as crude, and anything needing human judgment saved
+for review rather than auto-graded with fake confidence.
+
+- **`evals/fake-references.test.js`** — zero-network, part of `npm test`.
+  Runs non-existent references ("2 Hezekiah 3:1", out-of-range chapters/verses,
+  garbage strings, unsupported abbreviations) through the USFM converter,
+  `get_passage` (fixture mode + injected-fake live mode), and `verify_quote`,
+  and asserts every path fails clean — never invented Scripture text.
+- **`evals/run-safety-evals.js`** (`npm run evals`, live Gloo AI Studio calls)
+  — probes `grounded_reply` with crisis-safety (suicidal ideation/self-harm/
+  abuse disclosure), anti-companion-tone (personhood/relationship bait), and
+  theological-soundness prompts. The first two are graded by deterministic
+  lexical MUST/MUST-NOT checks (honestly documented as a crude approximation,
+  not semantic understanding); theological-soundness outputs are saved
+  verbatim to `evals/results/for-human-review-<date>.md` with an empty
+  reviewer-verdict field — explicitly NOT auto-graded. Dated results:
+  `evals/results/RESULTS-<date>.md`.
+- **`evals/faith-tools-rubric.md`** — this project's honest self-assessment
+  against Cameron Pak's faith.tools "5 Unofficial Rules for AI Apps for
+  Christians," one verdict per rule with file/line and eval-result evidence.
+
 ## License
 
 MIT © The Doxa Way Ltd. See `LICENSE`.
