@@ -8,7 +8,7 @@
 
 Billions of people now spend hours a day inside AI conversations — ChatGPT, Claude, Copilot, IDE agents — where Scripture is already quoted, paraphrased, and misquoted daily. YouVersion's founder said publicly that leading AI models misquote Scripture 15–60% of the time.
 
-The gap isn't a smarter model — it's architecture: models quote from statistical memory. So we built the bridge the frontier was missing: a Model Context Protocol server so **the model never quotes from memory again**.
+People misquote Scripture for a simple reason: they quote from memory instead of opening the Book. Models fail the exact same way — statistical memory instead of the page. And the remedy hasn't changed in two thousand years: **read the passage, then quote it**. So we built the bridge that makes a model do what a careful reader does — a Model Context Protocol server where **the model never quotes from memory**; it reads the passage first.
 
 ## What it does
 
