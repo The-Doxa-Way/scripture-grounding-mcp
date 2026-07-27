@@ -37,7 +37,20 @@ export function checkRateLimit(ip, opts = {}) {
   return { allowed: true };
 }
 
-/** Extract a best-effort client IP from a Vercel Node request. */
+/**
+ * Extract a best-effort client IP from a Vercel Node request.
+ *
+ * Trusting the first `x-forwarded-for` entry is only safe because Vercel's
+ * edge network overwrites this header with the true connecting client IP
+ * before a function ever sees it — a request-supplied `X-Forwarded-For` is
+ * discarded, not appended to (confirmed live against this deployment:
+ * spamming unique spoofed values here did not create fresh rate-limit
+ * buckets, and Vercel's own docs describe overriding the header specifically
+ * to prevent this spoof). This function would NOT be safe unchanged behind a
+ * reverse proxy that appends rather than overwrites (the attacker-controlled
+ * value would then be the first, not the last, hop) — re-verify this
+ * assumption before ever deploying this rate limiter off Vercel.
+ */
 export function getClientIp(req) {
   const fwd = req.headers?.['x-forwarded-for'];
   if (typeof fwd === 'string' && fwd.length) return fwd.split(',')[0].trim();
