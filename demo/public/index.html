@@ -249,7 +249,7 @@
       <div class="l">exact-quote rate, grounded (retrieve-then-constrain)</div>
     </div>
     <div class="stat">
-      <div class="n">34 / 213</div>
+      <div class="n">34 / 220</div>
       <div class="l">BSB fixture passages / automated tests, all offline</div>
     </div>
   </div>
@@ -369,11 +369,30 @@
     return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
 
-  async function callApi(path, opts) {
-    const res = await fetch(`${API_BASE}/${path}`, opts);
-    let body;
-    try { body = await res.json(); } catch { body = null; }
-    return { ok: res.ok, status: res.status, body };
+  /**
+   * @param {string} path
+   * @param {RequestInit} [opts]
+   * @param {number} [timeoutMs] - if set, aborts the request after this many ms
+   *   and resolves with a friendly timeout error instead of throwing (the
+   *   encourage endpoint can invoke a live LLM and is the one call slow
+   *   enough to need this — see the e-btn wiring below).
+   */
+  async function callApi(path, opts, timeoutMs) {
+    const controller = timeoutMs ? new AbortController() : null;
+    const timer = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
+    try {
+      const res = await fetch(`${API_BASE}/${path}`, controller ? { ...opts, signal: controller.signal } : opts);
+      let body;
+      try { body = await res.json(); } catch { body = null; }
+      return { ok: res.ok, status: res.status, body };
+    } catch (err) {
+      if (err.name === 'AbortError') {
+        return { ok: false, status: 0, body: { error: 'This is taking longer than expected — the request timed out after 25s. Please try again.' } };
+      }
+      throw err;
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
   }
 
   function renderPassage(container, ok, body) {
@@ -547,7 +566,7 @@
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message }),
-    });
+    }, 25000);
     renderEncourage(out, ok, body);
   });
 

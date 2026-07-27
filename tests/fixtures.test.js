@@ -63,3 +63,12 @@ test('non-psalm fixtures never carry a superscription field', () => {
     assert.equal(f.superscription, undefined, `${f.reference} should not have a superscription field`);
   }
 });
+
+test('findByReference matches an en-dash verse range against the hyphen-range fixture key (2026-07-27 fix)', () => {
+  const hyphen = findByReference('Psalm 46:1-3');
+  assert.ok(hyphen, 'expected the "Psalm 46:1-3" fixture to exist');
+  const enDash = findByReference('Psalm 46:1–3'); // en dash, not hyphen
+  assert.ok(enDash, 'expected an en-dash range to still find the fixture');
+  assert.equal(enDash.reference, hyphen.reference);
+  assert.equal(enDash.text, hyphen.text);
+});

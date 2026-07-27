@@ -15,7 +15,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import { tokenize } from './normalize.js';
+import { tokenize, deSmarten } from './normalize.js';
 import { similarity } from './diff.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -27,7 +27,10 @@ const FIXTURES_DIR = path.join(__dirname, '..', 'fixtures', 'bsb');
 let cache = null;
 
 function normalizeKey(reference) {
-  return reference.trim().toLowerCase().replace(/\s+/g, ' ');
+  // deSmarten so an en/em-dash verse range ("Psalm 46:1–3") matches the
+  // hyphen-range fixture key ("Psalm 46:1-3") — same reasoning as
+  // src/usfm.js's humanRefToUsfm.
+  return deSmarten(reference).trim().toLowerCase().replace(/\s+/g, ' ');
 }
 
 /**

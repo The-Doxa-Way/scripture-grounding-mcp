@@ -69,11 +69,34 @@ function escapeRegExp(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+/** Every quote-mark variant (straight + typographic) BSB fixture text or a caller's
+ * text might use around embedded direct speech — see src/normalize.js's SMART_CHAR_MAP
+ * for the equivalent list used on the verify_quote comparison side. */
+const QUOTE_CHARS = ['"', "'", '‘', '’', '‚', '‛', '“', '”', '„', '‟'];
+const QUOTE_CLASS_SOURCE = `[${QUOTE_CHARS.join('')}]`;
+const QUOTE_CHAR_RE = new RegExp(QUOTE_CLASS_SOURCE, 'g');
+
+/**
+ * Escape a canonical-text word into a regex fragment that also treats every
+ * quote-mark variant as equivalent — the fixture corpus renders embedded
+ * direct speech with curly quotes ("Never will I leave you") but a caller's
+ * text (an LLM reply, or a hand-typed test) will just as often use straight
+ * quotes or none, and a literal-character mismatch there must never silently
+ * defeat the quoted-Scripture exemption (see findQuotedSpans).
+ * @param {string} word
+ * @returns {string}
+ */
+function wordToPattern(word) {
+  return escapeRegExp(word).replace(QUOTE_CHAR_RE, QUOTE_CLASS_SOURCE);
+}
+
 /**
  * Locate each quoted-Scripture string inside `text`, whitespace-flexibly
- * (the model may reflow line breaks around a quote) but otherwise exact —
- * the passage is required to be quoted verbatim, so a fuzzy match here
- * would hide a real quoting problem rather than correctly exempting it.
+ * (the model may reflow line breaks around a quote) and quote-mark-flexibly
+ * (straight vs curly quotes are the same words), but otherwise exact — the
+ * passage is required to be quoted verbatim, so a fuzzy match on actual
+ * WORDING would hide a real quoting problem rather than correctly exempting
+ * it. Only presentation punctuation (quote marks) is treated as equivalent.
  * @param {string} text
  * @param {string[]} quotedSpans - verbatim passage text(s) expected to appear in `text`.
  * @returns {Array<{start: number, end: number}>}
@@ -82,7 +105,7 @@ export function findQuotedSpans(text, quotedSpans) {
   const spans = [];
   for (const q of quotedSpans ?? []) {
     if (!q || typeof q !== 'string') continue;
-    const words = q.trim().split(/\s+/).map(escapeRegExp);
+    const words = q.trim().split(/\s+/).map(wordToPattern);
     if (words.length === 0) continue;
     let re;
     try {

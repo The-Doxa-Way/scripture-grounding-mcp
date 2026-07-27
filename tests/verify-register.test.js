@@ -101,6 +101,29 @@ test('findQuotedSpans returns no span when the quote is not present verbatim', (
   assert.deepEqual(spans, []);
 });
 
+test('findQuotedSpans locates a quoted passage even when canonical curly quotes are retyped as straight quotes (quote-mark equivalence fix, 2026-07-27)', () => {
+  // Hebrews 13:5's canonical BSB text embeds a curly-quoted direct-speech
+  // span ("Never will I leave you, never will I forsake you.") — an LLM
+  // reply reproducing this verse will just as often retype those as plain
+  // straight quotes. quotedSpans is passed the VERBATIM canonical (curly)
+  // text, but the actual reply text below uses straight quotes throughout.
+  const heb135 = findByReference('Hebrews 13:5').text;
+  assert.match(heb135, /[“”]/, 'sanity check: fixture really does embed curly quotes');
+  const straightened = heb135.replace(/[“”]/g, '"');
+  assert.notEqual(straightened, heb135);
+  const spans = findQuotedSpans(straightened, [heb135]);
+  assert.equal(spans.length, 1, 'expected the passage to be found despite the quote-mark mismatch');
+  assert.equal(straightened.slice(spans[0].start, spans[0].end), straightened);
+});
+
+test('checkRegister does not flag "I"/"my" embedded in a correctly-quoted passage when the reply retypes canonical curly quotes as straight quotes', () => {
+  const heb135 = findByReference('Hebrews 13:5').text; // contains "...Never will I leave you..."
+  const straightened = heb135.replace(/[“”]/g, '"');
+  const text = `Feeling forsaken is heavy to carry. Scripture speaks to it directly:\n\n"${straightened}" (Hebrews 13:5, BSB)\n\nThis is God's own promise, never broken.`;
+  const result = checkRegister(text, { quotedSpans: [heb135] });
+  assert.equal(result.verdict, 'clean', `expected clean (the only "I" is inside the quoted passage), got: ${JSON.stringify(result.violations)}`);
+});
+
 test('stripViolatingSentences removes only the violating sentences, preserving the quoted passage untouched', () => {
   const text = `I feel for you. Scripture speaks to it directly:\n\n"${PSALM_23}" (Psalm 23:1-6, BSB)\n\nMy hope is that this helps. Consider bringing this to God in prayer.`;
   const stripped = stripViolatingSentences(text, [PSALM_23]);

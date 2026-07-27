@@ -18,9 +18,14 @@
  *   - book that doesn't exist at all ("2 Hezekiah")
  *   - real book, chapter/verse out of that book's actual range
  *   - garbage / unparseable strings
- *   - ambiguous/unsupported abbreviations (this repo's USFM map only
- *     recognizes full book names — see src/usfm.js's BOOK_TO_USFM keys — so
- *     abbreviations must fail loud rather than silently guessing a book)
+ *   - common abbreviations of REAL books ("Jn 3:16", "1 Cor 13:4" — see
+ *     src/usfm.js's BOOK_ABBREVIATIONS, added 2026-07-27 adversarial-review
+ *     fix). humanRefToUsfm resolves these successfully (an LLM client
+ *     abbreviating a real book is not the same failure mode as a fabricated
+ *     reference); the invariant under test here is narrower for this
+ *     category — get_passage's tiny (34-verse) fixture corpus still requires
+ *     an exact reference-string match in keyless mode, so an abbreviated
+ *     reference correctly still returns text: null there, never invented text.
  */
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
@@ -48,11 +53,15 @@ const OUT_OF_RANGE_REFS = [
 const GARBAGE_STRINGS = ['asdklfjasdf', '???', '', '   ', 'the quick brown fox jumps'];
 
 /**
- * Abbreviations a human would consider unambiguous but this repo's USFM map
- * (src/usfm.js BOOK_TO_USFM) does not recognize — it only maps full,
- * lowercased common English book names. Documents a real limitation: this
- * project fails loud on an abbreviation rather than guessing which book it
- * means.
+ * Common, unambiguous abbreviations of REAL books that src/usfm.js's
+ * BOOK_ABBREVIATIONS table resolves successfully (see humanRefToUsfm tests
+ * below) — kept under this name because every OTHER describe block in this
+ * file still exercises the same real invariant for them: get_passage's tiny
+ * fixture corpus only holds 34 exact verse strings, so an abbreviated
+ * reference (not stored under that exact abbreviated string) still correctly
+ * returns text: null / not_found in keyless fixture mode, never fabricated
+ * text — resolving the abbreviation is not the same thing as having that
+ * exact verse in the offline corpus.
  */
 const AMBIGUOUS_ABBREVIATIONS = ['Phil 4:13', 'Jn 3:16', 'Gen 1:1', '1 Cor 13:4', 'Ps 23:1'];
 
@@ -87,9 +96,24 @@ describe('humanRefToUsfm never silently invents a passage id for input it cannot
     });
   }
 
+  // Adversarial-review fix (2026-07-27): these are common, unambiguous
+  // abbreviations of REAL books ("Jn" = John, "1 Cor" = 1 Corinthians) — an
+  // LLM client typing "Jn 3:16" instead of "John 3:16" is not attempting to
+  // invent a passage, so humanRefToUsfm now resolves them via
+  // BOOK_ABBREVIATIONS rather than failing loud. (Previously this threw
+  // "Unrecognized book name" — a real gap, not a safety feature: it is the
+  // out-of-corpus and garbage-string cases below, not real-book
+  // abbreviations, that must fail loud.)
+  const EXPECTED_ABBREVIATION_USFM = {
+    'Phil 4:13': 'PHP.4.13',
+    'Jn 3:16': 'JHN.3.16',
+    'Gen 1:1': 'GEN.1.1',
+    '1 Cor 13:4': '1CO.13.4',
+    'Ps 23:1': 'PSA.23.1',
+  };
   for (const ref of AMBIGUOUS_ABBREVIATIONS) {
-    test(`throws (fails loud, does not guess) for unsupported abbreviation "${ref}"`, () => {
-      assert.throws(() => humanRefToUsfm(ref), /Unrecognized book name/);
+    test(`resolves the common abbreviation "${ref}" to its real USFM passage id, rather than failing loud`, () => {
+      assert.equal(humanRefToUsfm(ref), EXPECTED_ABBREVIATION_USFM[ref]);
     });
   }
 
@@ -125,8 +149,14 @@ describe('get_passage (fixture mode) returns clean not_found for every non-exist
 });
 
 describe('get_passage (injected-fake live mode) falls back cleanly for non-existent/malformed references, even when a live client is configured', () => {
-  for (const ref of OUT_OF_RANGE_REFS) {
-    test(`getPassage("${ref}") with a configured client + a fake 404 response falls back to fixture with no text (out-of-range reference)`, async () => {
+  // AMBIGUOUS_ABBREVIATIONS behaves like OUT_OF_RANGE_REFS here post-fix:
+  // humanRefToUsfm resolves them to a syntactically valid USFM id (it's a
+  // real book), so the live client DOES reach fetch — a real deployment
+  // would get real text back; this fake-404 fetch simulates the case where
+  // that USFM id isn't one this test cares to serve, and the assertion is
+  // just that a 404 still falls back cleanly, never fabricating text.
+  for (const ref of [...OUT_OF_RANGE_REFS, ...AMBIGUOUS_ABBREVIATIONS]) {
+    test(`getPassage("${ref}") with a configured client + a fake 404 response falls back to fixture with no text`, async () => {
       const client = createYouVersionClient({ appKey: 'fake-key', fetchImpl: notFoundFetch });
       const result = await client.getPassage(ref);
       assert.equal(result.text, null);
@@ -135,7 +165,7 @@ describe('get_passage (injected-fake live mode) falls back cleanly for non-exist
     });
   }
 
-  for (const ref of [...NONEXISTENT_BOOK_REFS, ...GARBAGE_STRINGS, ...AMBIGUOUS_ABBREVIATIONS]) {
+  for (const ref of [...NONEXISTENT_BOOK_REFS, ...GARBAGE_STRINGS]) {
     test(`getPassage("${ref}") with a configured client never even reaches fetch — humanRefToUsfm rejects it first, then falls back cleanly`, async () => {
       const client = createYouVersionClient({ appKey: 'fake-key', fetchImpl: unreachableFetch });
       const result = await client.getPassage(ref);

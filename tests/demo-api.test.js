@@ -152,6 +152,17 @@ test('DELETE /api/passage is 405', async () => {
   assert.equal(res.statusCode, 405);
 });
 
+test('GET /api/passage matches an en-dash verse range against the hyphen-range fixture (2026-07-27 fix, end-to-end through the live route)', async () => {
+  _resetForTests();
+  const res = makeRes();
+  await passageHandler(makeReq({ query: { reference: 'Psalm 46:1–3' }, ip: '20.0.0.6' }), res); // en dash
+  assert.equal(res.statusCode, 200);
+  const body = json(res);
+  assert.equal(body.reference, 'Psalm 46:1-3'); // fixture's canonical (hyphen) reference string
+  assert.equal(body.source, 'fixture');
+  assert.ok(body.text.length > 0);
+});
+
 // --- verify.js ---------------------------------------------------------------
 
 test('POST /api/verify 400s when quote or reference is missing', async () => {
