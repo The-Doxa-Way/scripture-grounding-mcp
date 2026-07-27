@@ -26,6 +26,7 @@ import * as clip07 from './templates/07-chart.js';
 import * as clip08 from './templates/08-limitations.js';
 import * as clip09 from './templates/09-close.js';
 import * as clip10 from './templates/10-montage-frontiers.js';
+import * as clip11 from './templates/11-register-guard.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '../..');
@@ -45,6 +46,7 @@ const HTML_CLIPS = [
   { id: '08', file: '08-limitations.mp4', mod: clip08 },
   { id: '09', file: '09-close.mp4', mod: clip09 },
   { id: '10', file: '10-montage-frontiers.mp4', mod: clip10 },
+  { id: '11', file: '11-register-guard.mp4', mod: clip11 },
 ];
 
 const requested = process.argv.slice(2);

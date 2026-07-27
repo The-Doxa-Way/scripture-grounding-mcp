@@ -1,4 +1,4 @@
-import { THEME_CSS, esc, buildDiffHTML } from './theme.js';
+import { THEME_CSS, FONT_LINKS, esc, buildDiffHTML } from './theme.js';
 
 export const DURATION = 25;
 
@@ -11,12 +11,12 @@ export function build(DATA) {
   const canon = buildDiffHTML(m.diffOps, 'a', 'green');
 
   return `<!doctype html>
-<html><head><meta charset="utf-8"><style>${THEME_CSS}
+<html><head><meta charset="utf-8">${FONT_LINKS}<style>${THEME_CSS}
   .chat-panel { width: 1600px; padding: 64px 72px; }
   .prompt-line { font-size: 34px; margin-bottom: 40px; }
   .prompt-line .lead { color: var(--text-dim); }
   .block-label { font-size: 20px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 14px; }
-  .textblock { position: relative; font-family: var(--serif); font-size: 32px; line-height: 1.55; }
+  .textblock { position: relative; font-family: var(--serif); font-style: italic; font-size: 32px; line-height: 1.55; }
   .textblock .plain, .textblock .hl { margin: 0; }
   .textblock .hl { position: absolute; inset: 0; }
   .ai-block { margin-bottom: 44px; }
@@ -27,7 +27,7 @@ export function build(DATA) {
     font-family: var(--mono); font-size: 22px; color: var(--text-dim);
     border-top: 1px solid var(--panel-border); padding-top: 22px;
   }
-  .refusal-panel .ref { color: var(--amber); }
+  .refusal-panel .ref { color: var(--gold); }
   .refusal-panel .quote { font-family: var(--serif); font-style: italic; color: var(--text); }
   </style></head>
   <body>

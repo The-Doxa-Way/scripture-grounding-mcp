@@ -1,4 +1,4 @@
-import { THEME_CSS, esc } from './theme.js';
+import { THEME_CSS, FONT_LINKS, esc } from './theme.js';
 
 export const DURATION = 10;
 
@@ -16,7 +16,7 @@ export function build(DATA) {
   const totalLines = config.split('\n').length;
 
   return `<!doctype html>
-<html><head><meta charset="utf-8"><style>${THEME_CSS}
+<html><head><meta charset="utf-8">${FONT_LINKS}<style>${THEME_CSS}
   .editor { width: 1200px; padding: 0; overflow: hidden; }
   .titlebar { display: flex; align-items: center; gap: 10px; padding: 22px 28px; border-bottom: 1px solid var(--panel-border); }
   .dot { width: 13px; height: 13px; border-radius: 50%; }
@@ -26,7 +26,7 @@ export function build(DATA) {
   .json-key { color: var(--accent); }
   .json-str { color: var(--green); }
   .status-row { display: flex; align-items: center; gap: 16px; padding: 0 48px 40px; font-size: 24px; }
-  .status-dot { width: 16px; height: 16px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 0 rgba(63,185,80,0.6); }
+  .status-dot { width: 16px; height: 16px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 0 rgba(48,209,88,0.6); }
   .status-text { color: var(--green); letter-spacing: 0.04em; }
   </style></head>
   <body>

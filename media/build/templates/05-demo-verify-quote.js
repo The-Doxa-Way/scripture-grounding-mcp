@@ -1,4 +1,4 @@
-import { THEME_CSS, esc, buildDiffHTML } from './theme.js';
+import { THEME_CSS, FONT_LINKS, esc, buildDiffHTML } from './theme.js';
 
 export const DURATION = 22;
 
@@ -9,26 +9,26 @@ export function build(DATA) {
   const similarityPct = (m.similarity * 100).toFixed(0);
 
   return `<!doctype html>
-<html><head><meta charset="utf-8"><style>${THEME_CSS}
+<html><head><meta charset="utf-8">${FONT_LINKS}<style>${THEME_CSS}
   .tool-panel { width: 1600px; padding: 60px 76px; }
   .tool-header { display: flex; align-items: baseline; gap: 18px; margin-bottom: 24px; }
   .tool-name { font-size: 30px; color: var(--accent); }
   .tool-name .tag { font-size: 20px; color: var(--text-dim); border: 1px solid var(--panel-border); border-radius: 6px; padding: 4px 10px; margin-left: 10px; }
   .call-line { font-size: 24px; color: var(--text-dim); margin-bottom: 22px; }
-  .call-line .ref { color: var(--green); }
+  .call-line .ref { color: var(--gold); }
   .loading { font-size: 22px; color: var(--text-dim); margin-bottom: 22px; }
   .verdict-row { display: flex; align-items: baseline; gap: 26px; margin-bottom: 30px; }
   .verdict-badge { font-size: 40px; font-weight: 700; letter-spacing: 0.03em; color: var(--red); }
   .verdict-sim { font-size: 24px; color: var(--text-dim); }
   .reason { font-size: 20px; color: var(--text-dim); margin-bottom: 30px; font-style: italic; }
   .block-label { font-size: 18px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 10px; }
-  .textblock { position: relative; font-family: var(--serif); font-size: 27px; line-height: 1.5; }
+  .textblock { position: relative; font-family: var(--serif); font-style: italic; font-size: 27px; line-height: 1.5; }
   .textblock .plain, .textblock .hl { margin: 0; }
   .textblock .hl { position: absolute; inset: 0; }
   .ai-block { margin-bottom: 26px; }
   .corrected-row { display: flex; align-items: center; gap: 18px; margin-top: 34px; padding-top: 30px; border-top: 1px solid var(--panel-border); }
-  .corrected-tag { font-size: 26px; color: var(--green); font-weight: 700; }
-  .corrected-text { font-family: var(--serif); font-size: 28px; line-height: 1.5; color: var(--text); }
+  .corrected-tag { font-size: 26px; color: var(--green); font-weight: 700; white-space: nowrap; flex-shrink: 0; }
+  .corrected-text { font-family: var(--serif); font-style: italic; font-size: 28px; line-height: 1.5; color: var(--text); }
   </style></head>
   <body>
     <div class="stage" id="stage" style="opacity:0">

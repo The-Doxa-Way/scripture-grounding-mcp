@@ -1,17 +1,17 @@
-import { THEME_CSS, esc } from './theme.js';
+import { THEME_CSS, FONT_LINKS, esc } from './theme.js';
 
 export const DURATION = 10;
 
 export function build(DATA) {
   const c = DATA.close;
   return `<!doctype html>
-<html><head><meta charset="utf-8"><style>${THEME_CSS}
-  .close-line { font-family: var(--serif); font-size: 56px; text-align: center; max-width: 1400px; line-height: 1.4; margin-bottom: 46px; }
+<html><head><meta charset="utf-8">${FONT_LINKS}<style>${THEME_CSS}
+  .close-line { font-family: var(--font-display); font-weight: 700; font-size: 56px; text-align: center; max-width: 1400px; line-height: 1.4; margin-bottom: 46px; }
   .url { font-size: 30px; color: var(--accent); letter-spacing: 0.02em; }
   </style></head>
   <body>
     <div class="stage" id="stage" style="opacity:0">
-      <div class="close-line serif" id="line">${esc(c.line)}</div>
+      <div class="close-line" id="line">${esc(c.line)}</div>
       <div class="url mono" id="url" style="opacity:0">${esc(c.url)}</div>
     </div>
     <script>

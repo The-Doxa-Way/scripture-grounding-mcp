@@ -1,4 +1,4 @@
-import { THEME_CSS, esc } from './theme.js';
+import { THEME_CSS, FONT_LINKS, esc } from './theme.js';
 
 export const DURATION = 12;
 
@@ -9,7 +9,7 @@ export function build(DATA) {
     .join('\n');
 
   return `<!doctype html>
-<html><head><meta charset="utf-8"><style>${THEME_CSS}
+<html><head><meta charset="utf-8">${FONT_LINKS}<style>${THEME_CSS}
   .word-wrap { position: relative; width: 1700px; height: 260px; display: flex; align-items: center; justify-content: center; }
   .word { position: absolute; font-family: var(--serif); font-size: 96px; text-align: center; letter-spacing: 0.01em; }
   .kicker { position: absolute; top: 96px; left: 0; right: 0; text-align: center; }

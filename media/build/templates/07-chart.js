@@ -1,4 +1,4 @@
-import { THEME_CSS, esc, easeOutCubic } from './theme.js';
+import { THEME_CSS, FONT_LINKS, esc, easeOutCubic } from './theme.js';
 
 export const DURATION = 15;
 
@@ -10,17 +10,17 @@ export function build(DATA) {
   const groundedLabel = (grounded * 100).toFixed(1) + '%';
 
   return `<!doctype html>
-<html><head><meta charset="utf-8"><style>${THEME_CSS}
+<html><head><meta charset="utf-8">${FONT_LINKS}<style>${THEME_CSS}
   .chart-panel { width: 1200px; padding: 72px 88px 64px; }
-  .chart-title { font-size: 30px; letter-spacing: 0.04em; color: var(--text); margin-bottom: 8px; text-align: center; }
+  .chart-title { font-family: var(--font-display); font-weight: 700; font-size: 30px; letter-spacing: 0.04em; color: var(--text); margin-bottom: 8px; text-align: center; }
   .chart-sub { font-size: 20px; color: var(--text-dim); text-align: center; margin-bottom: 72px; }
   .bars { display: flex; align-items: flex-end; justify-content: center; gap: 160px; height: 560px; }
   .bar-col { display: flex; flex-direction: column; align-items: center; width: 220px; height: 100%; justify-content: flex-end; }
   .bar-value { font-size: 44px; font-weight: 700; margin-bottom: 18px; font-family: var(--mono); }
   .bar-track { width: 160px; height: 100%; display: flex; align-items: flex-end; }
   .bar-fill { width: 100%; transform-origin: bottom; border-radius: 8px 8px 4px 4px; }
-  .bar-fill.ungrounded { background: linear-gradient(180deg, #f85149, #a6291f); }
-  .bar-fill.grounded { background: linear-gradient(180deg, #3fb950, #1f6b2c); }
+  .bar-fill.ungrounded { background: linear-gradient(180deg, #E52528, #7E1416); }
+  .bar-fill.grounded { background: linear-gradient(180deg, #30D158, #1A7330); }
   .bar-label { margin-top: 24px; font-size: 24px; color: var(--text-dim); font-family: var(--mono); }
   .caption-strip { bottom: 56px; }
   .models-note { position: absolute; bottom: 26px; left: 96px; right: 96px; text-align: center; font-size: 18px; color: var(--text-dim); opacity: 0.7; }
@@ -28,7 +28,7 @@ export function build(DATA) {
   <body>
     <div class="stage" id="stage" style="opacity:0">
       <div class="panel chart-panel">
-        <div class="chart-title mono" id="title" style="opacity:0">Exact-quote rate</div>
+        <div class="chart-title" id="title" style="opacity:0">Exact-quote rate</div>
         <div class="chart-sub mono" id="sub" style="opacity:0">${b.corpusSize} BSB passages &middot; same Gloo AI Studio call, auto-routed</div>
         <div class="bars">
           <div class="bar-col">

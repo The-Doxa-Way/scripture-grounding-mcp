@@ -1,25 +1,29 @@
 /**
- * Shared look for every clip: near-black background, monospace terminal
- * chrome, serif for Scripture text, generous whitespace, high contrast.
- * Kept as one string so every template stays visually consistent.
+ * Shared look for every clip: Doxa's dark brand palette (same tokens as
+ * demo/public/index.html, the authoritative web values), monospace terminal
+ * chrome, Fraunces italic for Scripture text, generous whitespace, high
+ * contrast. Kept as one string so every template stays visually consistent.
  */
 export const THEME_CSS = `
   :root {
     color-scheme: dark;
-    --bg: #0d1117;
-    --panel: #111826;
-    --panel-border: #30363d;
-    --text: #e6edf3;
-    --text-dim: #8b949e;
-    --accent: #79c0ff;
-    --accent-dim: #58a6ff;
-    --red: #f85149;
-    --red-bg: rgba(248, 81, 73, 0.16);
-    --green: #3fb950;
-    --green-bg: rgba(63, 185, 80, 0.14);
-    --amber: #d29922;
+    --bg: #1A1A1A;        /* color-charcoal */
+    --panel: #2C2C2E;     /* color-ash — card surface */
+    --panel-border: #38383A; /* color-ember */
+    --text: #FFFFFF;      /* color-pure-heat */
+    --text-dim: #ABABAB;  /* color-cool-ash */
+    --accent: #FF4500;    /* color-sacred-flame */
+    --accent-dim: #0EA5E9; /* color-hot-flame-blue (demo's --info) */
+    --red: #E52528;       /* color-crimson-flame */
+    --red-bg: rgba(229, 37, 40, 0.16);
+    --green: #30D158;     /* color-emerald-fire */
+    --green-bg: rgba(48, 209, 88, 0.14);
+    --amber: #FF9500;     /* color-amber-flame */
+    --gold: #FFD700;      /* color-divine-gold — Scripture reference labels */
     --mono: "SF Mono", ui-monospace, Menlo, Consolas, "Liberation Mono", monospace;
-    --serif: Georgia, "Iowan Old Style", "Times New Roman", serif;
+    --serif: 'Fraunces', Georgia, "Iowan Old Style", "Times New Roman", serif;
+    --font-display: 'Satoshi', system-ui, -apple-system, sans-serif;
+    --font-body: 'DM Sans', system-ui, -apple-system, sans-serif;
   }
   * { box-sizing: border-box; }
   html, body {
@@ -90,6 +94,21 @@ export const THEME_CSS = `
     text-transform: uppercase;
     color: var(--text-dim);
   }
+`;
+
+/**
+ * Same CDN font links as demo/public/index.html (Satoshi via Fontshare,
+ * DM Sans + Fraunces via Google Fonts) — every template's <head> includes
+ * this so document.fonts.ready (awaited in lib/capture.js before the first
+ * frame) actually has something real to wait on.
+ */
+export const FONT_LINKS = `
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://api.fontshare.com">
+  <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin>
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@900,700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,700&family=Fraunces:ital,opsz,wght@1,9..144,400&display=swap" rel="stylesheet">
 `;
 
 /** Escape untrusted-ish text for embedding in HTML templates built from real repo strings. */

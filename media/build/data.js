@@ -8,12 +8,32 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { wordDiff } from '../../src/diff.js';
+import { checkRegister } from '../../src/verify-register.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '../..');
 
 function readJSON(rel) {
   return JSON.parse(fs.readFileSync(path.join(ROOT, rel), 'utf8'));
+}
+
+/**
+ * Clip 11 — pulls the founder-flagged before/after reply text straight out of
+ * evals/results/founder-flagged-register-2026-07-27.md's own blockquotes
+ * (never hand-retyped): the "before" quote is already the doc's own abridged
+ * form (its "[...]" elisions, stripped here for on-screen readability); the
+ * "after" quote is the doc's full clean paragraph, trimmed to two of its four
+ * paragraphs to fit a 14s clip.
+ */
+function extractRegisterQuoteParagraphs(doc, startMarker, stopMarker) {
+  const s = doc.indexOf(startMarker);
+  if (s === -1) throw new Error(`founder-flagged-register-2026-07-27.md: marker not found: ${startMarker}`);
+  const from = s + startMarker.length;
+  const e = doc.indexOf(stopMarker, from);
+  if (e === -1) throw new Error(`founder-flagged-register-2026-07-27.md: stop marker not found: ${stopMarker}`);
+  const lines = doc.slice(from, e).split('\n').filter((l) => l.startsWith('>'));
+  const text = lines.map((l) => l.replace(/^>\s?/, '')).join('\n').trim();
+  return text.split(/\n\n+/).map((p) => p.replace(/\n/g, ' ').replace(/\*\*/g, '').replace(/\*/g, '').trim());
 }
 
 const results = readJSON('benchmark/results/results-2026-07-27.json');
@@ -30,6 +50,60 @@ const groundedDemo = readJSON('evals/results/grounded-reply-demo-2026-07-27-regi
 if (!psalm46 || !hebrews135) {
   throw new Error('Expected Psalm 46:1-3 and Hebrews 13:5 in worstUngroundedExamples — check results-2026-07-27.json');
 }
+
+// Clip 11 — the register-guard story (founder-flagged 2026-07-27).
+const registerDoc = fs.readFileSync(
+  path.join(ROOT, 'evals/results/founder-flagged-register-2026-07-27.md'),
+  'utf8'
+);
+const registerBeforeParas = extractRegisterQuoteParagraphs(
+  registerDoc,
+  '`output.reply`, before any fix):',
+  '## The fix'
+);
+const registerAfterParas = extractRegisterQuoteParagraphs(
+  registerDoc,
+  '**After** (verbatim, live production capture,',
+  'Zero first-person language'
+);
+// Rejoin the "I'd also encourage you to: - bullet - bullet - bullet" list
+// as prose (the doc's own bullet dashes read awkwardly on one line).
+const registerBulletSegments = registerBeforeParas[2]
+  .replace(/\[\.\.\.\]/g, '')
+  .split(/\s*-\s*/)
+  .map((s) => s.trim())
+  .filter(Boolean);
+const registerBefore = `${registerBeforeParas[0]} ${registerBulletSegments[0]} ${registerBulletSegments[1]}; ${registerBulletSegments[2]}`.trim();
+const registerAfter = `${registerAfterParas[0]} ${registerAfterParas[3]}`.trim();
+
+if (checkRegister(registerBefore).verdict !== 'violations') {
+  throw new Error('Expected the register-guard before-excerpt to trip checkRegister (src/verify-register.js)');
+}
+if (checkRegister(registerAfter).verdict !== 'clean') {
+  throw new Error('Expected the register-guard after-excerpt to be checkRegister-clean (src/verify-register.js)');
+}
+
+/** Case-insensitive find that returns the phrase with its real on-screen casing. */
+function findRegisterPhrase(text, phrase) {
+  const idx = text.toLowerCase().indexOf(phrase.toLowerCase());
+  if (idx === -1) {
+    throw new Error(`registerBefore excerpt no longer contains banned phrase: "${phrase}"`);
+  }
+  return text.slice(idx, idx + phrase.length);
+}
+// The three banned phrases the founder-flagged doc itself names (line ~34:
+// "First-person emotional/relational framing throughout ('I understand',
+// 'the passage I have for you', 'I'd also encourage you to')"), each paired
+// with the register requirement it breaks: 'first-person' is a literal
+// src/verify-register.js RULES category; 'tool-as-comforter' and
+// 'reassurance-empathy' name the other two hard requirements added to
+// grounded-reply.js's system prompt by the same fix (see the doc's "The fix"
+// section, item 1).
+const registerHighlights = [
+  { phrase: findRegisterPhrase(registerBefore, 'I understand that'), rule: 'first-person' },
+  { phrase: findRegisterPhrase(registerBefore, 'the passage I have for you'), rule: 'tool-as-comforter' },
+  { phrase: findRegisterPhrase(registerBefore, "I'd also encourage you"), rule: 'reassurance-empathy' },
+];
 
 export const DATA = {
   // Clip 01 / 05 — the real worst-misquote example (script explicitly names
@@ -70,6 +144,15 @@ export const DATA = {
   // (evals/results/grounded-reply-demo-2026-07-27.json), unmodified product
   // code path (src/grounded-reply.js).
   groundedReply: groundedDemo.output,
+  // Clip 11 — the register-guard story: verify_register against the real
+  // founder-flagged BEFORE reply, then the register-clean AFTER reply, both
+  // read verbatim from evals/results/founder-flagged-register-2026-07-27.md.
+  registerGuard: {
+    topic: "I'm anxious about my future",
+    before: registerBefore,
+    after: registerAfter,
+    highlights: registerHighlights,
+  },
   // Clip 07 — the real per-condition summary numbers.
   benchmark: {
     corpusSize: results.corpusSize,

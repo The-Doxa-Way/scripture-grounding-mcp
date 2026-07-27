@@ -1,4 +1,4 @@
-import { THEME_CSS, esc } from './theme.js';
+import { THEME_CSS, FONT_LINKS, esc } from './theme.js';
 
 export const DURATION = 20;
 
@@ -34,7 +34,7 @@ export function build(DATA) {
   const replyHTML = renderReplyExcerpt(g.reply);
 
   return `<!doctype html>
-<html><head><meta charset="utf-8"><style>${THEME_CSS}
+<html><head><meta charset="utf-8">${FONT_LINKS}<style>${THEME_CSS}
   .tool-panel { width: 1620px; padding: 60px 80px 110px; }
   .tool-header { display: flex; align-items: baseline; gap: 18px; margin-bottom: 22px; }
   .tool-name { font-size: 30px; color: var(--accent); }
@@ -43,11 +43,11 @@ export function build(DATA) {
   .call-line .val { color: var(--green); }
   .retrieval-banner { font-size: 22px; color: var(--accent-dim); margin-bottom: 30px; padding-bottom: 22px; border-bottom: 1px solid var(--panel-border); }
   .retrieval-banner .arrow { color: var(--text-dim); margin: 0 10px; }
-  .reply-body { font-family: var(--serif); font-size: 29px; line-height: 1.5; }
+  .reply-body { font-family: var(--font-body); font-size: 29px; line-height: 1.5; }
   .reply-body p { margin: 0 0 26px; }
   .reply-body .verbatim {
     margin: 18px 0 26px; padding: 20px 28px; border-left: 4px solid var(--green);
-    background: var(--green-bg); color: var(--text); font-style: italic; font-size: 30px;
+    background: var(--green-bg); color: var(--text); font-family: var(--serif); font-style: italic; font-size: 30px;
   }
   .truncate-note { font-family: var(--mono); font-size: 18px; color: var(--text-dim); font-style: normal; }
   </style></head>

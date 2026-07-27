@@ -1,4 +1,4 @@
-import { THEME_CSS, esc } from './theme.js';
+import { THEME_CSS, FONT_LINKS, esc } from './theme.js';
 
 export const DURATION = 18;
 
@@ -7,7 +7,7 @@ export function build(DATA) {
   const inputJSON = JSON.stringify({ reference: p.reference }, null, 2);
 
   return `<!doctype html>
-<html><head><meta charset="utf-8"><style>${THEME_CSS}
+<html><head><meta charset="utf-8">${FONT_LINKS}<style>${THEME_CSS}
   .tool-panel { width: 1500px; padding: 64px 76px; }
   .tool-header { display: flex; align-items: baseline; gap: 18px; margin-bottom: 34px; }
   .tool-name { font-size: 30px; color: var(--accent); }
@@ -16,9 +16,9 @@ export function build(DATA) {
   .call-json .val { color: var(--green); }
   .loading { font-size: 24px; color: var(--text-dim); margin-bottom: 30px; }
   .divider { border-top: 1px solid var(--panel-border); margin: 10px 0 40px; }
-  .passage-text { font-family: var(--serif); font-size: 40px; line-height: 1.6; }
+  .passage-text { font-family: var(--serif); font-style: italic; font-size: 40px; line-height: 1.6; }
   .citation { margin-top: 36px; font-family: var(--mono); font-size: 22px; color: var(--text-dim); letter-spacing: 0.02em; }
-  .citation .ref { color: var(--accent); }
+  .citation .ref { color: var(--gold); }
   </style></head>
   <body>
     <div class="stage" id="stage" style="opacity:0">

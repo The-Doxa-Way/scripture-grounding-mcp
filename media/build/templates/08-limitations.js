@@ -1,4 +1,4 @@
-import { THEME_CSS, esc } from './theme.js';
+import { THEME_CSS, FONT_LINKS, esc } from './theme.js';
 
 export const DURATION = 10;
 
@@ -9,19 +9,19 @@ export function build(DATA) {
     .join('\n');
 
   return `<!doctype html>
-<html><head><meta charset="utf-8"><style>${THEME_CSS}
+<html><head><meta charset="utf-8">${FONT_LINKS}<style>${THEME_CSS}
   .card { width: 1400px; padding: 84px 96px; }
   .kicker { margin-bottom: 20px; }
-  .title { font-size: 48px; margin-bottom: 56px; }
+  .title { font-family: var(--font-display); font-weight: 700; font-size: 48px; margin-bottom: 56px; }
   ul { list-style: none; margin: 0; padding: 0; }
-  .item { font-size: 30px; line-height: 1.6; margin-bottom: 30px; padding-left: 44px; position: relative; }
+  .item { font-family: var(--font-body); font-size: 30px; line-height: 1.6; margin-bottom: 30px; padding-left: 44px; position: relative; }
   .item::before { content: "\\2014"; position: absolute; left: 0; color: var(--text-dim); }
   </style></head>
   <body>
     <div class="stage" id="stage" style="opacity:0">
       <div class="panel card">
         <div class="kicker mono" id="kicker" style="opacity:0">measured, not solved</div>
-        <div class="title mono" id="title" style="opacity:0">Honest limitations</div>
+        <div class="title" id="title" style="opacity:0">Honest limitations</div>
         <ul>${itemsHTML}</ul>
       </div>
     </div>
