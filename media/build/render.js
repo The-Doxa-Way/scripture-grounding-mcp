@@ -4,6 +4,20 @@
  * in media/build/templates/ (rendered frame-by-frame via headless Chrome)
  * plus the pure-ffmpeg Ken Burns clip (media/build/lib/headlines.js).
  *
+ * This is the one-off tooling that produced the Kaggle submission's demo
+ * video — not part of the MCP server, its tests, or the quickstart. It is
+ * NOT expected to run unmodified on a fresh clone; it has two local
+ * prerequisites neither of which ships in this repo:
+ *   - Chrome/Chromium for the HTML clips (puppeteer-core is a
+ *     devDependency and bundles no browser of its own). Defaults to
+ *     /Applications/Google Chrome.app/...; override with $CHROME_PATH.
+ *   - `ffmpeg`/`ffprobe` on $PATH for every clip, plus the fair-use press
+ *     headline screenshots (media/assets/headline-*.jpg) for clip 02 —
+ *     gitignored on purpose (not distributable under this repo's MIT grant,
+ *     see the .gitignore comment), so a fresh clone never has them.
+ * When a prerequisite is missing, the affected clip(s) are skipped with a
+ * message rather than left to crash mid-render.
+ *
  * Usage: node media/build/render.js [clipNumber ...]
  *   node media/build/render.js          # rebuild all clips
  *   node media/build/render.js 01 05    # rebuild just clip 01 and 05
@@ -13,9 +27,9 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { DATA } from './data.js';
-import { captureClipFrames } from './lib/capture.js';
+import { captureClipFrames, chromeAvailable, CHROME_PATH } from './lib/capture.js';
 import { assembleFrames, ffprobeDuration } from './lib/ffmpeg.js';
-import { buildHeadlinesClip } from './lib/headlines.js';
+import { buildHeadlinesClip, missingImages } from './lib/headlines.js';
 
 import * as clip01 from './templates/01-misquote-open.js';
 import * as clip03 from './templates/03-bridge-config.js';
@@ -56,8 +70,17 @@ const want = (id) => wantAll || requested.includes(id);
 async function main() {
   const results = [];
 
+  const wantAnyHtmlClip = HTML_CLIPS.some((clip) => want(clip.id));
+  if (wantAnyHtmlClip && !chromeAvailable()) {
+    console.log(
+      `\nSkipping HTML clips: no Chrome/Chromium found at "${CHROME_PATH}".\n` +
+      'Set $CHROME_PATH to a Chrome/Chromium executable to render these clips.'
+    );
+  }
+
   for (const clip of HTML_CLIPS) {
     if (!want(clip.id)) continue;
+    if (!chromeAvailable()) continue;
     console.log(`\n=== ${clip.file} ===`);
     const html = clip.mod.build(DATA);
     const duration = clip.mod.DURATION;
@@ -74,10 +97,20 @@ async function main() {
   }
 
   if (want('02')) {
-    console.log('\n=== 02-headlines.mp4 ===');
-    const outPath = path.join(CLIPS_DIR, '02-headlines.mp4');
-    buildHeadlinesClip({ assetsDir: ASSETS_DIR, outPath, fps: 30, targetDuration: 12 });
-    results.push({ file: '02-headlines.mp4', outPath, targetDuration: 12 });
+    const missing = missingImages(ASSETS_DIR);
+    if (missing.length > 0) {
+      console.log(
+        `\nSkipping 02-headlines.mp4: missing local-only source screenshot(s) ` +
+        `${missing.join(', ')} in ${ASSETS_DIR}.\n` +
+        'These are fair-use press headlines kept out of the repo on purpose ' +
+        '(see .gitignore) — place them locally to rebuild this clip.'
+      );
+    } else {
+      console.log('\n=== 02-headlines.mp4 ===');
+      const outPath = path.join(CLIPS_DIR, '02-headlines.mp4');
+      buildHeadlinesClip({ assetsDir: ASSETS_DIR, outPath, fps: 30, targetDuration: 12 });
+      results.push({ file: '02-headlines.mp4', outPath, targetDuration: 12 });
+    }
   }
 
   console.log('\n=== Verification ===');

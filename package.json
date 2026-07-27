@@ -10,6 +10,10 @@
   "bin": {
     "scripture-grounding-mcp": "src/index.js"
   },
+  "files": [
+    "src",
+    "fixtures"
+  ],
   "scripts": {
     "start": "node src/index.js",
     "test": "node --test \"tests/**/*.test.js\" \"evals/*.test.js\"",

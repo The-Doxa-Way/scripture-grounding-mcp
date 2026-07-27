@@ -13,6 +13,19 @@ const CHROME_PATH =
   process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 
 /**
+ * puppeteer-core (a devDependency, not full puppeteer) ships no bundled
+ * browser — it drives whatever's at CHROME_PATH. A fresh clone on a machine
+ * without Chrome/Chromium at that path (or without $CHROME_PATH set to one)
+ * has nothing to launch; check first so callers can skip cleanly instead of
+ * letting puppeteer throw mid-capture.
+ */
+export function chromeAvailable() {
+  return fs.existsSync(CHROME_PATH);
+}
+
+export { CHROME_PATH };
+
+/**
  * @param {{name: string, html: string, duration: number, fps?: number, framesRoot: string}} opts
  */
 export async function captureClipFrames({ name, html, duration, fps = 30, framesRoot }) {

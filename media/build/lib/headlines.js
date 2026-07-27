@@ -5,14 +5,26 @@
  * ffmpeg-zoompan clip, and a static PNG pan needs no browser rendering.
  */
 import { execFileSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import path from 'node:path';
 
-const IMAGES = [
+export const IMAGES = [
   'headline-christian-today.jpg',
   'headline-charisma.jpg',
   'headline-christian-post.jpg',
   'headline-christian-daily.jpg',
 ];
+
+/**
+ * These four screenshots are fair-use press headlines kept local-only (see
+ * .gitignore's `media/assets/headline-*.jpg` rule) — not distributable under
+ * this repo's MIT grant, so a fresh clone never has them. Check for them
+ * before shelling out to ffmpeg so a missing-asset clone gets a clear skip
+ * message instead of an ffmpeg stack trace.
+ */
+export function missingImages(assetsDir) {
+  return IMAGES.filter((img) => !existsSync(path.join(assetsDir, img)));
+}
 
 export function buildHeadlinesClip({ assetsDir, outPath, fps = 30, targetDuration = 12 }) {
   const n = IMAGES.length;

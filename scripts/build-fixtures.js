@@ -315,8 +315,31 @@ async function buildAlt(translationKey) {
   return failed === 0;
 }
 
+function printHelp() {
+  console.log(`Usage:
+  node scripts/build-fixtures.js         # BSB (default, primary) — fetches
+                                          # https://bereanbible.com/bsb.txt fresh
+                                          # and overwrites fixtures/bsb/*.json
+  node scripts/build-fixtures.js --web    # WEB via bible-api.com (secondary);
+                                          # resumes/skips passages already
+                                          # written to fixtures/web/*.json
+  node scripts/build-fixtures.js --kjv    # KJV via bible-api.com (secondary);
+                                          # resumes/skips passages already
+                                          # written to fixtures/kjv/*.json
+  node scripts/build-fixtures.js --help   # print this message; makes no
+                                          # network call and writes no files
+
+Every mode makes a live network call to fetch canonical text and OVERWRITES
+(BSB) or fills in (--web/--kjv) fixture files under fixtures/. Run with no
+flags only when you intend to regenerate the committed BSB corpus.`);
+}
+
 async function main() {
   const args = process.argv.slice(2);
+  if (args.includes('--help') || args.includes('-h')) {
+    printHelp();
+    return;
+  }
   const wantWeb = args.includes('--web');
   const wantKjv = args.includes('--kjv');
   let success = true;
