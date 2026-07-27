@@ -9,6 +9,11 @@ against the source instead of trusting the model's recall.
 Built for Kaggle's **"Scripture in New Frontiers"** challenge (YouVersion +
 Gloo, July 2026).
 
+**Live demo:** [scripture-grounding-demo.vercel.app](https://scripture-grounding-demo.vercel.app)
+— try a passage, verify a quote (live red/green diff), and get a Scripture-grounded
+encouragement, all running keyless on the committed BSB fixture corpus. The
+same API backs a ChatGPT custom GPT Action config in `integrations/chatgpt/`.
+
 ## The problem
 
 Independent research on LLM Bible-quotation accuracy has reported
@@ -162,6 +167,18 @@ src/
   verify-quote.js         verify_quote's core classification logic
   grounded-reply.js       grounded_reply's keyword-map retrieval + system-prompt construction
   index.js                MCP server: registers all 4 tools over stdio
+
+demo/                    Vercel app: the live demo (public/index.html) + its
+                         API routes (api/passage.js, verify.js, encourage.js,
+                         openapi.js), which import src/*.js directly — no
+                         logic duplication. Deployed with Root Directory=demo;
+                         see demo/vercel.json. Keyless (fixture-only; the
+                         YouVersion path is off in this deployment, see
+                         api/passage.js's policy-gate comment); Gloo AI Studio
+                         generation is permitted via server-held env vars.
+integrations/chatgpt/    OpenAPI 3.1 spec + system-prompt instructions for a
+                         private ChatGPT custom GPT that uses the demo API as
+                         its Actions backend (GPTs can't speak MCP directly).
 ```
 
 ## Honest limitations

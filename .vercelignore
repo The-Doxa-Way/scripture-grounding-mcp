@@ -1,0 +1,15 @@
+# Deployment plumbing for the demo/ Vercel app (see demo/vercel.json, deployed
+# via `vercel --local-config demo/vercel.json` from the repo root so the
+# demo/api/*.js functions can import ../../src/*.js directly with no logic
+# duplication). This file lives at the repo root because Vercel resolves
+# .vercelignore relative to the deploy cwd, not the --local-config file.
+#
+# Exclude everything the demo app doesn't need at runtime, to keep the
+# deployment small and fast — none of this affects `npm test` or the MCP
+# server itself.
+media/
+notebook/
+tests/
+evals/results/
+.github/
+.git/

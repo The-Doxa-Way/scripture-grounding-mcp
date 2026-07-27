@@ -7,3 +7,4 @@ npm-debug.log*
 media/build/frames/
 media/edit/
 media/vo/
+.vercel

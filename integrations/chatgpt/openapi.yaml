@@ -1,0 +1,191 @@
+openapi: 3.1.0
+info:
+  title: Scripture Grounding demo API
+  version: "0.1.0"
+  description: >
+    Keyless REST API for the scripture-grounding-mcp project's core pattern:
+    retrieve canonical Scripture text, then verify any claimed quote against
+    it, rather than trusting a model's memory. Backed entirely by the
+    committed, public-domain Berean Standard Bible (BSB) fixture corpus (34
+    passages) — no YouVersion API key is used or required by this
+    deployment. `/encourage` additionally demonstrates retrieve-then-constrain
+    generation via Gloo AI Studio, degrading gracefully to a template-only
+    "grounding demo" mode when no Gloo credentials are configured server-side.
+    Built for Kaggle's "Scripture in New Frontiers" challenge; this API is
+    the ChatGPT-Actions-compatible backend for the same MCP server published
+    at github.com/The-Doxa-Way/scripture-grounding-mcp (GPTs can't speak MCP
+    directly, so this REST surface mirrors its three most important tools).
+servers:
+  - url: https://scripture-grounding-demo.vercel.app
+    description: Production demo deployment
+paths:
+  /api/passage:
+    get:
+      operationId: getPassage
+      summary: Retrieve canonical BSB text for a Scripture reference
+      description: >
+        Looks up a reference (e.g. "John 3:16-17") in the committed BSB
+        fixture corpus. If the reference isn't in the corpus, returns a 404
+        with the full list of available references — never invents text for
+        an unrecognized reference.
+      parameters:
+        - name: reference
+          in: query
+          required: true
+          schema:
+            type: string
+          example: John 3:16-17
+      responses:
+        "200":
+          description: Passage found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reference:
+                    type: string
+                  translation:
+                    type: string
+                  text:
+                    type: string
+                  source:
+                    type: string
+                    enum: [fixture]
+                  sourceUrl:
+                    type: string
+        "404":
+          description: Reference not in the fixture corpus
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  availableReferences:
+                    type: array
+                    items:
+                      type: string
+  /api/verify:
+    post:
+      operationId: verifyQuote
+      summary: Verify a claimed Scripture quote against canonical BSB text
+      description: >
+        The core grounding tool. Given a quote and the reference it is
+        claimed to be from, fetches canonical BSB text and classifies the
+        quote as exact, minor_variance, misquote, misattribution (the quote
+        actually matches a DIFFERENT passage in the corpus better), or
+        not_found. Returns a similarity score and a word-level diff summary.
+        Never asserts a quote is correct from memory — only what could be
+        verified against the corpus.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [quote, reference]
+              properties:
+                quote:
+                  type: string
+                  description: The quote text to verify.
+                reference:
+                  type: string
+                  description: The Scripture reference the quote is claimed to be from.
+              example:
+                quote: For God so loved the world that he sent his only Son.
+                reference: John 3:16-17
+      responses:
+        "200":
+          description: Verdict object
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  verdict:
+                    type: string
+                    enum: [exact, minor_variance, misquote, misattribution, not_found]
+                  claimedReference:
+                    type: string
+                    nullable: true
+                  canonicalText:
+                    type: string
+                    nullable: true
+                  canonicalTranslation:
+                    type: string
+                    nullable: true
+                  canonicalSource:
+                    type: string
+                    nullable: true
+                  similarityScore:
+                    type: number
+                    nullable: true
+                  diffSummary:
+                    type: object
+                    nullable: true
+                  correctReference:
+                    type: string
+                    nullable: true
+                  reason:
+                    type: string
+        "400":
+          description: Missing quote or reference
+  /api/encourage:
+    post:
+      operationId: encourage
+      summary: Get a Scripture-grounded encouragement for a topic or question
+      description: >
+        Retrieves a relevant BSB passage for a topic/question via a keyword
+        map (e.g. "anxious" -> Philippians 4:6-7), then generates a reply
+        constrained to quote ONLY that retrieved passage, verbatim, with Gloo
+        AI Studio if server credentials are configured — otherwise returns a
+        deterministic, no-network "grounding demo" stub reply. The response's
+        `source` field always says which mode served the reply
+        ("gloo-api" | "stub"), never presenting one as the other.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [message]
+              properties:
+                message:
+                  type: string
+                  description: A topic, feeling, or question to respond to, grounded in Scripture.
+              example:
+                message: I'm anxious about my future.
+      responses:
+        "200":
+          description: Grounded reply
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reply:
+                    type: string
+                    nullable: true
+                  source:
+                    type: string
+                    enum: [gloo-api, stub]
+                  groundedOn:
+                    type: object
+                    nullable: true
+                    properties:
+                      reference:
+                        type: string
+                      translation:
+                        type: string
+                      text:
+                        type: string
+                      matchedKeyword:
+                        type: string
+                        nullable: true
+                  error:
+                    type: string
+                    nullable: true
+        "400":
+          description: Missing message

@@ -1,0 +1,430 @@
+<title>Scripture Grounding — live demo</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="description" content="Live demo: an MCP server + API that makes an LLM verify Scripture quotes against canonical text instead of quoting from memory." />
+<style>
+  :root {
+    --bg: #0d1117;
+    --panel: #161b22;
+    --border: #30363d;
+    --text: #c9d1d9;
+    --text-dim: #8b949e;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --red: #f85149;
+    --amber: #d29922;
+    --gray: #6e7681;
+    --parchment: #f2e9d8;
+    --parchment-text: #2b2114;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --serif: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    line-height: 1.5;
+    padding: 0 0 3rem;
+  }
+  a { color: var(--accent); }
+  .wrap {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 2.5rem 1.25rem 0;
+  }
+  header.hero {
+    text-align: center;
+    margin-bottom: 2.5rem;
+  }
+  .eyebrow {
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  h1 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: clamp(1.8rem, 5vw, 2.75rem);
+    margin: 0.5rem 0 0.75rem;
+    line-height: 1.2;
+  }
+  .sub {
+    color: var(--text-dim);
+    max-width: 640px;
+    margin: 0 auto;
+    font-size: 0.95rem;
+  }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+    margin: 2rem 0;
+  }
+  .stat {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 0.75rem;
+    text-align: center;
+  }
+  .stat .n { font-size: 1.6rem; font-weight: 600; }
+  .stat .n.bad { color: var(--red); }
+  .stat .n.good { color: var(--green); }
+  .stat .l { color: var(--text-dim); font-size: 0.72rem; margin-top: 0.25rem; }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+  .panel h2 {
+    font-family: var(--serif);
+    font-size: 1.15rem;
+    font-weight: 400;
+    margin: 0 0 0.25rem;
+  }
+  .panel p.hint {
+    color: var(--text-dim);
+    font-size: 0.82rem;
+    margin: 0 0 0.9rem;
+  }
+  label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    margin: 0.6rem 0 0.25rem;
+  }
+  input[type=text], textarea {
+    width: 100%;
+    background: #0d1117;
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 6px;
+    padding: 0.55rem 0.7rem;
+    font-family: var(--mono);
+    font-size: 0.9rem;
+  }
+  textarea { min-height: 4.5rem; resize: vertical; }
+  button {
+    margin-top: 0.9rem;
+    background: var(--accent);
+    color: #0d1117;
+    border: none;
+    border-radius: 6px;
+    padding: 0.55rem 1.1rem;
+    font-family: var(--mono);
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  button:disabled { opacity: 0.5; cursor: default; }
+  button:hover:not(:disabled) { filter: brightness(1.1); }
+
+  .out { margin-top: 1rem; }
+  .scripture {
+    background: var(--parchment);
+    color: var(--parchment-text);
+    font-family: var(--serif);
+    border-radius: 6px;
+    padding: 0.9rem 1rem;
+    font-size: 1rem;
+    line-height: 1.55;
+  }
+  .scripture .ref {
+    display: block;
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: #6b5a3a;
+    margin-bottom: 0.4rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .error-box {
+    border: 1px solid var(--red);
+    color: #ffb3ae;
+    background: rgba(248, 81, 73, 0.08);
+    border-radius: 6px;
+    padding: 0.7rem 0.9rem;
+    font-size: 0.85rem;
+  }
+  .error-box ul { margin: 0.4rem 0 0; padding-left: 1.2rem; max-height: 8rem; overflow-y: auto; }
+
+  .badge {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding: 0.2rem 0.55rem;
+    border-radius: 4px;
+    margin-bottom: 0.6rem;
+  }
+  .badge.exact, .badge.gloo-api { background: rgba(63,185,80,0.15); color: var(--green); }
+  .badge.minor_variance { background: rgba(210,153,34,0.15); color: var(--amber); }
+  .badge.misquote, .badge.not_found { background: rgba(248,81,73,0.15); color: var(--red); }
+  .badge.misattribution { background: rgba(210,153,34,0.15); color: var(--amber); }
+  .badge.stub { background: rgba(110,118,129,0.2); color: var(--gray); }
+
+  .diff-line { font-size: 0.9rem; margin: 0.2rem 0; }
+  del { color: var(--red); text-decoration: line-through; background: rgba(248,81,73,0.1); }
+  ins { color: var(--green); text-decoration: none; background: rgba(63,185,80,0.12); }
+  .diff-counts { color: var(--text-dim); font-size: 0.78rem; margin-top: 0.5rem; }
+  .reason { color: var(--text-dim); font-size: 0.82rem; margin-top: 0.6rem; }
+
+  footer {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 0.78rem;
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+  }
+  footer a { margin: 0 0.4rem; }
+
+  @media (max-width: 600px) {
+    .stats { grid-template-columns: 1fr; }
+  }
+</style>
+
+<div class="wrap">
+  <header class="hero">
+    <div class="eyebrow">scripture-grounding-mcp — live demo</div>
+    <h1>The model never quotes from memory.</h1>
+    <p class="sub">
+      An open MCP server + API that retrieves canonical Scripture text and
+      verifies any quote against it — instead of trusting an LLM's recall.
+      Everything below runs keyless on the committed, public-domain Berean
+      Standard Bible (BSB) fixture corpus.
+    </p>
+  </header>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="n bad">64.7%</div>
+      <div class="l">exact-quote rate, ungrounded (model recalling from memory)</div>
+    </div>
+    <div class="stat">
+      <div class="n good">100%</div>
+      <div class="l">exact-quote rate, grounded (retrieve-then-constrain)</div>
+    </div>
+    <div class="stat">
+      <div class="n">34 / 141</div>
+      <div class="l">BSB fixture passages / automated tests, all offline</div>
+    </div>
+  </div>
+
+  <section class="panel">
+    <h2>1. Try a passage</h2>
+    <p class="hint">Retrieve canonical BSB text for a reference. Try "John 3:16-17" or "Psalm 23:1-6".</p>
+    <label for="p-ref">Reference</label>
+    <input id="p-ref" type="text" value="John 3:16-17" placeholder="e.g. Romans 8:28-39" />
+    <button id="p-btn">Get passage</button>
+    <div class="out" id="p-out"></div>
+  </section>
+
+  <section class="panel">
+    <h2>2. Verify a quote</h2>
+    <p class="hint">Paste a quote and the reference it's claimed to be from. Try changing a word or citing the wrong verse to see a misquote/misattribution verdict.</p>
+    <label for="v-quote">Quote</label>
+    <textarea id="v-quote">For God so loved the world that he sent his only Son, that whoever believes in him shall not perish.</textarea>
+    <label for="v-ref">Claimed reference</label>
+    <input id="v-ref" type="text" value="John 3:16-17" />
+    <button id="v-btn">Verify quote</button>
+    <div class="out" id="v-out"></div>
+  </section>
+
+  <section class="panel">
+    <h2>3. Try an encouragement</h2>
+    <p class="hint">Describe how you're feeling. A relevant passage is retrieved first, then a reply is generated constrained to quote only that passage.</p>
+    <label for="e-msg">Message</label>
+    <input id="e-msg" type="text" value="I'm anxious about my future" />
+    <button id="e-btn">Get encouragement</button>
+    <div class="out" id="e-out"></div>
+  </section>
+
+  <footer>
+    <div>
+      <a href="https://github.com/The-Doxa-Way/scripture-grounding-mcp" target="_blank" rel="noopener">Repo</a>
+      ·
+      <a href="https://github.com/The-Doxa-Way/scripture-grounding-mcp/blob/main/docs/writeup.md" target="_blank" rel="noopener">Writeup</a>
+      ·
+      <a href="/api/openapi.yaml" target="_blank" rel="noopener">OpenAPI spec</a>
+    </div>
+    <div style="margin-top:0.6rem;">
+      Built for the Scripture in New Frontiers challenge · BSB (public domain) · open source (MIT)
+    </div>
+  </footer>
+</div>
+
+<script>
+  function el(html) {
+    const t = document.createElement('template');
+    t.innerHTML = html.trim();
+    return t.content.firstChild;
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  async function callApi(path, opts) {
+    const res = await fetch(path, opts);
+    let body;
+    try { body = await res.json(); } catch { body = null; }
+    return { ok: res.ok, status: res.status, body };
+  }
+
+  function renderPassage(container, ok, body) {
+    if (!ok) {
+      let extra = '';
+      if (body && body.availableReferences) {
+        extra = `<ul>${body.availableReferences.map((r) => `<li>${escapeHtml(r)}</li>`).join('')}</ul>`;
+      }
+      container.innerHTML = '';
+      container.appendChild(el(`<div class="error-box">${escapeHtml(body?.error || 'Request failed.')}${extra}</div>`));
+      return;
+    }
+    container.innerHTML = '';
+    container.appendChild(el(`
+      <div class="scripture">
+        <span class="ref">${escapeHtml(body.reference)} — ${escapeHtml(body.translation)}</span>
+        ${escapeHtml(body.text)}
+      </div>
+    `));
+  }
+
+  /**
+   * Render a red/green word diff purely from verify_quote's diffSummary
+   * (the API's own diff data — see src/diff.js's summarizeDiff). diffSummary
+   * only carries the non-matching spans (capped at 10) plus aggregate word
+   * counts, not the full ordered token stream, so this renders each changed
+   * span as a canonical->quoted delta line rather than attempting a full
+   * inline reconstruction of the source text.
+   */
+  function renderDiff(diffSummary) {
+    if (!diffSummary) return '';
+    const lines = diffSummary.spans.map((s) => {
+      if (s.op === 'replace') {
+        return `<div class="diff-line"><del>${escapeHtml(s.canonical)}</del> &rarr; <ins>${escapeHtml(s.quoted)}</ins></div>`;
+      }
+      if (s.op === 'delete') {
+        return `<div class="diff-line"><del>${escapeHtml(s.canonical)}</del> <span style="color:var(--text-dim)">(missing from quote)</span></div>`;
+      }
+      return `<div class="diff-line"><ins>${escapeHtml(s.quoted)}</ins> <span style="color:var(--text-dim)">(added, not in canonical text)</span></div>`;
+    }).join('');
+    return `
+      ${lines}
+      <div class="diff-counts">
+        ${diffSummary.equalWords} words matched · ${diffSummary.replacedWords} replaced ·
+        ${diffSummary.insertedWords} inserted · ${diffSummary.deletedWords} deleted
+      </div>
+    `;
+  }
+
+  function renderVerify(container, ok, body) {
+    if (!ok) {
+      container.innerHTML = '';
+      container.appendChild(el(`<div class="error-box">${escapeHtml(body?.error || 'Request failed.')}</div>`));
+      return;
+    }
+    const score = body.similarityScore != null ? `${(body.similarityScore * 100).toFixed(1)}%` : '—';
+    let canonicalBlock = '';
+    if (body.canonicalText) {
+      canonicalBlock = `
+        <div class="scripture" style="margin-top:0.7rem;">
+          <span class="ref">${escapeHtml(body.claimedReference)} — ${escapeHtml(body.canonicalTranslation)}</span>
+          ${escapeHtml(body.canonicalText)}
+        </div>`;
+    }
+    let correction = '';
+    if (body.correctReference) {
+      correction = `<div class="reason">Closest match instead: <strong>${escapeHtml(body.correctReference)}</strong></div>`;
+    }
+    container.innerHTML = '';
+    container.appendChild(el(`
+      <div>
+        <span class="badge ${body.verdict}">${escapeHtml(body.verdict.replace('_', ' '))}</span>
+        <span style="color:var(--text-dim); font-size:0.82rem;"> similarity ${score}</span>
+        ${renderDiff(body.diffSummary)}
+        ${correction}
+        <div class="reason">${escapeHtml(body.reason)}</div>
+        ${canonicalBlock}
+      </div>
+    `));
+  }
+
+  function renderEncourage(container, ok, body) {
+    if (!ok) {
+      container.innerHTML = '';
+      container.appendChild(el(`<div class="error-box">${escapeHtml(body?.error || 'Request failed.')}</div>`));
+      return;
+    }
+    const sourceLabel = body.source === 'gloo-api' ? 'live generation' : 'grounding demo (retrieval-only)';
+    let grounded = '';
+    if (body.groundedOn) {
+      grounded = `
+        <div class="scripture" style="margin-top:0.7rem;">
+          <span class="ref">Grounded on ${escapeHtml(body.groundedOn.reference)} — ${escapeHtml(body.groundedOn.translation)}</span>
+          ${escapeHtml(body.groundedOn.text)}
+        </div>`;
+    }
+    container.innerHTML = '';
+    container.appendChild(el(`
+      <div>
+        <span class="badge ${body.source}">${escapeHtml(sourceLabel)}</span>
+        <div style="white-space:pre-wrap; margin-top:0.3rem;">${escapeHtml(body.reply || body.error || '')}</div>
+        ${grounded}
+      </div>
+    `));
+  }
+
+  function wireButton(btnId, outId, run) {
+    const btn = document.getElementById(btnId);
+    const out = document.getElementById(outId);
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      out.innerHTML = '<div style="color:var(--text-dim); font-size:0.85rem;">Loading…</div>';
+      try {
+        await run(out);
+      } catch (err) {
+        out.innerHTML = '';
+        out.appendChild(el(`<div class="error-box">${escapeHtml(err.message)}</div>`));
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  }
+
+  wireButton('p-btn', 'p-out', async (out) => {
+    const reference = document.getElementById('p-ref').value;
+    const { ok, body } = await callApi(`/api/passage?reference=${encodeURIComponent(reference)}`);
+    renderPassage(out, ok, body);
+  });
+
+  wireButton('v-btn', 'v-out', async (out) => {
+    const quote = document.getElementById('v-quote').value;
+    const reference = document.getElementById('v-ref').value;
+    const { ok, body } = await callApi('/api/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ quote, reference }),
+    });
+    renderVerify(out, ok, body);
+  });
+
+  wireButton('e-btn', 'e-out', async (out) => {
+    const message = document.getElementById('e-msg').value;
+    const { ok, body } = await callApi('/api/encourage', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message }),
+    });
+    renderEncourage(out, ok, body);
+  });
+</script>
