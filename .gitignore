@@ -8,3 +8,8 @@ media/build/frames/
 media/edit/
 media/vo/
 .vercel
+
+# Third-party press screenshots + the clip baking them: fair-use in the demo
+# video only — NOT distributable under this repo MIT grant (kept local-only).
+media/assets/headline-*.jpg
+media/clips/02-headlines.mp4

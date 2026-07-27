@@ -23,13 +23,13 @@ Works out of the box with no keys at all on the public-domain Berean Standard Bi
 
 ## Measured, not solved
 
-We benchmarked the same Gloo AI Studio call with and without grounding across 34 passages spanning narrative, poetry, prophecy, gospel, and epistles: exact-quote rate 65% ungrounded vs 100% grounded (with grounded+verify's auto-correction path also at 100%, since this run's grounded outputs never needed correcting); misattribution 0% in both conditions on this bounded corpus. The full methodology, corpus, and runner are in the repo — reproducible with free challenge keys.
+We benchmarked the same Gloo AI Studio call with and without grounding across 34 passages spanning narrative, poetry, prophecy, gospel, and epistles: exact-quote rate 65% ungrounded vs 100% grounded (the grounded+verify auto-correction path also scored 100%); misattribution 0% in both conditions on this bounded corpus. Methodology, corpus, and runner are in the repo — reproducible with free challenge keys.
 
 Named limitations, because trust is the product: cross-chapter ranges are unimplemented; misattribution detection searches a bounded corpus; grounded generation can still err in the words *around* a quote. The register guard is the same honesty standard: deterministic regex matches, not semantic understanding — a floor, not a ceiling (`evals/results/RESULTS-<date>.md`). Grounding makes remaining errors detectable rather than plausible. This problem is not solved; it is now measurable and materially smaller.
 
 ## Why us, and what's next
 
-We build Doxa, a prophetic-encouragement app, and run this retrieve-before-generate pattern in production — this challenge is the reason we opened the accuracy layer for everyone. The vision matches the brief's own words: Scripture present where people already are — in every AI conversation on earth, in any of 2,000+ languages — and word-for-word true.
+We build Doxa, a prophetic-encouragement app, and run this retrieve-before-generate pattern in production — this challenge is why we opened the accuracy layer for everyone. The vision is the brief's own: Scripture present where people already are — every AI conversation on earth, any of 2,000+ languages — word-for-word true.
 
 The bridge is built. It's open. Connect it.
 

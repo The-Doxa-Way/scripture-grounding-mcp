@@ -17,10 +17,11 @@ same API backs a ChatGPT custom GPT Action config in `integrations/chatgpt/`.
 
 ## The problem
 
-Independent research on LLM Bible-quotation accuracy has reported
-misquotation rates roughly in the **15%–60%** range depending on model,
-translation, and how obscure the passage is. The exact number varies a lot
-by study methodology — but the shape of the problem doesn't: models are
+YouVersion's founder said publicly in March 2026 (as widely reported in the
+Christian press) that the best AI models misquote Scripture roughly
+**15%–60%** of the time, depending on model, translation, and how obscure
+the passage is. The exact number varies with methodology — but the shape of
+the problem doesn't: models are
 fluent enough that a wrong quote reads exactly as confident as a right one.
 A user with no independent way to check has no signal that anything is
 wrong. That's the failure mode this project targets: not "the model doesn't

@@ -10,11 +10,10 @@ specifies *how* the numbers were produced, so the run is reproducible.
 
 ## Motivation
 
-Independent research on LLM Scripture recall (see e.g. the "Scripture in New
-Frontiers" challenge brief and the Gruenewald et al. line of work on Bible
-quotation accuracy) has reported misquotation rates in ungrounded models
-ranging roughly **15%–60%** depending on model, translation, and passage
-obscurity. That range is wide because methodology varies a lot between
+In March 2026, YouVersion founder Bobby Gruenewald said publicly (as widely
+reported in the Christian press, e.g. Christian Daily International,
+2026-03-16) that the best AI models misquote Scripture roughly **15%–60%**
+of the time depending on model, translation, and passage obscurity. That range is wide because methodology varies a lot between
 studies (what counts as a "quote," which translation is ground truth, how
 paraphrase is scored). This benchmark exists to make our own number
 reproducible rather than to adjudicate that range.

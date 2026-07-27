@@ -125,7 +125,7 @@ router, followed the "present this exactly" instruction faithfully on all
 34 passages this time), **not** proof that grounded+verify's correction
 path is unreachable or untested — `verify_quote` itself is unit-tested
 against all five verdicts in `tests/verify-quote.test.js` (53 of this
-repo's 70 tests are pre-existing, deterministic, offline tests of exactly
+repo's unit tests (70 at the time of this run; the suite has since grown) are pre-existing, deterministic, offline tests of exactly
 this logic, including forced non-exact verdicts). What this run adds is
 that the live pipeline, on this corpus, never needed to exercise that path —
 which is itself informative (grounded generation is reliable enough here
