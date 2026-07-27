@@ -65,7 +65,7 @@ asking a model to behave. See "Register guard" below.
 git clone https://github.com/The-Doxa-Way/scripture-grounding-mcp.git
 cd scripture-grounding-mcp
 npm install
-npm test              # 181 tests, all fixture/stub-mode, zero external calls
+npm test              # 202 tests, all fixture/stub-mode, zero external calls
 npm start              # runs the MCP server over stdio
 ```
 
