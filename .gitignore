@@ -4,3 +4,6 @@ node_modules/
 *.env
 npm-debug.log*
 .DS_Store
+media/build/frames/
+media/edit/
+media/vo/
