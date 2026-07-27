@@ -19,7 +19,7 @@ import { tokenize } from './normalize.js';
 import { wordDiff, similarity, summarizeDiff } from './diff.js';
 import { findByReference, findBestMatch } from './fixtures.js';
 import { splitSuperscription } from './superscription.js';
-import { findClosestCanon } from './alt-translations.js';
+import { findClosestCanon, findClosestCanonWithRemote } from './alt-translations.js';
 
 /** Similarity threshold above which a non-exact quote is "minor_variance" rather than "misquote". */
 const MINOR_VARIANCE_THRESHOLD = 0.95;
@@ -63,7 +63,14 @@ async function defaultCanonicalLookup(reference) {
 
 /**
  * @param {{quote: string, claimedReference: string, version?: string}} input
- * @param {{canonicalLookup?: (reference: string, version?: string) => Promise<{reference: string, text: string, translation: string, source: string}|null>}} [deps]
+ * @param {{
+ *   canonicalLookup?: (reference: string, version?: string) => Promise<{reference: string, text: string, translation: string, source: string}|null>,
+ *   multiVersion?: {fetchVersion: (reference: string, versionId: string) => Promise<object>, versionIds?: string[]}
+ * }} [deps] - `deps.multiVersion` is flag-gated (YOUVERSION_MULTI_VERSION=1 + YOUVERSION_APP_KEY —
+ *   see src/index.js) and, when present, additionally checks the claimed reference against a
+ *   configurable list of licensed YouVersion translations fetched live via the deployer's own key
+ *   (src/alt-translations.js's findClosestCanonWithRemote). Omitted (the default), this function is
+ *   byte-identical to its pre-2026-07-27 local-only (BSB/WEB/KJV) behavior.
  * @returns {Promise<{
  *   verdict: Verdict,
  *   claimedReference: string,
@@ -77,11 +84,13 @@ async function defaultCanonicalLookup(reference) {
  *   closestTranslation: string|null,
  *   similarityToClosest: number|null,
  *   verdictAgainstClosest: string|null,
- *   similarityToRequested: number|null
+ *   similarityToRequested: number|null,
+ *   remoteVersionsChecked: Array<{versionId: string, translation: string}|{versionId: string, skipped: true, note: string}>|null
  * }>}
  */
 export async function verifyQuote({ quote, claimedReference, version }, deps = {}) {
   const canonicalLookup = deps.canonicalLookup ?? defaultCanonicalLookup;
+  const multiVersion = deps.multiVersion;
 
   if (typeof quote !== 'string' || quote.trim().length === 0) {
     return {
@@ -98,6 +107,7 @@ export async function verifyQuote({ quote, claimedReference, version }, deps = {
       similarityToClosest: null,
       verdictAgainstClosest: null,
       similarityToRequested: null,
+      remoteVersionsChecked: null,
     };
   }
   if (typeof claimedReference !== 'string' || claimedReference.trim().length === 0) {
@@ -115,6 +125,7 @@ export async function verifyQuote({ quote, claimedReference, version }, deps = {
       similarityToClosest: null,
       verdictAgainstClosest: null,
       similarityToRequested: null,
+      remoteVersionsChecked: null,
     };
   }
 
@@ -151,6 +162,7 @@ export async function verifyQuote({ quote, claimedReference, version }, deps = {
         similarityToClosest: null,
         verdictAgainstClosest: null,
         similarityToRequested: null,
+        remoteVersionsChecked: null,
       };
     }
     return {
@@ -167,6 +179,7 @@ export async function verifyQuote({ quote, claimedReference, version }, deps = {
       similarityToClosest: null,
       verdictAgainstClosest: null,
       similarityToRequested: null,
+      remoteVersionsChecked: null,
     };
   }
 
@@ -179,7 +192,20 @@ export async function verifyQuote({ quote, claimedReference, version }, deps = {
   // LOCALLY (BSB/WEB/KJV — see src/alt-translations.js) — computed
   // unconditionally so a caller can always see which translation the quote
   // actually matches best, not just whether it matched the requested one.
-  const closest = findClosestCanon(claimedCanonical.reference, quoteTokens);
+  // When deps.multiVersion is present (flag-gated — see src/index.js), this
+  // additionally fetches the reference across a configurable list of
+  // licensed YouVersion translations via the deployer's own key and folds
+  // them into the same comparison; omitted, behavior is byte-identical to
+  // the local-only path.
+  let closest;
+  let remoteVersionsChecked = null;
+  if (multiVersion?.fetchVersion) {
+    const { best, remoteResults } = await findClosestCanonWithRemote(claimedCanonical.reference, quoteTokens, multiVersion);
+    closest = best;
+    remoteVersionsChecked = remoteResults;
+  } else {
+    closest = findClosestCanon(claimedCanonical.reference, quoteTokens);
+  }
   const closestTranslation = closest?.translation ?? null;
   const similarityToClosest = closest?.score ?? null;
   const verdictAgainstClosest = closest ? classifyVerdict(closest.score) : null;
@@ -208,6 +234,7 @@ export async function verifyQuote({ quote, claimedReference, version }, deps = {
       similarityToClosest,
       verdictAgainstClosest,
       similarityToRequested: claimedScore,
+      remoteVersionsChecked,
     };
   }
 
@@ -239,6 +266,7 @@ export async function verifyQuote({ quote, claimedReference, version }, deps = {
       similarityToClosest,
       verdictAgainstClosest,
       similarityToRequested: claimedScore,
+      remoteVersionsChecked,
     };
   }
 
@@ -272,5 +300,6 @@ export async function verifyQuote({ quote, claimedReference, version }, deps = {
     similarityToClosest,
     verdictAgainstClosest,
     similarityToRequested: claimedScore,
+    remoteVersionsChecked,
   };
 }

@@ -44,6 +44,18 @@ async function canonicalLookup(reference, version) {
   return { reference: result.reference, text: result.text, translation: result.translation, source: result.source };
 }
 
+// Licensed-translation multi-version comparison (founder-directed 2026-07-27):
+// flag-gated DEFAULT OFF pending YouVersion's written AI-use approval (see
+// README's "Multi-version detection" section). Requires BOTH a real
+// YOUVERSION_APP_KEY (so this only ever runs against a deployer's own,
+// non-shareable key — never a shared/hosted one) AND the explicit opt-in
+// YOUVERSION_MULTI_VERSION=1. When absent, verify_quote's closest-canon
+// comparison is unchanged (local BSB/WEB/KJV only).
+const multiVersionEnabled = youVersion.isConfigured && process.env.YOUVERSION_MULTI_VERSION === '1';
+const multiVersionDeps = multiVersionEnabled
+  ? { fetchVersion: (reference, versionId) => youVersion.getPassage(reference, versionId) }
+  : undefined;
+
 const server = new McpServer({ name: 'scripture-grounding-mcp', version: '0.1.0' });
 
 server.registerTool(
@@ -106,7 +118,10 @@ server.registerTool(
     },
   },
   async ({ quote, claimed_reference, version }) => {
-    const result = await verifyQuote({ quote, claimedReference: claimed_reference, version }, { canonicalLookup });
+    const result = await verifyQuote(
+      { quote, claimedReference: claimed_reference, version },
+      { canonicalLookup, multiVersion: multiVersionDeps }
+    );
     return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
   }
 );

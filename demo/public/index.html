@@ -295,12 +295,17 @@
       see <code>benchmark/results/RESULTS.md</code>'s "Cross-translation check" section.
     </p>
     <p class="hint">
-      <strong>Not yet:</strong> with your own free YouVersion key, <code>get_passage</code> and
-      <code>verify_quote</code> already work against any one of YouVersion's 2,000+ licensed
-      translations at a time. Extending today's closest-canon comparison to check several of
-      those licensed translations at once is a different use of that access than this server's
-      existing single-translation retrieval, and needs YouVersion's own written sign-off first —
-      that request is in. YouVersion, please say yes.
+      <strong>Implemented and tested, off by default:</strong> with your own free YouVersion key,
+      <code>get_passage</code> and <code>verify_quote</code> already work against any one of
+      YouVersion's 2,000+ licensed translations at a time. Extending today's closest-canon
+      comparison to check several of those licensed translations at once — live, via your own key,
+      never a committed fixture — is now built and tested in the open-source repo (a prior pass
+      declined to build this at all pending the founder's own explicit direction, which was then
+      given). It ships gated <strong>off by default</strong> behind an explicit environment-variable
+      opt-in, pending YouVersion's own written sign-off that this specific use is covered — that
+      request is in. This <em>hosted</em> demo holds no server-side YouVersion credential and stays
+      fixture-only either way (see the repo README); the licensed-comparison path is for
+      self-hosted, bring-your-own-key deployments of this server. YouVersion, please say yes.
     </p>
   </section>
 

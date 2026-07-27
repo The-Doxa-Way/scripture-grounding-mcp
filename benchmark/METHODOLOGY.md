@@ -99,12 +99,16 @@ but is a no-op for both today.
 
 A third, licensed-translation path — fetching NIV/ESV/NASB/etc. live via a
 developer's own `YOUVERSION_APP_KEY` for the same closest-canon comparison
-— is **not implemented**. It would be a materially different use of the
-YouVersion Platform API than this server's existing single-translation
-`get_passage`/`verify_quote` path (fetching one requested translation), and
-building + shipping it ahead of YouVersion's written confirmation that this
-specific use is covered was a deliberate line this integrity fix did not
-cross. See README's "Multi-version detection" section.
+— **is now implemented and tested**, flag-gated **default off** behind
+`YOUVERSION_MULTI_VERSION=1` (in addition to `YOUVERSION_APP_KEY`) pending
+YouVersion's written confirmation that this specific use is covered. An
+earlier pass on this repo declined to build this at all, treating the line
+above as one only the founder could cross; the founder made that call
+explicitly (2026-07-27) — build it, gated, pending approval — and this is
+that build (`src/alt-translations.js`'s `findClosestCanonWithRemote`,
+verified end-to-end against the real YouVersion Platform API with a
+real key). See README's "Multi-version detection" section, including the
+live accessible-versions table.
 
 ### Same model, every condition
 

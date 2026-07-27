@@ -65,7 +65,7 @@ asking a model to behave. See "Register guard" below.
 git clone https://github.com/The-Doxa-Way/scripture-grounding-mcp.git
 cd scripture-grounding-mcp
 npm install
-npm test              # 202 tests, all fixture/stub-mode, zero external calls
+npm test              # 212 tests, all fixture/stub-mode, zero external calls
 npm start              # runs the MCP server over stdio
 ```
 
@@ -160,14 +160,43 @@ Run against this benchmark's own cached ungrounded misses (see
 honest answer was **0 of 11**: none of them turned out to be accurate
 WEB/KJV quotes misfiled as BSB misses — reported as-is, not spun.
 
-**Not yet implemented:** with your own free YouVersion key, `get_passage`
-and `verify_quote` already work against any *one* of YouVersion's 2,000+
-licensed translations at a time (the `version` parameter). Extending
-today's closest-canon comparison to check several licensed translations
-(NIV/ESV/NASB/etc.) at once is a materially different use of that access
-than this server's existing single-translation retrieval, and this repo
-does not build or exercise that path ahead of YouVersion's own written
-confirmation that it's covered — that request is in.
+**Licensed-translation comparison (implemented, flag-gated, DEFAULT OFF):**
+with your own free YouVersion key, `get_passage` and `verify_quote` already
+work against any *one* of YouVersion's 2,000+ licensed translations at a
+time (the `version` parameter). Extending today's closest-canon comparison
+to check several licensed translations (NIV/ESV/NASB/etc.) live, via your
+own key — never a committed fixture, never a shared credential, licensed
+text held only in memory for the duration of one request — is now built and
+tested (`src/alt-translations.js`'s `findClosestCanonWithRemote` /
+`fetchRemoteVersionCandidates`; a per-version fetch failure — an
+inaccessible id, a network error — is skipped with a note, never thrown).
+Honest note: an earlier pass on this repo declined to build this at all,
+judging it needed the founder's own explicit call rather than an agent's
+assumption; the founder made that call (2026-07-27) — build it, gated
+behind explicit opt-in, pending YouVersion's approval — and this is that
+build.
+
+It ships **off by default** behind two separate gates: `YOUVERSION_APP_KEY`
+(so it only ever runs against a deployer's own key) AND the explicit opt-in
+`YOUVERSION_MULTI_VERSION=1` — both required, pending YouVersion's written
+confirmation that this specific AI-use is covered (that request is in).
+Configure which translations are checked via `YOUVERSION_VERSION_IDS`
+(comma-separated YouVersion bibleIds; default `111,100,2692`).
+
+Accessible-versions table (checked live 2026-07-27 against this project's
+own, non-commercial App Key — a deployer whose key has accepted a
+translation's license in the [YouVersion developer
+portal](https://developers.youversion.com) will see it succeed instead):
+
+| bibleId | Translation | Accessible with our key? |
+|---|---|---|
+| 111 | NIV (New International Version) | No — 403 Access denied on passage fetch (exists in the Platform catalog, 200 on bible-info; needs per-version license acceptance in the portal) |
+| 100 | NASB1995 | No — same as NIV above |
+| 2692 | NASB2020 | No — same as NIV above |
+| 1, 59, 116, 1713 (bible.com's own ids for KJV, ESV, NLT, CSB) | KJV / ESV / NLT / CSB | N/A — these ids 404 "not found" against the Platform API; not (yet) in this catalog at all, a different failure than a licensing gate |
+| 12 | ASV (American Standard Version, public domain) | Yes — 200 on a real passage fetch, which is why this feature's own real end-to-end test (see `tests/verify-quote.test.js` and this repo's PR history) uses ASV rather than a commercial translation: none of the popular licensed ones are actually fetchable with this project's own key |
+
+YouVersion, please say yes.
 
 ## Fixture corpus
 
@@ -316,7 +345,7 @@ service. Specifically:
 npm test
 ```
 
-202 tests (`node --test`), all deterministic, all offline (fixture/stub mode
+212 tests (`node --test`), all deterministic, all offline (fixture/stub mode
 — no network calls, no API keys required to run the suite). Covers:
 normalization robustness (smart quotes, inline verse numbers, mixed case),
 word-diff correctness, all five `verify_quote` verdicts (including a named

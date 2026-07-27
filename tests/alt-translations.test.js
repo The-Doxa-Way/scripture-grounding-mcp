@@ -3,7 +3,12 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import { localCandidateTranslations, findClosestCanon } from '../src/alt-translations.js';
+import {
+  localCandidateTranslations,
+  findClosestCanon,
+  fetchRemoteVersionCandidates,
+  findClosestCanonWithRemote,
+} from '../src/alt-translations.js';
 import { tokenize } from '../src/normalize.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -60,4 +65,96 @@ test('WEB and KJV fixtures never carry a superscription field for these 34 passa
       assert.equal(fixture.superscription, undefined, `${corpus}/${file} should have no superscription field`);
     }
   }
+});
+
+// --- Licensed-translation (YouVersion-keyed) multi-version comparison ---
+// (founder-directed 2026-07-27, flag-gated — see README's "Multi-version
+// detection" section). These tests inject a FAKE fetchVersion — no real
+// network call, no licensed text anywhere near the test suite.
+
+test('fetchRemoteVersionCandidates returns a translation/text pair for a version that fetches successfully', async () => {
+  const fetchVersion = async (reference, versionId) => {
+    assert.equal(reference, 'Philippians 4:13');
+    return { text: 'FAKE NIV-style rendering.', translation: 'NIV', source: 'youversion-api' };
+  };
+  const results = await fetchRemoteVersionCandidates('Philippians 4:13', fetchVersion, ['111']);
+  assert.equal(results.length, 1);
+  assert.equal(results[0].versionId, '111');
+  assert.equal(results[0].skipped, undefined);
+  assert.match(results[0].translation, /NIV/);
+  assert.equal(results[0].text, 'FAKE NIV-style rendering.');
+});
+
+test('fetchRemoteVersionCandidates skips a version gracefully (never throws) when the client falls back to fixture (inaccessible/unlicensed id)', async () => {
+  const fetchVersion = async () => ({
+    text: 'some fixture fallback text',
+    translation: 'BSB (Berean Standard Bible, public domain)',
+    source: 'fixture',
+    note: 'YouVersion API call failed (YouVersion API responded 403 for /bibles/100/passages/PHP.4.13); served from fixture instead.',
+  });
+  const results = await fetchRemoteVersionCandidates('Philippians 4:13', fetchVersion, ['100']);
+  assert.equal(results.length, 1);
+  assert.equal(results[0].skipped, true);
+  assert.match(results[0].note, /100:.*403/);
+});
+
+test('fetchRemoteVersionCandidates skips gracefully (never throws) when fetchVersion itself rejects', async () => {
+  const fetchVersion = async () => {
+    throw new Error('network down');
+  };
+  const results = await fetchRemoteVersionCandidates('Philippians 4:13', fetchVersion, ['999']);
+  assert.equal(results.length, 1);
+  assert.equal(results[0].skipped, true);
+  assert.match(results[0].note, /999: network down/);
+});
+
+test('fetchRemoteVersionCandidates handles a mix of one success and one failure independently, in order', async () => {
+  const fetchVersion = async (reference, versionId) => {
+    if (versionId === '111') return { text: 'FAKE NIV text.', translation: 'NIV', source: 'youversion-api' };
+    throw new Error('unreachable');
+  };
+  const results = await fetchRemoteVersionCandidates('Philippians 4:13', fetchVersion, ['111', '999']);
+  assert.equal(results.length, 2);
+  assert.equal(results[0].skipped, undefined);
+  assert.equal(results[1].skipped, true);
+});
+
+test('findClosestCanonWithRemote picks a remote candidate when it scores higher than every local one', async () => {
+  const fetchVersion = async () => ({
+    text: 'FAKE remote rendering that matches the quote exactly.',
+    translation: 'FAKE-VERSION',
+    source: 'youversion-api',
+  });
+  const quoteTokens = tokenize('FAKE remote rendering that matches the quote exactly.');
+  const { best, remoteResults } = await findClosestCanonWithRemote('Philippians 4:13', quoteTokens, {
+    fetchVersion,
+    versionIds: ['999'], // outside KNOWN_VERSION_NAMES, so the fetch's own `translation` passes through unmodified
+  });
+  assert.equal(best.translation, 'FAKE-VERSION');
+  assert.equal(best.score, 1);
+  assert.equal(remoteResults.length, 1);
+});
+
+test('findClosestCanonWithRemote falls back to the best LOCAL candidate when every remote version is skipped', async () => {
+  const fetchVersion = async () => {
+    throw new Error('access denied');
+  };
+  const bsbText = JSON.parse(readFileSync(path.join(REPO_ROOT, 'fixtures/bsb/philippians-4-13.json'), 'utf8')).text;
+  const quoteTokens = tokenize(bsbText);
+  const { best, remoteResults } = await findClosestCanonWithRemote('Philippians 4:13', quoteTokens, {
+    fetchVersion,
+    versionIds: ['111'],
+  });
+  assert.equal(best.translation, 'BSB (Berean Standard Bible, public domain)');
+  assert.equal(remoteResults.length, 1);
+  assert.equal(remoteResults[0].skipped, true);
+});
+
+test('findClosestCanonWithRemote with no fetchVersion behaves like local-only findClosestCanon (empty remoteResults)', async () => {
+  const bsbText = JSON.parse(readFileSync(path.join(REPO_ROOT, 'fixtures/bsb/psalm-23-1-6.json'), 'utf8')).text;
+  const quoteTokens = tokenize(bsbText);
+  const { best, remoteResults } = await findClosestCanonWithRemote('Psalm 23:1-6', quoteTokens, {});
+  const localOnly = findClosestCanon('Psalm 23:1-6', quoteTokens);
+  assert.deepEqual(best, localOnly);
+  assert.deepEqual(remoteResults, []);
 });

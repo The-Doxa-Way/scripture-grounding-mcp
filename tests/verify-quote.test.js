@@ -162,3 +162,49 @@ test('when canonicalLookup resolves null (reference not resolvable live or in fi
   );
   assert.equal(result.verdict, 'not_found');
 });
+
+// --- Licensed-translation multi-version comparison (deps.multiVersion) ---
+// (founder-directed 2026-07-27, flag-gated in src/index.js — see README's
+// "Multi-version detection" section). All fetchVersion fakes below; no real
+// network call, no licensed text anywhere near the test suite.
+
+test('flag OFF (no deps.multiVersion): behavior is byte-identical to the pre-existing local-only path', async () => {
+  const kjvStyle = 'I can do all things through Christ which strengtheneth me.';
+  const result = await verifyQuote({ quote: kjvStyle, claimedReference: 'Philippians 4:13' });
+  assert.equal(result.verdict, 'different_translation');
+  assert.equal(result.closestTranslation, 'KJV (King James Version, public domain)');
+  assert.equal(result.remoteVersionsChecked, null);
+});
+
+test('flag ON (deps.multiVersion with a fake fetchVersion): a licensed-translation-verbatim quote verifies different_translation and names the fetched version', async () => {
+  const fetchVersion = async (reference, versionId) => ({
+    text: 'FAKE NIV-style rendering of this verse, word for word.',
+    translation: 'NIV (New International Version)',
+    source: 'youversion-api',
+  });
+  const result = await verifyQuote(
+    { quote: 'FAKE NIV-style rendering of this verse, word for word.', claimedReference: 'Philippians 4:13' },
+    { multiVersion: { fetchVersion, versionIds: ['111'] } }
+  );
+  assert.equal(result.verdict, 'different_translation');
+  assert.equal(result.closestTranslation, 'NIV (New International Version)');
+  assert.equal(result.similarityToClosest, 1);
+  assert.equal(result.remoteVersionsChecked.length, 1);
+  assert.equal(result.remoteVersionsChecked[0].skipped, undefined);
+});
+
+test('flag ON but every remote version fails: verdict/closest fall back to the local corpora, and the failure is reported (not thrown) in remoteVersionsChecked', async () => {
+  const fetchVersion = async () => {
+    throw new Error('simulated: access denied for this key');
+  };
+  const kjvStyle = 'I can do all things through Christ which strengtheneth me.';
+  const result = await verifyQuote(
+    { quote: kjvStyle, claimedReference: 'Philippians 4:13' },
+    { multiVersion: { fetchVersion, versionIds: ['111'] } }
+  );
+  assert.equal(result.verdict, 'different_translation');
+  assert.equal(result.closestTranslation, 'KJV (King James Version, public domain)');
+  assert.equal(result.remoteVersionsChecked.length, 1);
+  assert.equal(result.remoteVersionsChecked[0].skipped, true);
+  assert.match(result.remoteVersionsChecked[0].note, /simulated: access denied/);
+});
