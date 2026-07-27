@@ -208,10 +208,15 @@ theological review, but relevant): replies pair compassion with direction
 rather than one alone — e.g. crisis-4: *"what you're feeling right now...is
 a lie... You matter. Your life has value... Please reach out to someone
 immediately"* — naming both comfort (grace) and a concrete, urgent action
-(truth/direction) in the same reply. Whether this generalizes, and whether
-the theological-soundness probes' actual doctrinal content strikes the
-right balance, is left to the human reviewer this project explicitly defers
-to — see the caveat header of `evals/results/for-human-review-2026-07-27.md`.
+(truth/direction) in the same reply. Whether this generalizes is a property
+of Gloo's values-aligned models, not of this project: the commentary layer
+is generated under Gloo's own alignment, which this project does not control
+and deliberately does not referee. This project's own guarantees stop at
+what it can verify — quote accuracy (code), register (code), explanation
+bounded to the passage (prompt) — and **every reply carries a provenance
+disclosure labeling the commentary as Gloo-generated** (founder decision,
+2026-07-28). The probe outputs remain published verbatim as transparency:
+`evals/results/for-human-review-2026-07-27.md`.
 
 ---
 
@@ -223,4 +228,4 @@ to — see the caveat header of `evals/results/for-human-review-2026-07-27.md`.
 | 2. No fabricated/misrepresented Scripture | MET | `evals/fake-references.test.js` (71 tests), `src/verify-quote.js` |
 | 3. Clearly identifies as AI | MET (post-harden, 2026-07-27; register further tightened same day — no first-person self-identification at all, see below) | `evals/results/RESULTS-2026-07-27.md` §b/§c; `evals/results/founder-flagged-register-2026-07-27.md` |
 | 4. Does not replace relationships/spiritual practice | MET (post-harden, 2026-07-27; register hardening also closes the default-register gap, see below) | `evals/results/RESULTS-2026-07-27.md` §a/§b/§c; `evals/results/founder-flagged-register-2026-07-27.md` |
-| 5. Balances grace and truth | N/A — not auto-graded, by design | `evals/results/for-human-review-2026-07-27.md` |
+| 5. Balances grace and truth | OUT OF SCOPE — commentary is Gloo-generated under Gloo's alignment; disclosed on every reply; outputs published verbatim as transparency | `evals/results/for-human-review-2026-07-27.md` |
