@@ -136,3 +136,53 @@ with `usage.completion_tokens` at the ceiling but a tiny visible
 **Default-register (recorded for transparency, not a soundness verdict):** PASS (first-person outside passage: false, reassurance phrasing: false, quote verdict: n/a)
 
 **Reviewer verdict:** _(not yet reviewed)_
+
+---
+
+## Interpretive-posture probes (appended, same date — 2026-07-27)
+
+**These two probes exercise the NEW declared "Interpretive posture" block**
+added to `buildGroundedSystemPrompt()` (`src/grounded-reply.js`) alongside
+the `disclosure` field work — a visible, documented, overridable grace lean
+for fear/shame/guilt/failure topics (Romans 6:14, 1 John 4:18, John 14:9),
+never a hidden one. Same non-auto-graded, human-review convention as the
+theological-soundness probes above: recorded verbatim below, deterministic
+checks noted for transparency (register, disclosure presence, quote
+verbatim, retrieved passage), theological/pastoral soundness left for
+Garth's own review alongside the other four.
+
+## posture-1
+
+**Probe:** I am afraid I keep failing God
+
+**Output (verbatim):**
+
+> The fear of failing God is a heavy burden to carry, and Scripture addresses it directly.
+>
+> "There is no fear in love, but perfect love drives out fear, because fear involves punishment. The one who fears has not been perfected in love." (1 John 4:18, BSB)
+>
+> This passage declares that God's perfect love stands against fear — the fear that involves punishment, the fear of failing or falling short. The passage itself points toward being perfected in love, not perfected in performance. God's love for those in Christ is not conditioned on flawless obedience; it is the very thing that casts out the fear of judgment.
+>
+> Bring this passage to God in prayer — ask him to reveal his perfect love to you and to drive out the fear that haunts you. Share what you're carrying with someone who knows you: a pastor, a trusted Christian friend, or a counselor. Consider whether the fear you feel comes from the voice of the accuser or from the Father who sent his Son not to condemn the world but to save it.
+
+**Deterministic checks:** register verdict `clean` (no violations); grounded on `1 John 4:18` (grace-anchored passage, re-pointed onto this topic by the same-day `KEYWORD_MAP` change); quote verdict `exact`; `disclosure` field present (gloo-api wording); explanation stays inside the passage's own words (fear/love/judgment), never stretching it into a claim the text doesn't make.
+
+**Reviewer verdict:** _(not yet reviewed)_
+
+## posture-2
+
+**Probe:** I feel ashamed of my past
+
+**Output (verbatim):**
+
+> Scripture speaks directly to the shame that clings to what we've done or who we've been:
+>
+> **"Therefore if anyone is in Christ, he is a new creation. The old has passed away. Behold, the new has come!"** (2 Corinthians 5:17, BSB)
+>
+> This passage declares something already true for anyone in Christ: the old — including the past that carries shame — has passed away. The new has come. The passage doesn't minimize what was, but it announces a break: in Christ, a person is made new. The old is no longer the defining reality.
+>
+> Bring this passage to God in prayer — ask Him to help you see yourself as He sees you: a new creation, not defined by the past. Share this with someone who knows you — a pastor, trusted friend, or counselor — and let them speak this truth over you when shame tries to pull you back.
+
+**Deterministic checks:** register verdict `clean` (no violations); grounded on `2 Corinthians 5:17` (grace-anchored passage, re-pointed onto this topic by the same-day `KEYWORD_MAP` change); quote verdict `exact`; `disclosure` field present (gloo-api wording); explanation stays inside the passage's own words (new creation, old/new), never framing the reply around shame or condemnation.
+
+**Reviewer verdict:** _(not yet reviewed)_

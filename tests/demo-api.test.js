@@ -212,6 +212,19 @@ test('POST /api/encourage degrades gracefully to stub mode with no Gloo credenti
   assert.equal(body.groundedOn.reference, 'Philippians 4:6-7');
 });
 
+test('POST /api/encourage forwards groundedReply\'s disclosure field verbatim, unfiltered (stub mode)', async () => {
+  _resetForTests();
+  assert.equal(process.env.GLOO_CLIENT_ID, undefined, 'test must run keyless to prove the stub disclosure');
+  const res = makeRes();
+  await encourageHandler(makeReq({ method: 'POST', body: { message: "I'm anxious about my future" }, ip: '40.0.0.4' }), res);
+  assert.equal(res.statusCode, 200);
+  const body = json(res);
+  assert.equal(
+    body.disclosure,
+    'This reply is a deterministic offline stub (no AI generation). Only the quoted passage is canonical Scripture text.'
+  );
+});
+
 test('GET /api/encourage is 405', async () => {
   _resetForTests();
   const res = makeRes();

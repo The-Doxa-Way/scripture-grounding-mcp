@@ -165,7 +165,9 @@ paths:
         AI Studio if server credentials are configured — otherwise returns a
         deterministic, no-network "grounding demo" stub reply. The response's
         `source` field always says which mode served the reply
-        ("gloo-api" | "stub"), never presenting one as the other.
+        ("gloo-api" | "stub"), never presenting one as the other. The
+        response's `disclosure` field is always present too, and MUST be
+        surfaced to the user alongside the reply (see gpt-instructions.md).
       requestBody:
         required: true
         content:
@@ -193,6 +195,15 @@ paths:
                   source:
                     type: string
                     enum: [gloo-api, stub]
+                  disclosure:
+                    type: string
+                    description: >
+                      Always present. Discloses which mode generated the reply: live mode
+                      names Gloo AI Studio's model and its own opaque alignment layer as the
+                      source of the generated commentary; stub mode states plainly that no AI
+                      generation occurred. Either way, only the quoted passage is canonical
+                      Scripture text — never mistake the surrounding commentary for
+                      Doxa-authored text or for Scripture itself.
                   groundedOn:
                     type: object
                     nullable: true

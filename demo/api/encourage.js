@@ -8,7 +8,9 @@
  * failing), it falls back automatically to a deterministic, no-network stub
  * — this route always degrades gracefully to a "grounding demo"
  * (retrieval + template) rather than erroring, and reports which mode served
- * the reply via the `source` field ("gloo-api" | "stub").
+ * the reply via the `source` field ("gloo-api" | "stub"). groundedReply()'s
+ * result (including its always-present `disclosure` field — see
+ * src/grounded-reply.js) is forwarded verbatim, unfiltered.
  */
 import { groundedReply } from '../../src/grounded-reply.js';
 import { createGlooClient } from '../../src/gloo-client.js';

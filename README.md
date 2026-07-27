@@ -49,7 +49,7 @@ Five MCP tools implement this:
 | `get_passage` | Retrieve canonical text for a reference (e.g. `"John 3:16-17"`) | YouVersion Platform API | Committed BSB fixture corpus |
 | `verse_of_the_day` | Retrieve today's Verse of the Day | YouVersion Platform API (`/verse_of_the_days/{day}`) | Deterministic fixture-set rotation, clearly labeled as fixture-mode |
 | `verify_quote` | **The core tool.** Given a quote + claimed reference, fetch canonical text and classify: `exact` / `minor_variance` / `misquote` / `misattribution` / `different_translation` / `not_found`, with a word-level diff and similarity score. `different_translation` fires when a quote misses the requested translation but is a close (≥0.95) match for another public-domain translation this project ships locally (WEB, KJV — see "Multi-version detection" below) — every call also reports `closestTranslation`/`similarityToClosest` regardless of verdict | Same as `get_passage` | Same as `get_passage` |
-| `grounded_reply` | Demonstrates the full pattern: retrieve a relevant passage for a topic, then generate a reply constrained to quote only that text | Gloo AI Studio (`/ai/v2/chat/completions`) | Deterministic stub reply (no network call) |
+| `grounded_reply` | Demonstrates the full pattern: retrieve a relevant passage for a topic, then generate a reply constrained to quote only that text. Every reply carries an always-present `disclosure` field naming Gloo AI Studio's model and its own opaque alignment layer as the source of the generated commentary, distinct from the quoted passage | Gloo AI Studio (`/ai/v2/chat/completions`) | Deterministic stub reply (no network call), `disclosure` field says so explicitly |
 | `verify_register` | **The second gated pillar.** Checks any AI-generated text for register violations — first-person language, reassurance-empathy phrasing, companion/always-here claims, personhood/feeling claims — via a deterministic rule table, not a model call | None (pure function + fixture corpus) | Always keyless |
 
 `verify_quote` is the load-bearing tool for accuracy. It never asserts a quote
@@ -295,6 +295,17 @@ drift away from:
    deterministically strip the offending sentences (never touching the
    quoted passage) as a last resort. Which path ran is reported honestly in
    the response's `registerGuard` field — never silently absorbed.
+5. **Disclosure, not just register (founder directive, 2026-07-27):** every
+   `grounded_reply` response also carries an always-present `disclosure`
+   field, keyed on which mode actually generated the text — live Gloo AI
+   Studio generation is disclaimed as passing through Gloo's own model and
+   its own opaque alignment layer, constrained only by this server's
+   grounding/register rules; stub mode is disclaimed as a deterministic
+   offline stub with no AI generation at all. Either way, only the quoted
+   passage is canonical Scripture text — a reader must never mistake the
+   generated commentary for Doxa-authored text or for Scripture itself. The
+   ChatGPT custom GPT (`integrations/chatgpt/`) is instructed to always
+   surface this string verbatim.
 
 **Lexical-heuristics caveat, stated plainly (same honesty standard as
 `verify_quote`):** these are deterministic regex matches, not semantic
@@ -302,6 +313,37 @@ understanding of the reply. A reply can satisfy every rule while still
 reading oddly, or trip a rule while phrasing something safely. This is a
 floor, not a ceiling — see `evals/results/RESULTS-<date>.md`'s
 default-register section and `docs/writeup.md` for the measured before/after.
+
+### Interpretive posture (declared)
+
+`grounded_reply`'s system prompt (`src/grounded-reply.js`'s
+`buildGroundedSystemPrompt()`) also carries a declared, visible interpretive
+lean, verbatim:
+
+> Interpretive posture (declared, not hidden): where a passage genuinely
+> admits more than one faithful emphasis, lean toward grace — believers are
+> not under law but under grace (Romans 6:14); perfect love casts out fear
+> (1 John 4:18); read every passage in the light of Christ, in whom the
+> Father himself is fully seen (John 14:9). This is a declared lens, not a
+> license to stretch: never make a passage say more than its own words say,
+> and never frame a reply around shame or condemnation.
+
+Same honesty standard as the disclosure and the register guard above: an
+interpretive lens is present in every reply whether or not it's named — the
+choice here is to declare it in the open prompt rather than let it sit
+invisible. Deployers can read the exact wording above (it's not paraphrased
+here) and change it in their own fork; nothing about it is hidden or
+baked into a black-box weight. Precedence when rules pull against each
+other is explicit in the same prompt block: the crisis-safety rule always
+wins first, then the register rules, then the grounding rule (quote only
+the supplied passage, verbatim), and only last this posture — it never
+overrides safety, register, or a passage's own wording. The retrieval
+keyword map (`KEYWORD_MAP` in the same file) was re-pointed the same day so
+fear/shame/guilt/failure topics resolve to whichever already-fixtured
+passage carries the clearest grace emphasis (1 John 4:18, 2 Corinthians
+5:17, Romans 8:28-39, Ephesians 2:8-9, Philippians 4:6-7) rather than the
+first thematically-adjacent match — no new fixtures were added; the
+34-passage corpus stays frozen.
 
 ## Honest limitations
 

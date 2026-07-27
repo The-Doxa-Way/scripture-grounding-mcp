@@ -495,12 +495,16 @@
           ${escapeHtml(body.groundedOn.text)}
         </div>`;
     }
+    const disclosure = body.disclosure
+      ? `<div class="reason">${escapeHtml(body.disclosure)}</div>`
+      : '';
     container.innerHTML = '';
     container.appendChild(el(`
       <div>
         <span class="badge ${body.source}">${escapeHtml(sourceLabel)}</span>
         <div style="white-space:pre-wrap; margin-top:0.3rem;">${escapeHtml(body.reply || body.error || '')}</div>
         ${grounded}
+        ${disclosure}
       </div>
     `));
   }
