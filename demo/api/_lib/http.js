@@ -55,6 +55,16 @@ export function withGate(handler, opts = {}) {
     try {
       await handler(req, res);
     } catch (err) {
+      // Vercel's Node.js runtime lazily parses `req.body` and throws on
+      // malformed JSON the first time a handler accesses it (documented at
+      // vercel.com/docs/functions/runtimes/node-js#request-body) — that
+      // throw lands here, not in the handler's own validation, so it must be
+      // classified as a client error (400) rather than falling through to
+      // the generic 500 below.
+      if (/invalid json/i.test(err?.message ?? '')) {
+        sendJson(res, 400, { error: 'Malformed JSON in request body.' });
+        return;
+      }
       sendJson(res, 500, { error: 'Internal error', detail: err.message });
     }
   };

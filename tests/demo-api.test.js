@@ -92,6 +92,22 @@ test('withGate turns a thrown handler error into a 500 instead of crashing', asy
   assert.match(json(res).error, /internal error/i);
 });
 
+test('withGate turns a malformed-JSON body error into a clean 400, not a 500', async () => {
+  // Regression: Vercel's Node.js runtime throws an "Invalid JSON" error the
+  // first time a handler accesses req.body for a request whose JSON body
+  // didn't parse. Before this fix, withGate's catch-all always answered 500
+  // regardless of cause — a malformed request from a caller was reported as
+  // an internal server error, and every route shares this same wrapper.
+  _resetForTests();
+  const gated = withGate(async () => {
+    throw new Error('Invalid JSON');
+  });
+  const res = makeRes();
+  await gated(makeReq({ ip: '10.0.0.4' }), res);
+  assert.equal(res.statusCode, 400);
+  assert.match(json(res).error, /malformed json/i);
+});
+
 // --- passage.js --------------------------------------------------------------
 
 test('GET /api/passage returns fixture text for a known reference', async () => {
