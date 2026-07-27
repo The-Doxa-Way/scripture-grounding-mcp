@@ -2,7 +2,7 @@
 
 **An open MCP server that makes any AI assistant quote Scripture accurately — built on the YouVersion Platform and Gloo AI Studio.**
 
-*(Kaggle writeup draft — target ≤500 words. Benchmark numbers marked `[BM:*]` are filled from `benchmark/results/` before submission; nothing ships with a placeholder.)*
+*(Kaggle writeup draft — target ≤500 words. Benchmark numbers below are filled from `benchmark/results/RESULTS.md` (real run, 2026-07-27, Gloo AI Studio auto_routing, 34-passage BSB corpus) — nothing ships with a placeholder.)*
 
 ## The frontier nobody named
 
@@ -22,7 +22,7 @@ Works out of the box with no keys at all on the public-domain Berean Standard Bi
 
 ## Measured, not solved
 
-We benchmarked the same model with and without grounding across [BM:N] passages spanning narrative, poetry, prophecy, and epistles: exact-quote rate [BM:ungrounded]% ungrounded vs [BM:grounded]% grounded; misattribution [BM:misattr-un]% vs [BM:misattr-gr]%. The full methodology, corpus, and runner are in the repo and the attached notebook — reproducible with free challenge keys.
+We benchmarked the same Gloo AI Studio call with and without grounding across 34 passages spanning narrative, poetry, prophecy, gospel, and epistles: exact-quote rate 65% ungrounded vs 100% grounded (with grounded+verify's auto-correction path also at 100%, since this run's grounded outputs never needed correcting); misattribution 0% in both conditions on this bounded corpus. The full methodology, corpus, and runner are in the repo — reproducible with free challenge keys.
 
 Named limitations, because trust is the product: cross-chapter ranges are unimplemented; misattribution detection searches a bounded corpus; grounded generation can still err in the words *around* a quote. Grounding makes remaining errors detectable rather than plausible. This problem is not solved; it is now measurable and materially smaller.
 

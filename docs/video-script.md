@@ -47,8 +47,8 @@ CAPTION: Canonical text from the YouVersion Platform. Values-aligned generation 
 *Screen: benchmark bar chart animating: ungrounded vs grounded exact-quote rate;
 then the limitations list, plainly shown.*
 
-CAPTION: Same model, [BM:N] passages — narrative, poetry, prophecy, epistles.
-CAPTION: Exact quotes: [BM:ungrounded]% from memory → [BM:grounded]% grounded.
+CAPTION: Same model, 34 passages — narrative, poetry, prophecy, gospel, epistles.
+CAPTION: Exact quotes: 65% from memory → 100% grounded.
 CAPTION: Not solved. Measured, reproducible, and materially smaller — with the failure modes named in the repo.
 
 ## 2:20–3:00 — The frontier
@@ -69,7 +69,7 @@ CAPTION: Scripture, present where people already are — and word-for-word true.
 ---
 
 ## Shot list / assets needed
-- [ ] Screen rec: ungrounded misquote (pick the worst real example from the benchmark run — authentic, not staged)
+- [ ] Screen rec: ungrounded misquote (pick the worst real example from the benchmark run — authentic, not staged; see `benchmark/results/RESULTS.md`'s three worst-ungrounded-examples section, e.g. the Psalm 46:1-3 or 1 Corinthians 13:4-7 misquotes, or the Hebrews 13:5 refusal)
 - [ ] Screen rec: the three tool demos (single continuous session where possible)
 - [ ] Benchmark chart animation (render from benchmark/results/ with a small script — no hand-drawn numbers)
 - [ ] IDE + custom GPT + Claude Desktop b-roll (each ≥5s, real)

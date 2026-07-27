@@ -49,13 +49,15 @@ const PASSAGES = [
   'Psalm 91:1-2',
   'Psalm 121:1-2',
   'Proverbs 3:5-6',
-  // prophecy
+  'Lamentations 3:22-23',
+  // prophecy (apocalyptic, e.g. Revelation, is grouped under prophecy for the
+  // benchmark's 5-genre taxonomy — see benchmark/METHODOLOGY.md)
   'Isaiah 40:28-31',
   'Isaiah 41:10',
   'Isaiah 53:4-6',
   'Jeremiah 29:11',
-  'Lamentations 3:22-23',
   'Micah 6:8',
+  'Revelation 21:1-4',
   // gospel
   'Matthew 5:3-10',
   'Matthew 6:31-34',
@@ -79,9 +81,51 @@ const PASSAGES = [
   'James 1:2-4',
   '1 Peter 5:6-7',
   '1 John 4:18',
-  // apocalyptic
-  'Revelation 21:1-4',
 ];
+
+/**
+ * Genre tag used by benchmark/runner.js's per-genre breakdown. Five buckets:
+ * narrative, poetry (wisdom literature), prophecy (including apocalyptic),
+ * gospel, epistle. Every entry in PASSAGES must have a mapping here — build
+ * fails loud (see buildBsbFixture) if one is missing, rather than shipping a
+ * fixture with no genre.
+ */
+const GENRE_BY_REFERENCE = {
+  'Genesis 1:1-3': 'narrative',
+  'Psalm 23:1-6': 'poetry',
+  'Psalm 46:1-3': 'poetry',
+  'Psalm 91:1-2': 'poetry',
+  'Psalm 121:1-2': 'poetry',
+  'Proverbs 3:5-6': 'poetry',
+  'Lamentations 3:22-23': 'poetry',
+  'Isaiah 40:28-31': 'prophecy',
+  'Isaiah 41:10': 'prophecy',
+  'Isaiah 53:4-6': 'prophecy',
+  'Jeremiah 29:11': 'prophecy',
+  'Micah 6:8': 'prophecy',
+  'Revelation 21:1-4': 'prophecy',
+  'Matthew 5:3-10': 'gospel',
+  'Matthew 6:31-34': 'gospel',
+  'Matthew 11:28-30': 'gospel',
+  'Mark 12:30-31': 'gospel',
+  'John 3:16-17': 'gospel',
+  'John 14:6': 'gospel',
+  'John 14:27': 'gospel',
+  'John 16:33': 'gospel',
+  'Romans 8:28-39': 'epistle',
+  'Romans 12:2': 'epistle',
+  '1 Corinthians 13:4-7': 'epistle',
+  '2 Corinthians 5:17': 'epistle',
+  'Galatians 5:22-23': 'epistle',
+  'Ephesians 2:8-9': 'epistle',
+  'Philippians 4:6-7': 'epistle',
+  'Philippians 4:13': 'epistle',
+  'Hebrews 11:1': 'epistle',
+  'Hebrews 13:5': 'epistle',
+  'James 1:2-4': 'epistle',
+  '1 Peter 5:6-7': 'epistle',
+  '1 John 4:18': 'epistle',
+};
 
 function slugify(reference) {
   return reference
@@ -131,6 +175,8 @@ async function fetchBsbVerseMap() {
 
 function buildBsbFixture(reference, verseMap, sourceUrl) {
   const { book, chapter, verseStart, verseEnd } = parseReference(reference);
+  const genre = GENRE_BY_REFERENCE[reference];
+  if (!genre) throw new Error(`No genre mapping for "${reference}" — add one to GENRE_BY_REFERENCE.`);
   const parts = [];
   for (let v = verseStart; v <= verseEnd; v++) {
     const key = `${book} ${chapter}:${v}`;
@@ -141,6 +187,7 @@ function buildBsbFixture(reference, verseMap, sourceUrl) {
   return {
     reference,
     translation: 'BSB (Berean Standard Bible, public domain)',
+    genre,
     source: sourceUrl,
     fetchedAt: new Date().toISOString(),
     text: parts.join(' '),

@@ -54,7 +54,7 @@ a canonical source, with a transparent verdict and score.
 git clone https://github.com/The-Doxa-Way/scripture-grounding-mcp.git
 cd scripture-grounding-mcp
 npm install
-npm test              # 53 tests, all fixture/stub-mode, zero external calls
+npm test              # 70 tests, all fixture/stub-mode, zero external calls
 npm start              # runs the MCP server over stdio
 ```
 
@@ -202,13 +202,16 @@ service. Specifically:
 npm test
 ```
 
-53 tests (`node --test`), all deterministic, all offline (fixture/stub mode
+70 tests (`node --test`), all deterministic, all offline (fixture/stub mode
 — no network calls, no API keys required to run the suite). Covers:
 normalization robustness (smart quotes, inline verse numbers, mixed case),
 word-diff correctness, all five `verify_quote` verdicts (including a named
 KJV-vs-BSB wording test and a misattribution-outside-the-corpus case),
-USFM reference conversion, and both API clients' live-call/fallback/error
-paths via injected fake `fetch` implementations.
+USFM reference conversion, both API clients' live-call/fallback/error paths
+via injected fake `fetch` implementations, and the benchmark harness's pure
+scoring-aggregation and resume-from-raw-cache logic (`benchmark/lib/`) via
+injected fake filesystem implementations — the real benchmark run itself
+(`npm run benchmark`) is a separate, explicitly-invoked live-API path.
 
 ## License
 

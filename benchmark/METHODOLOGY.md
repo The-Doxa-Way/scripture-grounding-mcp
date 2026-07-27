@@ -1,11 +1,12 @@
 # Benchmark methodology
 
-**Status: measured, not solved.** This document specifies a reproducible way to
-measure how often an LLM misquotes Scripture, and how much a retrieve-then-verify
-pipeline (this MCP server) reduces that error — not a claim that either the
-problem or the fix is complete. Numbers below are placeholders for a
-methodology; running `benchmark/runner.js` against real model API keys
-produces the actual numbers, which belong in a results file, not in this doc.
+**Status: measured, not solved.** This document specifies the reproducible way
+this repo measures how often an LLM misquotes Scripture, and how much a
+retrieve-then-verify pipeline (this MCP server) reduces that error — not a
+claim that either the problem or the fix is complete. The actual numbers from
+running this methodology live in `benchmark/results/RESULTS.md` and
+`benchmark/results/results-<date>.json`, never in this doc — this file
+specifies *how* the numbers were produced, so the run is reproducible.
 
 ## Motivation
 
@@ -22,17 +23,25 @@ reproducible rather than to adjudicate that range.
 
 ### Corpus
 
-`fixtures/bsb/*.json` — 34 passages from the Berean Standard Bible (BSB,
-public domain), chosen for genre coverage:
+`fixtures/bsb/*.json` — all 34 passages from the Berean Standard Bible (BSB,
+public domain), each tagged with a `genre` field (added to fixture metadata
+for this benchmark):
 
-| Genre | Example passages |
-|---|---|
-| Narrative | Genesis 1:1-3 |
-| Poetry / wisdom | Psalm 23, Psalm 46, Proverbs 3:5-6 |
-| Prophecy | Isaiah 53:4-6, Jeremiah 29:11, Micah 6:8 |
-| Gospel | Matthew 5:3-10, John 3:16-17, John 14:6 |
-| Epistle | Romans 8:28-39, Philippians 4:6-7, Hebrews 11:1 |
-| Apocalyptic | Revelation 21:1-4 |
+| Genre | Count | Example passages |
+|---|---|---|
+| Narrative | 1 | Genesis 1:1-3 |
+| Poetry / wisdom | 6 | Psalm 23, Psalm 46, Proverbs 3:5-6, Lamentations 3:22-23 |
+| Prophecy | 6 | Isaiah 53:4-6, Jeremiah 29:11, Micah 6:8, Revelation 21:1-4 |
+| Gospel | 8 | Matthew 5:3-10, John 3:16-17, John 14:6 |
+| Epistle | 13 | Romans 8:28-39, Philippians 4:6-7, Hebrews 11:1 |
+
+Five genre buckets, not six: apocalyptic literature (Revelation 21:1-4) is
+grouped under **prophecy** for this benchmark's taxonomy rather than kept as
+a seventh/sixth bucket of its own, since it's a single passage and a
+subtype of prophetic literature — a simplification, named here rather than
+left implicit. `scripts/build-fixtures.js`'s `GENRE_BY_REFERENCE` map is the
+source of truth and fails loud (throws) if a passage is ever added without a
+genre assigned.
 
 BSB is the ground-truth translation for this benchmark because it is fully
 public domain (dedicated 2023) and because it is a single fixed baseline
@@ -43,32 +52,94 @@ deployed app, the YouVersion Platform API supplies whichever of its 2,000+
 licensed translations the end user has chosen; the benchmark's fixed BSB
 baseline is a measurement-methodology choice, not a product default.)
 
+### Same model, every condition
+
+All three conditions are run against the same Gloo AI Studio call
+(`auto_routing: true` — Gloo's own model router, not a hardcoded model id),
+so the comparison is retrieval/verification strategy holding the model
+constant, not a model-vs-model comparison. Gloo's response reports which
+underlying model actually served the request (`model` field on the chat
+completion); the exact model(s) observed during the real run are recorded in
+`benchmark/results/results-<date>.json`'s `modelsObserved` and in
+`RESULTS.md` — `auto_routing` means this is not guaranteed to be a single
+fixed model across all 34×2 calls, so it's reported rather than assumed.
+
 ### Conditions
 
-1. **Ungrounded** — prompt a model directly: *"Quote \<reference\> exactly."*
-   Score its raw output against the BSB fixture text. This simulates the
-   failure mode: the model answering from parametric memory.
-2. **Grounded** — retrieve the BSB fixture text via `get_passage`, then ask
-   the model to quote it back (an easier task — this measures the retrieval
-   plumbing and prompt-following, i.e. a ceiling/sanity check).
-3. **Grounded + verify_quote** — take the model's own free-form answer
-   (which may cite Scripture unprompted) and run every claimed quote through
-   `verify_quote` before it reaches a user. This is the condition that
-   matters for the actual product: it doesn't make the model quote
-   correctly, it catches the model when it doesn't.
+1. **Ungrounded** — the model is asked to quote a reference from memory, with
+   **no context supplied at all**. Exact prompts sent (from
+   `benchmark/runner.js`):
+   - System: *"You are asked to quote a Bible verse from memory. Quote it
+     exactly as it appears in the Berean Standard Bible (BSB) translation.
+     Output ONLY the verse text — no reference, no chapter/verse numbers, no
+     commentary, no explanation."*
+   - User: *"Quote \<reference\> exactly from the Berean Standard Bible."*
 
-### Metrics
+   This simulates the failure mode the whole project targets: the model
+   answering from parametric memory, with nothing to check it against.
 
-- **Exact-match rate** — fraction of quotes classified `exact` by
-  `verify_quote`.
-- **Word error rate (WER)** — `1 - similarityScore` from `verify_quote`,
-  averaged across quotes; a continuous companion to the categorical verdict.
-- **Misattribution rate** — fraction of quotes classified `misattribution`
-  (fluent, real-sounding Scripture wording pinned to the wrong reference —
-  the failure mode that is hardest for a human to catch by eye).
-- **Not-found / refusal rate** — fraction where the model declines to answer
-  or its answer resembles nothing in the corpus; tracked separately so a low
-  misquote rate can't hide a model that's simply dodging the question.
+2. **Grounded** — the pipeline retrieves canonical BSB text first (via the
+   YouVersion Platform API with fixture fallback — the same path
+   `get_passage` uses), then instructs the model to present that exact text
+   back. Exact prompts:
+   - System: *"Here is the canonical Berean Standard Bible (BSB) text for
+     \<reference\>:\n\n"\<canonical text\>"\n\nPresent this passage exactly
+     as given above, with no changes whatsoever. Output ONLY that exact text —
+     no additions, no paraphrasing, no commentary, no reference citation."*
+   - User: *"Give me the exact text of \<reference\>."*
+
+   **This condition measures pipeline fidelity and prompt-following, not
+   model memory.** A high exact-rate here says "when handed the right text
+   and told to repeat it, the model does" — it is a ceiling/sanity check on
+   the retrieval + instruction-following plumbing, not evidence the model
+   knows Scripture. Anything below ~100% here is itself a finding (the model
+   drifting from supplied text even when told not to).
+
+3. **Grounded + verify** — condition 2's raw model output is passed through
+   `verify_quote` (the actual `src/verify-quote.js`, unmodified). If the
+   verdict is anything other than `exact` or `minor_variance`, the output is
+   auto-corrected: the canonical text is substituted for what the model said,
+   **before** it would reach a user. This condition spends **zero additional
+   model calls** — it's derived entirely from condition 2's cached raw
+   output, since verify_quote's classification is deterministic and local.
+   This is the actual product path (`get_passage` → generate → `verify_quote`
+   → correct-or-flag) and the number that matters most: not "does the model
+   quote correctly" but "does the user ever see an uncorrected wrong quote."
+
+### Scoring
+
+Every raw output, from every condition, is scored the same way: run through
+`verifyQuote({ quote, claimedReference })` from `src/verify-quote.js`
+**unmodified**, using its default canonical lookup (the BSB fixture corpus
+directly — not the YouVersion API), so all three conditions are measured
+against the identical ruler. (Condition 2's *prompt* is built from a
+YouVersion-API-first retrieval; its *scoring* still goes through the same
+fixture-based `verify_quote` as every other condition. In practice these
+agree — BSB text confirmed identical between the fixture corpus and a live
+YouVersion API call during this benchmark's development — but scoring is
+intentionally pinned to one source so a fixture/API drift can never make
+conditions incomparable.)
+
+Reported per condition, and per genre within each condition:
+
+- **Exact rate** — fraction classified `exact`.
+- **Minor-variance rate** — fraction classified `minor_variance` (similarity
+  > 0.95, not identical).
+- **Misquote rate** — fraction classified `misquote`.
+- **Misattribution rate** — fraction classified `misattribution` (fluent,
+  real-sounding wording pinned to the wrong reference — see below).
+- **Not-found rate** — fraction classified `not_found` (refusal, empty
+  response, or output that resembles nothing in the corpus).
+- **Mean similarity** — mean of `verify_quote`'s continuous `similarityScore`
+  across all items with a numeric score (a continuous companion to the
+  categorical verdict; `not_found` items with no comparable text are
+  excluded from this mean but still counted in `notFoundRate`, so a low
+  misquote rate can never silently hide behind exclusion).
+
+Plus, from the ungrounded condition specifically: the three worst-scoring
+examples, rendered verbatim with their word-level diff against canonical
+text — the same failure mode a human would need to catch by eye, is caught
+here by a deterministic diff instead.
 
 ### Failure modes (named, not averaged away)
 
@@ -83,11 +154,17 @@ baseline is a measurement-methodology choice, not a product default.)
   real book/chapter, which the corpus can't validate at all beyond
   `not_found`; this benchmark cannot fully distinguish fabrication from an
   obscure-but-real passage simply missing from a 34-passage fixture corpus.
-  A production system needs the full YouVersion corpus, not just fixtures,
+  **Misattribution search is fixture-corpus-bounded**: `verify_quote` can
+  only detect misattribution to one of these 34 passages — a quote that
+  misattributes to a real verse *outside* the fixture corpus is reported as
+  `not_found`, indistinguishable from pure fabrication at this scale. A
+  production system needs the full YouVersion corpus, not just fixtures,
   before treating `not_found` as proof of fabrication.
 - **Refusal masquerading as safety** — a model that declines to quote at all
   scores well on error rate while providing zero value; tracked via the
-  not-found/refusal metric above so it isn't rewarded.
+  not-found/refusal metric above so it isn't rewarded. `worstExamples`
+  deliberately treats a null/missing similarity score (refusal) as *worse*
+  than any numeric misquote score, so refusals surface rather than hide.
 
 ### What this benchmark does NOT claim
 
@@ -98,19 +175,41 @@ baseline is a measurement-methodology choice, not a product default.)
   all ~31,000 Bible verses — the fixture corpus is intentionally small and
   reproducible for this submission; scaling the corpus is listed as future
   work, not assumed.
+- It does not claim the grounded condition (2) measures whether the model
+  "knows" Scripture — it measures whether the pipeline's retrieval and the
+  model's instruction-following combine to reproduce supplied text exactly.
+  The grounded+verify condition (3) is the one that reflects real product
+  behavior end to end.
 - It does not claim grounding "solves" hallucination — it converts an
   invisible failure (wrong Scripture stated with total confidence) into a
-  measured, visible one (a `verdict` your application can act on:
-  block, flag, or correct before the user sees it).
+  measured, visible one (a `verdict` your application can act on: block,
+  flag, or correct before the user sees it).
 
 ## Running it
 
 ```bash
-node benchmark/runner.js --model <caller-name> --condition ungrounded|grounded|grounded-verify
+npm run benchmark
+# = node benchmark/runner.js --model gloo --condition all
 ```
 
-See `benchmark/runner.js` for the pluggable model-caller interface. Model
-callers are env-keyed (e.g. `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`,
-`GLOO_API_KEY`) and stubbed by default so the harness runs with zero
-external calls until real keys are supplied — consistent with the rest of
-this repo's "runs today in fixture/stub mode" design.
+Runs all three conditions sequentially against the live Gloo AI Studio API
+(reading `GLOO_CLIENT_ID`/`GLOO_CLIENT_SECRET` from
+`~/.config/doxa/gloo-api.env` via `src/env.js`, never committed/logged),
+34 calls for ungrounded + 34 for grounded (condition 3 is derived, zero
+extra calls — 68 live calls total for a full run). Calls are sequential with
+a 350ms delay between them and retried once (after a 2s backoff) on a
+429/5xx before falling back. Every raw model response is cached to
+`benchmark/results/raw-<condition>.jsonl` as it's produced, so re-running
+after an interruption resumes from cache instead of re-spending calls.
+
+Single-condition / stub-mode runs for development:
+
+```bash
+node benchmark/runner.js --model stub --condition ungrounded   # zero network, exercises the harness
+node benchmark/runner.js --model gloo --condition grounded     # one condition only
+```
+
+See `benchmark/runner.js` for the pluggable model-caller interface
+(`quoteFromMemory` / `quoteGrounded`) and `benchmark/lib/` for the pure
+scoring-aggregation and resume-from-cache logic (unit-tested in `tests/`,
+zero network).
