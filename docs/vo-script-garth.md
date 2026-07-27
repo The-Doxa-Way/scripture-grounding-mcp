@@ -1,45 +1,45 @@
-# Voiceover script — Garth records, target ~2:20–2:30 spoken (v2, shortened)
+# Voiceover script v3 — Garth records, target ~1:50–2:00 spoken
 
-**How to record:** QuickTime Player → File → New Audio Recording (or Voice
-Memos). Quiet room, read naturally — no need to rush. One continuous take;
-if you flub a line, pause and read that line again, I cut around it. Save
-into `media/` in this repo (any filename) or tell Claude where it landed.
+**Changes from v2 (after v1 video review):** opening verse now matches the
+on-screen demo (Psalm 46:1-3); ~1 minute shorter; screen-carried lists (games,
+wearables…) removed from VO; new register-guard line; CTA kept for emphasis.
 
-Numbers written as words. Em-dashes are breath pauses.
+**How to record:** QuickTime / Voice Memos, quiet room, natural pace, one take,
+repeat any flubbed line mid-take. Save into `media/` and tell Claude.
 
 ---
 
-Ask an AI assistant to quote Isaiah fifty-three, verse five — word for word.
-It answers instantly, confidently — and gets it wrong. Not badly wrong.
-Almost right. Which is worse.
+Ask an AI assistant to quote Psalm forty-six, verses one to three — exactly.
+It answers instantly, confidently — and gets it wrong. Almost right. Which is
+worse.
 
-The founder of YouVersion — the Bible app with a billion installs — says the
-best AI models misquote Scripture fifteen to sixty percent of the time. And
-Scripture is already inside our AI conversations, quoted from statistical
-memory. For Scripture, close isn't faithful.
+YouVersion's founder says the best AI models misquote Scripture fifteen to
+sixty percent of the time. And for Scripture, close isn't faithful.
 
-So we built the missing bridge. The Scripture Grounding MCP — an open-source
-server for the standard that connects tools to nearly every AI assistant:
-Claude, ChatGPT, Cursor. One rule: the model never quotes from memory.
+So we built the missing bridge — the Scripture Grounding MCP. Open source,
+and it plugs into nearly every AI assistant. One rule: the model never quotes
+from memory.
 
-Three tools. Get passage — canonical text, live from the YouVersion Platform.
-The Berean Standard Bible by default; two thousand translations with a free
-key. Verify quote — hand it any AI quotation, and it runs a word-level
-comparison against the canonical text — code, not another model grading its
-own homework — and returns the verdict, and the correction. Grounded reply —
-encouragement for a real moment, from Gloo AI Studio's values-aligned models,
-allowed to quote only the text it just retrieved.
+It retrieves canonical text, live, from the YouVersion Platform — the Berean
+Standard Bible by default, two thousand translations with a free key.
 
-We measured it. Same model, thirty-four passages, every genre. From memory:
-sixty-five percent exact. Grounded: one hundred percent. The methodology, the
-corpus, and every raw output are in the open repo — reproducible with the
-same free keys every participant gets. And the limitations are named right
-next to the results, because trust is the product. Not solved — measured, and
-materially smaller.
+It verifies any AI quotation against the canonical text, word by word — code,
+not another model grading its own homework — and returns the correction.
 
-We run this retrieve-first pattern in production at Doxa, our encouragement
-app. Opening the accuracy layer is our answer to the challenge YouVersion
-issued: Scripture, present where people already are — games, IDEs, wearables,
-every AI conversation on earth — word for word true.
+And when it encourages, it may quote only the text it just retrieved —
+generated with Gloo AI Studio's values-aligned models.
+
+One more guard, because accuracy isn't the only failure mode: no simulated
+empathy. A deterministic register guard keeps the tool a tool — it points to
+God, and to real people. It never pretends to be your friend.
+
+We measured it. Thirty-four passages. From memory: sixty-five percent exact.
+Grounded: one hundred percent. Everything is in the open repo — reproducible
+with the same free keys every participant gets. And the limitations are named
+right next to the results, because trust is the product.
+
+We run this pattern in production at Doxa, our encouragement app. This is our
+answer to the challenge YouVersion issued — Scripture, present where people
+already are. Word for word true.
 
 The bridge is built. It's open. Connect it.
