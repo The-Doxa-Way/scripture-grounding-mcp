@@ -1,0 +1,14 @@
+# Deps for notebook/scripture-grounding-benchmark.ipynb.
+# Installed + executed locally against Python 3.13 (see notebook/README.md for the
+# exact repro steps, including a macOS/Homebrew Python 3.14 caveat).
+# Kaggle's default Python notebook image already ships matplotlib/pandas/requests;
+# only `regex` is not preinstalled there and must be pip-installed in a setup cell.
+jupyter==1.1.1
+nbconvert==7.17.1
+nbformat==5.10.4
+nbclient==0.11.0
+ipykernel==7.3.0
+matplotlib==3.11.1
+pandas==3.0.5
+requests==2.34.2
+regex==2026.7.19

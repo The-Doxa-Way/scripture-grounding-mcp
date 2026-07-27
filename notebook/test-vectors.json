@@ -1,0 +1,122 @@
+[
+  {
+    "label": "exact quote against its correct reference",
+    "input": {
+      "quote": "I can do all things through Christ who gives me strength.",
+      "claimedReference": "Philippians 4:13"
+    },
+    "expected": {
+      "verdict": "exact",
+      "similarityScore": 1,
+      "correctReference": null
+    }
+  },
+  {
+    "label": "curly quotes + inline verse numbers + mixed case + extra whitespace (normalization robustness)",
+    "input": {
+      "quote": "“16 FOR   god so loved the world that He gave His one and only Son, that everyone who believes in Him shall not perish but have eternal life. 17 For God did not send His Son into the world to condemn   the world, but to save the world through Him.”",
+      "claimedReference": "John 3:16-17"
+    },
+    "expected": {
+      "verdict": "exact",
+      "similarityScore": 1,
+      "correctReference": null
+    }
+  },
+  {
+    "label": "one-word substitution (\"declares\" -> \"says\") lands just above 0.95: minor_variance",
+    "input": {
+      "quote": "For I know the plans I have for you, says the LORD, plans to prosper you and not to harm you, to give you a future and a hope.",
+      "claimedReference": "Jeremiah 29:11"
+    },
+    "expected": {
+      "verdict": "minor_variance",
+      "similarityScore": 0.9655,
+      "correctReference": null
+    }
+  },
+  {
+    "label": "KJV-style wording of Philippians 4:13 diverges enough from BSB: misquote (named translation-bleed case)",
+    "input": {
+      "quote": "I can do all things through Christ which strengtheneth me.",
+      "claimedReference": "Philippians 4:13"
+    },
+    "expected": {
+      "verdict": "misquote",
+      "similarityScore": 0.7619,
+      "correctReference": null
+    }
+  },
+  {
+    "label": "materially reworded paraphrase attributed to its real reference: misquote",
+    "input": {
+      "quote": "I know the good plans I have in store for you, so says the Lord, plans to bless you and not to hurt you, giving you great hope for tomorrow.",
+      "claimedReference": "Jeremiah 29:11"
+    },
+    "expected": {
+      "verdict": "misquote",
+      "similarityScore": 0.6441,
+      "correctReference": null
+    }
+  },
+  {
+    "label": "exact quote pinned to the wrong (but real, in-corpus) reference: misattribution",
+    "input": {
+      "quote": "For God so loved the world that He gave His one and only Son, that everyone who believes in Him shall not perish but have eternal life. For God did not send His Son into the world to condemn the world, but to save the world through Him.",
+      "claimedReference": "Psalm 23:1-6"
+    },
+    "expected": {
+      "verdict": "misattribution",
+      "similarityScore": 0.0952,
+      "correctReference": "John 3:16-17"
+    }
+  },
+  {
+    "label": "exact quote attributed to a reference outside the corpus: misattribution against best in-corpus match",
+    "input": {
+      "quote": "I can do all things through Christ who gives me strength.",
+      "claimedReference": "Zephaniah 3:99"
+    },
+    "expected": {
+      "verdict": "misattribution",
+      "similarityScore": null,
+      "correctReference": "Philippians 4:13"
+    }
+  },
+  {
+    "label": "unrelated/garbage quote against an in-corpus reference: not_found (fail-safe, no crash)",
+    "input": {
+      "quote": "purple elephants dance on tuesdays in the marketplace",
+      "claimedReference": "Philippians 4:13"
+    },
+    "expected": {
+      "verdict": "not_found",
+      "similarityScore": 0,
+      "correctReference": null
+    }
+  },
+  {
+    "label": "refusal-shaped text (real ungrounded benchmark output, Hebrews 13:5): not_found",
+    "input": {
+      "quote": "I'm here to help, but I can't respond to that request. If you're unsure why, try asking it another way — I'd love to assist however I can!",
+      "claimedReference": "Hebrews 13:5"
+    },
+    "expected": {
+      "verdict": "not_found",
+      "similarityScore": 0.0702,
+      "correctReference": null
+    }
+  },
+  {
+    "label": "real ungrounded benchmark output, Psalm 46:1-3 (dropped superscription + near-synonym swaps): misquote",
+    "input": {
+      "quote": "God is our refuge and strength, an ever-present help in trouble. Therefore we will not fear, though the earth is transformed and the mountains are moved into the heart of the sea, though their waters roar and foam and the mountains quake in the surge.",
+      "claimedReference": "Psalm 46:1-3"
+    },
+    "expected": {
+      "verdict": "misquote",
+      "similarityScore": 0.7963,
+      "correctReference": null
+    }
+  }
+]
