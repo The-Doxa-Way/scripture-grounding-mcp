@@ -24,16 +24,22 @@ test('buildGroundedSystemPrompt embeds the canonical text verbatim and requires 
   assert.match(prompt, /verbatim/);
 });
 
-test('buildGroundedSystemPrompt includes the declared interpretive-posture block and its precedence order', () => {
+test('buildGroundedSystemPrompt carries no declared interpretive posture/lens language', () => {
   const passage = findByReference('Philippians 4:13');
   const prompt = buildGroundedSystemPrompt(passage);
-  assert.match(prompt, /Interpretive posture \(declared, not hidden\)/);
-  assert.match(prompt, /Romans 6:14/);
-  assert.match(prompt, /1 John 4:18/);
-  assert.match(prompt, /John 14:9/);
-  assert.match(prompt, /never make a passage say more than its own words say/);
-  // Precedence order must be stated explicitly: crisis > register > grounding > posture.
-  assert.match(prompt, /crisis-safety rule always wins first, then the register rules above, then the grounding rule.*only last this interpretive posture/s);
+  assert.doesNotMatch(prompt, /Interpretive posture/i);
+  assert.doesNotMatch(prompt, /not under law/i);
+  assert.doesNotMatch(prompt, /perfect love casts out/i);
+  assert.doesNotMatch(prompt, /seen the Father/i);
+});
+
+test('buildGroundedSystemPrompt states the passage-governs grounding line, the no-shame rule, and crisis > register > grounding precedence', () => {
+  const passage = findByReference('Philippians 4:13');
+  const prompt = buildGroundedSystemPrompt(passage);
+  assert.match(prompt, /Explain only what the passage itself says/);
+  assert.match(prompt, /Never shame the person or frame a reply around condemnation/);
+  // Precedence order must be stated explicitly: crisis > register > grounding.
+  assert.match(prompt, /crisis-safety rule always wins first, then the register rules above.*then the grounding rule/s);
 });
 
 test('groundedReply in stub mode (no GLOO_API_KEY) returns a stub reply grounded on the matched passage, with the stub disclosure', async () => {

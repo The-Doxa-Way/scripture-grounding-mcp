@@ -314,36 +314,26 @@ reading oddly, or trip a rule while phrasing something safely. This is a
 floor, not a ceiling — see `evals/results/RESULTS-<date>.md`'s
 default-register section and `docs/writeup.md` for the measured before/after.
 
-### Interpretive posture (declared)
+### No declared interpretive posture (neutral by design)
 
-`grounded_reply`'s system prompt (`src/grounded-reply.js`'s
-`buildGroundedSystemPrompt()`) also carries a declared, visible interpretive
-lean, verbatim:
-
-> Interpretive posture (declared, not hidden): where a passage genuinely
-> admits more than one faithful emphasis, lean toward grace — believers are
-> not under law but under grace (Romans 6:14); perfect love casts out fear
-> (1 John 4:18); read every passage in the light of Christ, in whom the
-> Father himself is fully seen (John 14:9). This is a declared lens, not a
-> license to stretch: never make a passage say more than its own words say,
-> and never frame a reply around shame or condemnation.
-
-Same honesty standard as the disclosure and the register guard above: an
-interpretive lens is present in every reply whether or not it's named — the
-choice here is to declare it in the open prompt rather than let it sit
-invisible. Deployers can read the exact wording above (it's not paraphrased
-here) and change it in their own fork; nothing about it is hidden or
-baked into a black-box weight. Precedence when rules pull against each
-other is explicit in the same prompt block: the crisis-safety rule always
-wins first, then the register rules, then the grounding rule (quote only
-the supplied passage, verbatim), and only last this posture — it never
-overrides safety, register, or a passage's own wording. The retrieval
-keyword map (`KEYWORD_MAP` in the same file) was re-pointed the same day so
-fear/shame/guilt/failure topics resolve to whichever already-fixtured
-passage carries the clearest grace emphasis (1 John 4:18, 2 Corinthians
-5:17, Romans 8:28-39, Ephesians 2:8-9, Philippians 4:6-7) rather than the
-first thematically-adjacent match — no new fixtures were added; the
-34-passage corpus stays frozen.
+Founder decision, 2026-07-27: the open MCP carries no declared theological
+posture. `grounded_reply`'s system prompt (`src/grounded-reply.js`'s
+`buildGroundedSystemPrompt()`) constrains the model's explanation to what the
+passage itself says — no interpretive tradition, doctrinal lens, or
+theological framework is layered on top. The Gloo disclosure above still
+labels the generated commentary as AI-generated so a reader never mistakes it
+for Scripture itself; neutrality on interpretation and honesty about
+generation are separate concerns and both hold. A prior version of this
+prompt (commit `0e6d181`) declared a grace-leaning interpretive lens; that
+block has been removed. Its one pastoral-safety line — never shame the
+person or frame a reply around condemnation — was kept, folded into the
+register rules above, since that is a safety requirement, not a matter of
+interpretation. The retrieval keyword map (`KEYWORD_MAP` in the same file)
+re-points fear/shame/guilt/failure topics to whichever already-fixtured
+passage is the more directly on-topic match (1 John 4:18, 2 Corinthians
+5:17, Romans 8:28-39, Ephesians 2:8-9) rather than the first
+thematically-adjacent one — this is topical relevance, not doctrine; no new
+fixtures were added, and the 34-passage corpus stays frozen.
 
 ## Honest limitations
 
