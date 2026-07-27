@@ -6,9 +6,10 @@
  * against ground truth produced by the actual shipped Node code — proving
  * the Python port is faithful, not just "looks right."
  *
- * Covers all five verify_quote verdicts, plus normalization-robustness cases
- * (curly quotes, inline verse numbers, mixed case) and a named KJV-vs-BSB
- * wording case, mirroring tests/verify-quote.test.js.
+ * Covers all six verify_quote verdicts (including different_translation —
+ * src/alt-translations.js's closest-canon detection), plus normalization-
+ * robustness cases (curly quotes, inline verse numbers, mixed case) and a
+ * named KJV-vs-BSB wording case, mirroring tests/verify-quote.test.js.
  *
  * Run: node scripts/dump-test-vectors.js
  */
@@ -48,7 +49,7 @@ const cases = [
     },
   },
   {
-    label: 'KJV-style wording of Philippians 4:13 diverges enough from BSB: misquote (named translation-bleed case)',
+    label: 'verbatim KJV wording of Philippians 4:13, claimed as BSB: different_translation, not misquote',
     input: {
       quote: 'I can do all things through Christ which strengtheneth me.',
       claimedReference: 'Philippians 4:13',

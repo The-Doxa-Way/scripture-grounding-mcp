@@ -9,6 +9,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { wordDiff } from '../../src/diff.js';
 import { checkRegister } from '../../src/verify-register.js';
+import { ungroundedUserMessage } from '../../benchmark/runner.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '../..');
@@ -37,8 +38,14 @@ function extractRegisterQuoteParagraphs(doc, startMarker, stopMarker) {
 }
 
 const results = readJSON('benchmark/results/results-2026-07-27.json');
-const psalm46 = results.worstUngroundedExamples.find((e) => e.reference === 'Psalm 46:1-3');
+// Looked up from the full ungrounded item list, not `worstUngroundedExamples`
+// (superscription scoring correction, 2026-07-27): Psalm 46:1-3's similarity
+// rose enough once its BSB superscription stopped being scored as part of
+// the quoted passage that it fell out of the worst-3 — it's still a real,
+// named `misquote`, just no longer the single worst one, so it's fetched by
+// reference directly rather than assumed to be in the worst-examples list.
 const hebrews135 = results.worstUngroundedExamples.find((e) => e.reference === 'Hebrews 13:5');
+const psalm46 = results.conditions.ungrounded.items.find((e) => e.reference === 'Psalm 46:1-3');
 const john316 = readJSON('fixtures/bsb/john-3-16-17.json');
 // Register-hardening fix (founder-flagged 2026-07-27): the original capture
 // (grounded-reply-demo-2026-07-27.json) was the anthropomorphizing BEFORE
@@ -48,7 +55,10 @@ const john316 = readJSON('fixtures/bsb/john-3-16-17.json');
 const groundedDemo = readJSON('evals/results/grounded-reply-demo-2026-07-27-register-fix.json');
 
 if (!psalm46 || !hebrews135) {
-  throw new Error('Expected Psalm 46:1-3 and Hebrews 13:5 in worstUngroundedExamples — check results-2026-07-27.json');
+  throw new Error('Expected Psalm 46:1-3 (ungrounded items) and Hebrews 13:5 (worstUngroundedExamples) — check results-2026-07-27.json');
+}
+if (psalm46.verdict !== 'misquote') {
+  throw new Error(`Expected Psalm 46:1-3's ungrounded verdict to still be misquote (clip 01/05 script assumes this); got "${psalm46.verdict}" — pick a different example or update the clips.`);
 }
 
 // Clip 11 — the register-guard story (founder-flagged 2026-07-27).
@@ -106,14 +116,24 @@ const registerHighlights = [
 ];
 
 export const DATA = {
-  // Clip 01 / 05 — the real worst-misquote example (script explicitly names
+  // Clip 01 / 05 — a real named misquote example (script explicitly names
   // Psalm 46:1-3 as an acceptable pick; Isaiah 53:4-6's real ungrounded
   // output is only a minor_variance, similarity 0.974, not a misquote, so it
-  // does not fit the "wrong words" brief — Psalm 46:1-3 does, per
-  // benchmark/results/RESULTS.md's worst-examples section).
+  // does not fit the "wrong words" brief — Psalm 46:1-3 does). Superscription
+  // scoring correction (2026-07-27): Psalm 46's similarity rose once its BSB
+  // superscription stopped being scored as part of the quoted passage, so
+  // it's no longer the single WORST ungrounded example (see
+  // benchmark/results/RESULTS.md) — it's still a real, named `misquote`
+  // (asserted above), which is all this clip's script needs.
+  //
+  // typedPrompt is the benchmark's own real condition-A user message
+  // (`ungroundedUserMessage` from benchmark/runner.js, unmodified) — it names
+  // the BSB translation explicitly, so calling the on-screen output a
+  // misquote is honest (an unversioned "quote this exactly" prompt could be
+  // answered accurately from a different translation).
   misquote: {
     reference: 'Psalm 46:1-3',
-    typedPrompt: 'Quote Psalm 46:1-3 exactly.',
+    typedPrompt: ungroundedUserMessage('Psalm 46:1-3'),
     raw: psalm46.rawText,
     canonical: psalm46.canonicalText,
     verdict: psalm46.verdict,
@@ -174,7 +194,7 @@ export const DATA = {
   limitations: [
     '34 fixture passages, not the whole Bible — misattribution search only checks these 34.',
     'Word-level similarity, not semantic similarity — wording overlap, not meaning.',
-    'One default translation (BSB) — a different legitimate translation scores as a mismatch.',
+    'Detects, not just penalizes, translation mismatch — BSB/WEB/KJV compared locally; licensed translations need YouVersion’s sign-off.',
     'grounded_reply’s retrieval is a keyword map, not a real search engine.',
     'This measures. It does not solve.',
   ],

@@ -21,7 +21,7 @@ import { similarity } from './diff.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const FIXTURES_DIR = path.join(__dirname, '..', 'fixtures', 'bsb');
 
-/** @typedef {{reference: string, translation: string, source: string, fetchedAt: string, text: string}} Fixture */
+/** @typedef {{reference: string, translation: string, source: string, fetchedAt: string, text: string, superscription?: string}} Fixture */
 
 /** @type {Fixture[] | null} */
 let cache = null;

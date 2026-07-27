@@ -80,9 +80,13 @@ paths:
         The core grounding tool. Given a quote and the reference it is
         claimed to be from, fetches canonical BSB text and classifies the
         quote as exact, minor_variance, misquote, misattribution (the quote
-        actually matches a DIFFERENT passage in the corpus better), or
-        not_found. Returns a similarity score and a word-level diff summary.
-        Never asserts a quote is correct from memory — only what could be
+        actually matches a DIFFERENT passage in the corpus better),
+        different_translation (the quote misses BSB but closely matches
+        another public-domain translation this project ships locally — WEB
+        or KJV), or not_found. Returns a similarity score and a word-level
+        diff summary, plus closestTranslation/similarityToClosest/
+        verdictAgainstClosest/similarityToRequested on every call. Never
+        asserts a quote is correct from memory — only what could be
         verified against the corpus.
       requestBody:
         required: true
@@ -111,7 +115,7 @@ paths:
                 properties:
                   verdict:
                     type: string
-                    enum: [exact, minor_variance, misquote, misattribution, not_found]
+                    enum: [exact, minor_variance, misquote, misattribution, different_translation, not_found]
                   claimedReference:
                     type: string
                     nullable: true
@@ -135,6 +139,19 @@ paths:
                     nullable: true
                   reason:
                     type: string
+                  closestTranslation:
+                    type: string
+                    nullable: true
+                    description: The closest-matching translation across every locally shipped corpus (BSB/WEB/KJV), regardless of verdict.
+                  similarityToClosest:
+                    type: number
+                    nullable: true
+                  verdictAgainstClosest:
+                    type: string
+                    nullable: true
+                  similarityToRequested:
+                    type: number
+                    nullable: true
         "400":
           description: Missing quote or reference
   /encourage:

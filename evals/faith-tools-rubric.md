@@ -32,14 +32,18 @@ count without saying the two pages disagree.
 
 - `verify_quote` (`src/verify-quote.js`) is the accuracy-check mechanism: it
   classifies any quote against canonical text as `exact` / `minor_variance`
-  (>0.95 similarity) / `misquote` / `misattribution` / `not_found` — never
-  asserting correctness from the model's own memory (`src/verify-quote.js:1-15`
-  doc comment; classification logic `src/verify-quote.js:151-165`).
+  (>0.95 similarity) / `misquote` / `misattribution` / `different_translation`
+  / `not_found` — never asserting correctness from the model's own memory
+  (`src/verify-quote.js:1-15` doc comment; classification logic
+  `src/verify-quote.js`).
 - The real, live-run benchmark (`benchmark/results/RESULTS.md`, 2026-07-27,
   34-passage BSB corpus, Gloo AI Studio `auto_routing`) measured: **ungrounded
-  64.7% exact** (misquotes roughly 1 in 3 times from memory), **grounded 100%
+  67.6% exact** (misquotes roughly 1 in 3 times from memory), **grounded 100%
   exact**, **grounded+verify 100% exact**. This is the project's central
-  accuracy claim, and it is a real measured number, not an assertion.
+  accuracy claim, and it is a real measured number, not an assertion. (Scoring
+  correction, 2026-07-27: psalm superscriptions — musical/liturgical headings,
+  not the quoted passage — are now excluded from scoring; prior run measured
+  64.7%, inflated by penalizing their omission. Old vs. new: RESULTS.md.)
 - The fixture ground truth (`fixtures/bsb/*.json`) is fetched fresh from
   `bereanbible.com/bsb.txt` by `scripts/build-fixtures.js`, never hand-typed
   or drawn from a model's memory — each fixture records its own
@@ -215,7 +219,7 @@ to — see the caveat header of `evals/results/for-human-review-2026-07-27.md`.
 
 | Rule | Verdict | Primary evidence |
 |---|---|---|
-| 1. Biblically accurate | MET (scope: BSB, 34 passages) | `benchmark/results/RESULTS.md` — 100% exact grounded/grounded+verify vs. 64.7% ungrounded |
+| 1. Biblically accurate | MET (scope: BSB, 34 passages) | `benchmark/results/RESULTS.md` — 100% exact grounded/grounded+verify vs. 67.6% ungrounded |
 | 2. No fabricated/misrepresented Scripture | MET | `evals/fake-references.test.js` (71 tests), `src/verify-quote.js` |
 | 3. Clearly identifies as AI | MET (post-harden, 2026-07-27; register further tightened same day — no first-person self-identification at all, see below) | `evals/results/RESULTS-2026-07-27.md` §b/§c; `evals/results/founder-flagged-register-2026-07-27.md` |
 | 4. Does not replace relationships/spiritual practice | MET (post-harden, 2026-07-27; register hardening also closes the default-register gap, see below) | `evals/results/RESULTS-2026-07-27.md` §a/§b/§c; `evals/results/founder-flagged-register-2026-07-27.md` |

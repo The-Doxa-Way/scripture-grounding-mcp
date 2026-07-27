@@ -48,7 +48,7 @@ CAPTION: Canonical text from the YouVersion Platform. Values-aligned generation 
 then the limitations list, plainly shown.*
 
 CAPTION: Same model, 34 passages — narrative, poetry, prophecy, gospel, epistles.
-CAPTION: Exact quotes: 65% from memory → 100% grounded.
+CAPTION: Exact quotes: 67.6% from memory → 100% grounded.
 CAPTION: Not solved. Measured, reproducible, and materially smaller — with the failure modes named in the repo.
 
 ## 2:20–3:00 — The frontier

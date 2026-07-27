@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-27T16:22:53.408Z",
+  "generatedAt": "2026-07-27T19:30:43.009Z",
   "caller": {
     "key": "gloo",
     "name": "Gloo AI Studio (auto_routing)"
@@ -14,18 +14,18 @@
       "summary": {
         "n": 34,
         "counts": {
-          "exact": 22,
-          "minor_variance": 4,
+          "exact": 23,
+          "minor_variance": 3,
           "misquote": 7,
           "misattribution": 0,
           "not_found": 1
         },
-        "exactRate": 0.6470588235294118,
-        "minorVarianceRate": 0.11764705882352941,
+        "exactRate": 0.6764705882352942,
+        "minorVarianceRate": 0.08823529411764706,
         "misquoteRate": 0.20588235294117646,
         "misattributionRate": 0,
         "notFoundRate": 0.029411764705882353,
-        "meanSimilarity": 0.9438232149133656,
+        "meanSimilarity": 0.9494658643273326,
         "similarityScoredCount": 34
       },
       "byGenre": {
@@ -83,18 +83,18 @@
         "poetry": {
           "n": 6,
           "counts": {
-            "exact": 2,
-            "minor_variance": 1,
+            "exact": 3,
+            "minor_variance": 0,
             "misquote": 3,
             "misattribution": 0,
             "not_found": 0
           },
-          "exactRate": 0.3333333333333333,
-          "minorVarianceRate": 0.16666666666666666,
+          "exactRate": 0.5,
+          "minorVarianceRate": 0,
           "misquoteRate": 0.5,
           "misattributionRate": 0,
           "notFoundRate": 0,
-          "meanSimilarity": 0.9260816668161301,
+          "meanSimilarity": 0.9580566801619433,
           "similarityScoredCount": 6
         },
         "prophecy": {
@@ -145,7 +145,9 @@
                 "quoted": "always perseveres"
               }
             ]
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 0.85
         },
         {
           "reference": "1 John 4:18",
@@ -165,7 +167,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "1 Peter 5:6-7",
@@ -196,7 +200,9 @@
                 "quoted": "in due time"
               }
             ]
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 0.8888888888888888
         },
         {
           "reference": "2 Corinthians 5:17",
@@ -216,7 +222,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "Ephesians 2:8-9",
@@ -236,7 +244,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "Galatians 5:22-23",
@@ -256,7 +266,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "Genesis 1:1-3",
@@ -276,7 +288,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "Hebrews 11:1",
@@ -296,7 +310,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "Hebrews 13:5",
@@ -332,7 +348,9 @@
                 "quoted": "can"
               }
             ]
-          }
+          },
+          "closestTranslation": "WEB (World English Bible, public domain)",
+          "similarityToClosest": 0.1
         },
         {
           "reference": "Isaiah 40:28-31",
@@ -352,7 +370,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "Isaiah 41:10",
@@ -372,7 +392,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "Isaiah 53:4-6",
@@ -403,7 +425,9 @@
                 "quoted": ""
               }
             ]
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 0.974025974025974
         },
         {
           "reference": "James 1:2-4",
@@ -423,7 +447,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "Jeremiah 29:11",
@@ -459,7 +485,9 @@
                 "quoted": "future"
               }
             ]
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 0.9152542372881356
         },
         {
           "reference": "John 14:27",
@@ -479,7 +507,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "John 14:6",
@@ -499,7 +529,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "John 16:33",
@@ -519,7 +551,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "John 3:16-17",
@@ -539,7 +573,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "Lamentations 3:22-23",
@@ -570,7 +606,9 @@
                 "quoted": ""
               }
             ]
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 0.92
         },
         {
           "reference": "Mark 12:30-31",
@@ -590,7 +628,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "Matthew 11:28-30",
@@ -610,7 +650,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "Matthew 5:3-10",
@@ -630,7 +672,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "Matthew 6:31-34",
@@ -656,7 +700,9 @@
                 "quoted": "so"
               }
             ]
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 0.9864864864864865
         },
         {
           "reference": "Micah 6:8",
@@ -676,7 +722,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "Philippians 4:13",
@@ -696,7 +744,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "Philippians 4:6-7",
@@ -737,7 +787,9 @@
                 "quoted": "transcends"
               }
             ]
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 0.8571428571428571
         },
         {
           "reference": "Proverbs 3:5-6",
@@ -757,7 +809,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "Psalm 121:1-2",
@@ -768,20 +822,15 @@
           "anomaly": false,
           "anomalyReason": null,
           "verdict": "misquote",
-          "similarityScore": 0.8571428571428571,
-          "canonicalText": "A song of ascents. I lift up my eyes to the hills. From where does my help come? My help comes from the LORD, the Maker of heaven and earth.",
+          "similarityScore": 0.9230769230769231,
+          "canonicalText": "I lift up my eyes to the hills. From where does my help come? My help comes from the LORD, the Maker of heaven and earth.",
           "correctReference": null,
           "diffSummary": {
             "equalWords": 24,
             "replacedWords": 2,
             "insertedWords": 1,
-            "deletedWords": 4,
+            "deletedWords": 0,
             "spans": [
-              {
-                "op": "delete",
-                "canonical": "a song of ascents",
-                "quoted": ""
-              },
               {
                 "op": "replace",
                 "canonical": "hills from",
@@ -793,7 +842,9 @@
                 "quoted": "from"
               }
             ]
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 0.9230769230769231
         },
         {
           "reference": "Psalm 23:1-6",
@@ -803,23 +854,19 @@
           "source": "gloo-api",
           "anomaly": false,
           "anomalyReason": null,
-          "verdict": "minor_variance",
-          "similarityScore": 0.9830508474576272,
-          "canonicalText": "A Psalm of David. The LORD is my shepherd; I shall not want. He makes me lie down in green pastures; He leads me beside quiet waters. He restores my soul; He guides me in the paths of righteousness for the sake of His name. Even though I walk through the valley of the shadow of death, I will fear no evil, for You are with me; Your rod and Your staff, they comfort me. You prepare a table before me in the presence of my enemies. You anoint my head with oil; my cup overflows. Surely goodness and mercy will follow me all the days of my life, and I will dwell in the house of the LORD forever.",
+          "verdict": "exact",
+          "similarityScore": 1,
+          "canonicalText": "The LORD is my shepherd; I shall not want. He makes me lie down in green pastures; He leads me beside quiet waters. He restores my soul; He guides me in the paths of righteousness for the sake of His name. Even though I walk through the valley of the shadow of death, I will fear no evil, for You are with me; Your rod and Your staff, they comfort me. You prepare a table before me in the presence of my enemies. You anoint my head with oil; my cup overflows. Surely goodness and mercy will follow me all the days of my life, and I will dwell in the house of the LORD forever.",
           "correctReference": null,
           "diffSummary": {
             "equalWords": 116,
             "replacedWords": 0,
             "insertedWords": 0,
-            "deletedWords": 4,
-            "spans": [
-              {
-                "op": "delete",
-                "canonical": "a psalm of david",
-                "quoted": ""
-              }
-            ]
-          }
+            "deletedWords": 0,
+            "spans": []
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "Psalm 46:1-3",
@@ -830,20 +877,15 @@
           "anomaly": false,
           "anomalyReason": null,
           "verdict": "misquote",
-          "similarityScore": 0.7962962962962963,
-          "canonicalText": "For the choirmaster. Of the sons of Korah. According to Alamoth. A song. God is our refuge and strength, an ever-present help in times of trouble. Therefore we will not fear, though the earth is transformed and the mountains are toppled into the depths of the seas, though their waters roar and foam and the mountains quake in the surge. Selah",
+          "similarityScore": 0.9052631578947369,
+          "canonicalText": "God is our refuge and strength, an ever-present help in times of trouble. Therefore we will not fear, though the earth is transformed and the mountains are toppled into the depths of the seas, though their waters roar and foam and the mountains quake in the surge. Selah",
           "correctReference": null,
           "diffSummary": {
             "equalWords": 43,
             "replacedWords": 3,
             "insertedWords": 0,
-            "deletedWords": 16,
+            "deletedWords": 3,
             "spans": [
-              {
-                "op": "delete",
-                "canonical": "for the choirmaster of the sons of korah according to alamoth a song",
-                "quoted": ""
-              },
               {
                 "op": "delete",
                 "canonical": "times of",
@@ -870,7 +912,9 @@
                 "quoted": ""
               }
             ]
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 0.9052631578947369
         },
         {
           "reference": "Psalm 91:1-2",
@@ -890,7 +934,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "Revelation 21:1-4",
@@ -916,7 +962,9 @@
                 "quoted": "the first"
               }
             ]
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 0.9915254237288136
         },
         {
           "reference": "Romans 12:2",
@@ -936,7 +984,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "Romans 8:28-39",
@@ -956,7 +1006,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         }
       ]
     },
@@ -1084,7 +1136,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "1 John 4:18",
@@ -1104,7 +1158,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "1 Peter 5:6-7",
@@ -1124,7 +1180,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "2 Corinthians 5:17",
@@ -1144,7 +1202,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "Ephesians 2:8-9",
@@ -1164,7 +1224,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "Galatians 5:22-23",
@@ -1184,7 +1246,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "Genesis 1:1-3",
@@ -1204,7 +1268,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "Hebrews 11:1",
@@ -1224,7 +1290,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "Hebrews 13:5",
@@ -1244,7 +1312,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "Isaiah 40:28-31",
@@ -1264,7 +1334,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "Isaiah 41:10",
@@ -1284,7 +1356,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "Isaiah 53:4-6",
@@ -1304,7 +1378,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "James 1:2-4",
@@ -1324,7 +1400,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "Jeremiah 29:11",
@@ -1344,7 +1422,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "John 14:27",
@@ -1364,7 +1444,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "John 14:6",
@@ -1384,7 +1466,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "John 16:33",
@@ -1404,7 +1488,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "John 3:16-17",
@@ -1424,7 +1510,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "Lamentations 3:22-23",
@@ -1444,7 +1532,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "Mark 12:30-31",
@@ -1464,7 +1554,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "Matthew 11:28-30",
@@ -1484,7 +1576,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "Matthew 5:3-10",
@@ -1504,7 +1598,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "Matthew 6:31-34",
@@ -1524,7 +1620,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "Micah 6:8",
@@ -1544,7 +1642,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "Philippians 4:13",
@@ -1564,7 +1664,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "Philippians 4:6-7",
@@ -1584,7 +1686,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "Proverbs 3:5-6",
@@ -1604,7 +1708,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "Psalm 121:1-2",
@@ -1616,15 +1722,17 @@
           "anomalyReason": null,
           "verdict": "exact",
           "similarityScore": 1,
-          "canonicalText": "A song of ascents. I lift up my eyes to the hills. From where does my help come? My help comes from the LORD, the Maker of heaven and earth.",
+          "canonicalText": "I lift up my eyes to the hills. From where does my help come? My help comes from the LORD, the Maker of heaven and earth.",
           "correctReference": null,
           "diffSummary": {
-            "equalWords": 30,
+            "equalWords": 26,
             "replacedWords": 0,
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "Psalm 23:1-6",
@@ -1636,15 +1744,17 @@
           "anomalyReason": null,
           "verdict": "exact",
           "similarityScore": 1,
-          "canonicalText": "A Psalm of David. The LORD is my shepherd; I shall not want. He makes me lie down in green pastures; He leads me beside quiet waters. He restores my soul; He guides me in the paths of righteousness for the sake of His name. Even though I walk through the valley of the shadow of death, I will fear no evil, for You are with me; Your rod and Your staff, they comfort me. You prepare a table before me in the presence of my enemies. You anoint my head with oil; my cup overflows. Surely goodness and mercy will follow me all the days of my life, and I will dwell in the house of the LORD forever.",
+          "canonicalText": "The LORD is my shepherd; I shall not want. He makes me lie down in green pastures; He leads me beside quiet waters. He restores my soul; He guides me in the paths of righteousness for the sake of His name. Even though I walk through the valley of the shadow of death, I will fear no evil, for You are with me; Your rod and Your staff, they comfort me. You prepare a table before me in the presence of my enemies. You anoint my head with oil; my cup overflows. Surely goodness and mercy will follow me all the days of my life, and I will dwell in the house of the LORD forever.",
           "correctReference": null,
           "diffSummary": {
-            "equalWords": 120,
+            "equalWords": 116,
             "replacedWords": 0,
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "Psalm 46:1-3",
@@ -1656,15 +1766,17 @@
           "anomalyReason": null,
           "verdict": "exact",
           "similarityScore": 1,
-          "canonicalText": "For the choirmaster. Of the sons of Korah. According to Alamoth. A song. God is our refuge and strength, an ever-present help in times of trouble. Therefore we will not fear, though the earth is transformed and the mountains are toppled into the depths of the seas, though their waters roar and foam and the mountains quake in the surge. Selah",
+          "canonicalText": "God is our refuge and strength, an ever-present help in times of trouble. Therefore we will not fear, though the earth is transformed and the mountains are toppled into the depths of the seas, though their waters roar and foam and the mountains quake in the surge. Selah",
           "correctReference": null,
           "diffSummary": {
-            "equalWords": 62,
+            "equalWords": 49,
             "replacedWords": 0,
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "Psalm 91:1-2",
@@ -1684,7 +1796,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "Revelation 21:1-4",
@@ -1704,7 +1818,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "Romans 12:2",
@@ -1724,7 +1840,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         },
         {
           "reference": "Romans 8:28-39",
@@ -1744,7 +1862,9 @@
             "insertedWords": 0,
             "deletedWords": 0,
             "spans": []
-          }
+          },
+          "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+          "similarityToClosest": 1
         }
       ]
     },
@@ -2433,9 +2553,9 @@
           "finalText": "A song of ascents. I lift up my eyes to the hills. From where does my help come? My help comes from the Lord, the Maker of heaven and earth.",
           "verdict": "exact",
           "similarityScore": 1,
-          "canonicalText": "A song of ascents. I lift up my eyes to the hills. From where does my help come? My help comes from the LORD, the Maker of heaven and earth.",
+          "canonicalText": "I lift up my eyes to the hills. From where does my help come? My help comes from the LORD, the Maker of heaven and earth.",
           "diffSummary": {
-            "equalWords": 30,
+            "equalWords": 26,
             "replacedWords": 0,
             "insertedWords": 0,
             "deletedWords": 0,
@@ -2454,9 +2574,9 @@
           "finalText": "A Psalm of David. The Lord is my shepherd; I shall not want. He makes me lie down in green pastures; He leads me beside quiet waters. He restores my soul; He guides me in the paths of righteousness for the sake of His name. Even though I walk through the valley of the shadow of death, I will fear no evil, for You are with me; Your rod and Your staff, they comfort me. You prepare a table before me in the presence of my enemies. You anoint my head with oil; my cup overflows. Surely goodness and mercy will follow me all the days of my life, and I will dwell in the house of the Lord forever.",
           "verdict": "exact",
           "similarityScore": 1,
-          "canonicalText": "A Psalm of David. The LORD is my shepherd; I shall not want. He makes me lie down in green pastures; He leads me beside quiet waters. He restores my soul; He guides me in the paths of righteousness for the sake of His name. Even though I walk through the valley of the shadow of death, I will fear no evil, for You are with me; Your rod and Your staff, they comfort me. You prepare a table before me in the presence of my enemies. You anoint my head with oil; my cup overflows. Surely goodness and mercy will follow me all the days of my life, and I will dwell in the house of the LORD forever.",
+          "canonicalText": "The LORD is my shepherd; I shall not want. He makes me lie down in green pastures; He leads me beside quiet waters. He restores my soul; He guides me in the paths of righteousness for the sake of His name. Even though I walk through the valley of the shadow of death, I will fear no evil, for You are with me; Your rod and Your staff, they comfort me. You prepare a table before me in the presence of my enemies. You anoint my head with oil; my cup overflows. Surely goodness and mercy will follow me all the days of my life, and I will dwell in the house of the LORD forever.",
           "diffSummary": {
-            "equalWords": 120,
+            "equalWords": 116,
             "replacedWords": 0,
             "insertedWords": 0,
             "deletedWords": 0,
@@ -2475,9 +2595,9 @@
           "finalText": "For the choirmaster. Of the sons of Korah. According to Alamoth. A song. God is our refuge and strength, an ever-present help in times of trouble. Therefore we will not fear, though the earth is transformed and the mountains are toppled into the depths of the seas, though their waters roar and foam and the mountains quake in the surge. Selah",
           "verdict": "exact",
           "similarityScore": 1,
-          "canonicalText": "For the choirmaster. Of the sons of Korah. According to Alamoth. A song. God is our refuge and strength, an ever-present help in times of trouble. Therefore we will not fear, though the earth is transformed and the mountains are toppled into the depths of the seas, though their waters roar and foam and the mountains quake in the surge. Selah",
+          "canonicalText": "God is our refuge and strength, an ever-present help in times of trouble. Therefore we will not fear, though the earth is transformed and the mountains are toppled into the depths of the seas, though their waters roar and foam and the mountains quake in the surge. Selah",
           "diffSummary": {
-            "equalWords": 62,
+            "equalWords": 49,
             "replacedWords": 0,
             "insertedWords": 0,
             "deletedWords": 0,
@@ -2607,58 +2727,9 @@
             "quoted": "can"
           }
         ]
-      }
-    },
-    {
-      "reference": "Psalm 46:1-3",
-      "genre": "poetry",
-      "rawText": "God is our refuge and strength, an ever-present help in trouble. Therefore we will not fear, though the earth is transformed and the mountains are moved into the heart of the sea, though their waters roar and foam and the mountains quake in the surge.",
-      "model": "gloo-anthropic-claude-sonnet-4.5",
-      "source": "gloo-api",
-      "anomaly": false,
-      "anomalyReason": null,
-      "verdict": "misquote",
-      "similarityScore": 0.7962962962962963,
-      "canonicalText": "For the choirmaster. Of the sons of Korah. According to Alamoth. A song. God is our refuge and strength, an ever-present help in times of trouble. Therefore we will not fear, though the earth is transformed and the mountains are toppled into the depths of the seas, though their waters roar and foam and the mountains quake in the surge. Selah",
-      "correctReference": null,
-      "diffSummary": {
-        "equalWords": 43,
-        "replacedWords": 3,
-        "insertedWords": 0,
-        "deletedWords": 16,
-        "spans": [
-          {
-            "op": "delete",
-            "canonical": "for the choirmaster of the sons of korah according to alamoth a song",
-            "quoted": ""
-          },
-          {
-            "op": "delete",
-            "canonical": "times of",
-            "quoted": ""
-          },
-          {
-            "op": "replace",
-            "canonical": "toppled",
-            "quoted": "moved"
-          },
-          {
-            "op": "replace",
-            "canonical": "depths",
-            "quoted": "heart"
-          },
-          {
-            "op": "replace",
-            "canonical": "seas",
-            "quoted": "sea"
-          },
-          {
-            "op": "delete",
-            "canonical": "selah",
-            "quoted": ""
-          }
-        ]
-      }
+      },
+      "closestTranslation": "WEB (World English Bible, public domain)",
+      "similarityToClosest": 0.1
     },
     {
       "reference": "1 Corinthians 13:4-7",
@@ -2689,7 +2760,52 @@
             "quoted": "always perseveres"
           }
         ]
-      }
+      },
+      "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+      "similarityToClosest": 0.85
+    },
+    {
+      "reference": "Philippians 4:6-7",
+      "genre": "epistle",
+      "rawText": "Do not be anxious about anything, but in every situation, by prayer and petition, with thanksgiving, present your requests to God. And the peace of God, which transcends all understanding, will guard your hearts and your minds in Christ Jesus.",
+      "model": "gloo-anthropic-claude-sonnet-4.5",
+      "source": "gloo-api",
+      "anomaly": false,
+      "anomalyReason": null,
+      "verdict": "misquote",
+      "similarityScore": 0.8571428571428571,
+      "canonicalText": "Be anxious for nothing, but in everything, by prayer and petition, with thanksgiving, present your requests to God. And the peace of God, which surpasses all understanding, will guard your hearts and your minds in Christ Jesus.",
+      "correctReference": null,
+      "diffSummary": {
+        "equalWords": 33,
+        "replacedWords": 5,
+        "insertedWords": 2,
+        "deletedWords": 0,
+        "spans": [
+          {
+            "op": "insert",
+            "canonical": "",
+            "quoted": "do not"
+          },
+          {
+            "op": "replace",
+            "canonical": "for nothing",
+            "quoted": "about anything"
+          },
+          {
+            "op": "replace",
+            "canonical": "everything",
+            "quoted": "every situation"
+          },
+          {
+            "op": "replace",
+            "canonical": "surpasses",
+            "quoted": "transcends"
+          }
+        ]
+      },
+      "closestTranslation": "BSB (Berean Standard Bible, public domain)",
+      "similarityToClosest": 0.8571428571428571
     }
   ]
 }

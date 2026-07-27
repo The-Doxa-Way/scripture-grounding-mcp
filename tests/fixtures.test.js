@@ -38,3 +38,28 @@ test('findBestMatch returns null for empty/garbage input', () => {
   assert.equal(findBestMatch(''), null);
   assert.equal(findBestMatch('   '), null);
 });
+
+test('psalm fixtures with a BSB superscription store it separately, never baked into `text` (integrity fix, 2026-07-27)', () => {
+  const cases = {
+    'Psalm 46:1-3': 'For the choirmaster. Of the sons of Korah. According to Alamoth. A song.',
+    'Psalm 23:1-6': 'A Psalm of David.',
+    'Psalm 121:1-2': 'A song of ascents.',
+  };
+  for (const [reference, expectedSuperscription] of Object.entries(cases)) {
+    const fixture = findByReference(reference);
+    assert.equal(fixture.superscription, expectedSuperscription, `${reference} superscription`);
+    assert.ok(!fixture.text.includes(expectedSuperscription), `${reference} text should not contain its superscription`);
+  }
+});
+
+test('Psalm 91 (no BSB superscription) has no superscription field', () => {
+  const fixture = findByReference('Psalm 91:1-2');
+  assert.equal(fixture.superscription, undefined);
+});
+
+test('non-psalm fixtures never carry a superscription field', () => {
+  for (const f of loadFixtures()) {
+    if (f.reference.startsWith('Psalm')) continue;
+    assert.equal(f.superscription, undefined, `${f.reference} should not have a superscription field`);
+  }
+});

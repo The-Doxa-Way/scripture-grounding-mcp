@@ -51,6 +51,61 @@ deployed app, the YouVersion Platform API supplies whichever of its 2,000+
 licensed translations the end user has chosen; the benchmark's fixed BSB
 baseline is a measurement-methodology choice, not a product default.)
 
+**Superscription scoring correction, 2026-07-27:** BSB's source file
+(bereanbible.com/bsb.txt) bakes a psalm's superscription — a musical/
+liturgical heading, e.g. "For the choirmaster. Of the sons of Korah.
+According to Alamoth. A song." on Psalm 46 — into the same line as verse
+1's body text. A superscription is not the quoted passage, so scoring a
+quote that (correctly) omitted it as if it had dropped canonical wording
+inflated the similarity-distance for every psalm fixture that has one
+(Psalm 23, 46, 121; Psalm 91 has none in BSB). Fixed by splitting the
+superscription into its own fixture field, kept for provenance/display but
+excluded from `text` (`src/superscription.js`, applied at fixture-build time
+in `scripts/build-fixtures.js`); `verify_quote` also strips a leading
+superscription from the *quote* side when present, so a quote that includes
+the header (e.g. this benchmark's own `grounded` condition, which retrieves
+and echoes the full verse-1 line) still verifies exact rather than being
+penalized for extra words the canonical text no longer carries. See
+`benchmark/results/RESULTS.md`'s "Scoring correction" note for the old vs.
+new numbers this produced.
+
+### Secondary corpora — cross-translation detection
+
+Two more public-domain translations of the same 34 passages — WEB (World
+English Bible) and KJV (King James Version) — are fetched the same
+provenance-tracked way as BSB (`scripts/build-fixtures.js --web` / `--kjv`,
+via bible-api.com) and committed to `fixtures/web/*.json` /
+`fixtures/kjv/*.json`. They exist for exactly one purpose: distinguishing
+"wrong words" from "right words, wrong translation." `verify_quote`
+(`src/alt-translations.js`) compares every quote against the closest of all
+three local canons and reports it via four always-present fields —
+`closestTranslation`, `similarityToClosest`, `verdictAgainstClosest`,
+`similarityToRequested` — regardless of verdict. When a quote misses the
+requested translation (below the minor-variance threshold) but is a close
+(≥0.95) match for a different local canon, the verdict becomes
+`different_translation` instead of `misquote` — "accurate KJV quote, but
+BSB was requested" is a real, different, more forgivable failure mode than
+invented wording, and this project measures the difference rather than
+collapsing both into one label. See `benchmark/results/RESULTS.md`'s
+"Cross-translation check" section for what this found when run against
+this benchmark's own cached ungrounded misses (zero additional API calls —
+scored entirely from `raw-ungrounded.jsonl`).
+
+Bible-api.com's WEB/KJV text does not carry a psalm superscription as part
+of any verse's text at all (confirmed live for Psalm 23/46/121 — their
+verse-1 text starts directly with the body), unlike bereanbible.com's BSB —
+so the superscription split is applied to these corpora too, for symmetry,
+but is a no-op for both today.
+
+A third, licensed-translation path — fetching NIV/ESV/NASB/etc. live via a
+developer's own `YOUVERSION_APP_KEY` for the same closest-canon comparison
+— is **not implemented**. It would be a materially different use of the
+YouVersion Platform API than this server's existing single-translation
+`get_passage`/`verify_quote` path (fetching one requested translation), and
+building + shipping it ahead of YouVersion's written confirmation that this
+specific use is covered was a deliberate line this integrity fix did not
+cross. See README's "Multi-version detection" section.
+
 ### Same model, every condition
 
 All three conditions are run against the same Gloo AI Studio call
@@ -129,6 +184,12 @@ Reported per condition, and per genre within each condition:
   real-sounding wording pinned to the wrong reference — see below).
 - **Not-found rate** — fraction classified `not_found` (refusal, empty
   response, or output that resembles nothing in the corpus).
+- **Different-translation rate** — fraction classified `different_translation`
+  (misses the requested BSB wording but is a close, ≥0.95, match for WEB or
+  KJV — see "Secondary corpora" above). Not currently a separate reported
+  rate in the headline table (this run measured 0%), but every item's
+  `closestTranslation`/`similarityToClosest` are in `results-<date>.json`
+  regardless.
 - **Mean similarity** — mean of `verify_quote`'s continuous `similarityScore`
   across all items with a numeric score (a continuous companion to the
   categorical verdict; `not_found` items with no comparable text are
@@ -170,6 +231,12 @@ here by a deterministic diff instead.
 - It does not claim BSB (or any single translation) is the "correct" text —
   Scripture has legitimate translation variance; `verify_quote` measures
   fidelity to a *chosen reference translation*, not theological correctness.
+  It also does not assert this away by fiat: `verify_quote` actively checks
+  each miss against the other public-domain translations this project ships
+  locally (WEB, KJV) and reports `different_translation` rather than
+  `misquote` when that's what the evidence shows — and this run's own
+  cross-translation check (RESULTS.md) found 0 of 11 ungrounded misses were
+  actually accurate WEB/KJV quotes, reported honestly either way it landed.
 - It does not claim a low misquote rate on 34 fixture passages generalizes to
   all ~31,000 Bible verses — the fixture corpus is intentionally small and
   reproducible for this submission; scaling the corpus is listed as future

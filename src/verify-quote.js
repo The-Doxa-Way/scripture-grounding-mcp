@@ -1,7 +1,9 @@
 /**
  * Core logic for the verify_quote tool: given a claimed quote + reference,
  * decide whether the quote is exact, a minor variance, a misquote, pinned to
- * the wrong reference (misattribution), or unverifiable (not_found).
+ * the wrong reference (misattribution), an accurate quote of a DIFFERENT
+ * translation than requested (different_translation — see
+ * src/alt-translations.js), or unverifiable (not_found).
  *
  * Canonical text for the claimed reference is resolved via an injectable
  * `canonicalLookup(reference, version)` (defaults to the BSB fixture
@@ -16,6 +18,8 @@
 import { tokenize } from './normalize.js';
 import { wordDiff, similarity, summarizeDiff } from './diff.js';
 import { findByReference, findBestMatch } from './fixtures.js';
+import { splitSuperscription } from './superscription.js';
+import { findClosestCanon } from './alt-translations.js';
 
 /** Similarity threshold above which a non-exact quote is "minor_variance" rather than "misquote". */
 const MINOR_VARIANCE_THRESHOLD = 0.95;
@@ -27,8 +31,24 @@ const MISATTRIBUTION_MIN_SCORE = 0.7;
 const MISATTRIBUTION_MARGIN = 0.15;
 
 /**
- * @typedef {'exact'|'minor_variance'|'misquote'|'misattribution'|'not_found'} Verdict
+ * @typedef {'exact'|'minor_variance'|'misquote'|'misattribution'|'not_found'|'different_translation'} Verdict
  */
+
+/**
+ * Classify a similarity score into a verdict using the same thresholds as
+ * the main claimed-translation comparison — reused for `verdictAgainstClosest`
+ * (see `findClosestCanon`) so a caller can tell at a glance whether the
+ * quote is exact/minor_variance/misquote/not_found *against the closest
+ * translation this project ships locally*, independent of the requested one.
+ * @param {number} score
+ * @returns {'exact'|'minor_variance'|'misquote'|'not_found'}
+ */
+function classifyVerdict(score) {
+  if (score >= 0.999) return 'exact';
+  if (score > MINOR_VARIANCE_THRESHOLD) return 'minor_variance';
+  if (score >= MISQUOTE_FLOOR) return 'misquote';
+  return 'not_found';
+}
 
 /**
  * Default canonical-text lookup: the local BSB fixture corpus.
@@ -53,7 +73,11 @@ async function defaultCanonicalLookup(reference) {
  *   similarityScore: number|null,
  *   diffSummary: object|null,
  *   correctReference: string|null,
- *   reason: string
+ *   reason: string,
+ *   closestTranslation: string|null,
+ *   similarityToClosest: number|null,
+ *   verdictAgainstClosest: string|null,
+ *   similarityToRequested: number|null
  * }>}
  */
 export async function verifyQuote({ quote, claimedReference, version }, deps = {}) {
@@ -70,6 +94,10 @@ export async function verifyQuote({ quote, claimedReference, version }, deps = {
       diffSummary: null,
       correctReference: null,
       reason: 'Empty or missing quote text — nothing to verify.',
+      closestTranslation: null,
+      similarityToClosest: null,
+      verdictAgainstClosest: null,
+      similarityToRequested: null,
     };
   }
   if (typeof claimedReference !== 'string' || claimedReference.trim().length === 0) {
@@ -83,17 +111,31 @@ export async function verifyQuote({ quote, claimedReference, version }, deps = {
       diffSummary: null,
       correctReference: null,
       reason: 'Empty or missing claimed_reference — nothing to verify against.',
+      closestTranslation: null,
+      similarityToClosest: null,
+      verdictAgainstClosest: null,
+      similarityToRequested: null,
     };
   }
 
-  const quoteTokens = tokenize(quote);
+  // Fixture canonical text no longer includes a psalm's superscription (see
+  // src/superscription.js) — a quote is not the passage's own musical/
+  // liturgical heading, so strip a leading superscription from the QUOTE
+  // side too before comparing. This keeps both directions symmetric: a quote
+  // that omits the header compares as if it never existed (the common case),
+  // and a quote that includes it (e.g. this project's own `grounded`
+  // benchmark condition, which retrieves and echoes the full verse-1 line)
+  // still verifies exact rather than being penalized for extra words the
+  // canonical text no longer carries.
+  const comparableQuote = splitSuperscription(quote).body || quote;
+  const quoteTokens = tokenize(comparableQuote);
   const claimedCanonical = await canonicalLookup(claimedReference, version);
 
   if (!claimedCanonical || !claimedCanonical.text) {
     // We still search the fixture corpus for a best match, since the quote
     // might be a real, correctly-worded verse that's simply pinned to a
     // reference we couldn't resolve (or to a bogus one).
-    const best = findBestMatch(quote);
+    const best = findBestMatch(comparableQuote);
     if (best && best.score >= MISATTRIBUTION_MIN_SCORE) {
       return {
         verdict: 'misattribution',
@@ -105,6 +147,10 @@ export async function verifyQuote({ quote, claimedReference, version }, deps = {
         diffSummary: null,
         correctReference: best.reference,
         reason: `"${claimedReference}" could not be resolved to canonical text, but the quote closely matches ${best.reference} (similarity ${best.score.toFixed(2)}).`,
+        closestTranslation: null,
+        similarityToClosest: null,
+        verdictAgainstClosest: null,
+        similarityToRequested: null,
       };
     }
     return {
@@ -117,6 +163,10 @@ export async function verifyQuote({ quote, claimedReference, version }, deps = {
       diffSummary: null,
       correctReference: null,
       reason: `No canonical text available for "${claimedReference}" (not resolvable via YouVersion API or the fixture corpus).`,
+      closestTranslation: null,
+      similarityToClosest: null,
+      verdictAgainstClosest: null,
+      similarityToRequested: null,
     };
   }
 
@@ -125,10 +175,19 @@ export async function verifyQuote({ quote, claimedReference, version }, deps = {
   const ops = wordDiff(canonicalTokens, quoteTokens);
   const diffSummary = summarizeDiff(ops);
 
+  // Closest-canon comparison across every translation this project ships
+  // LOCALLY (BSB/WEB/KJV — see src/alt-translations.js) — computed
+  // unconditionally so a caller can always see which translation the quote
+  // actually matches best, not just whether it matched the requested one.
+  const closest = findClosestCanon(claimedCanonical.reference, quoteTokens);
+  const closestTranslation = closest?.translation ?? null;
+  const similarityToClosest = closest?.score ?? null;
+  const verdictAgainstClosest = closest ? classifyVerdict(closest.score) : null;
+
   // Check whether some OTHER passage in the (fixture) corpus matches the
   // quote meaningfully better than the claimed one — that's misattribution,
   // regardless of how well/poorly the quote matches its claimed home.
-  const best = findBestMatch(quote);
+  const best = findBestMatch(comparableQuote);
   if (
     best &&
     best.reference.toLowerCase() !== claimedCanonical.reference.toLowerCase() &&
@@ -145,6 +204,41 @@ export async function verifyQuote({ quote, claimedReference, version }, deps = {
       diffSummary,
       correctReference: best.reference,
       reason: `Quote matches ${best.reference} (similarity ${best.score.toFixed(2)}) much better than the claimed reference ${claimedCanonical.reference} (similarity ${claimedScore.toFixed(2)}).`,
+      closestTranslation,
+      similarityToClosest,
+      verdictAgainstClosest,
+      similarityToRequested: claimedScore,
+    };
+  }
+
+  // The quote clearly misses the REQUESTED translation but is a close
+  // (>=0.95) match for a DIFFERENT translation this project ships locally —
+  // that's a version-fidelity issue ("accurate KJV quote, but BSB was
+  // requested"), not a wording error, so it gets its own verdict rather than
+  // being flatly scored as a misquote of the requested translation.
+  if (
+    claimedScore < MINOR_VARIANCE_THRESHOLD &&
+    closest &&
+    closest.score >= MINOR_VARIANCE_THRESHOLD &&
+    closest.translation !== claimedCanonical.translation
+  ) {
+    return {
+      verdict: 'different_translation',
+      claimedReference: claimedCanonical.reference,
+      canonicalText: claimedCanonical.text,
+      canonicalTranslation: claimedCanonical.translation,
+      canonicalSource: claimedCanonical.source,
+      similarityScore: claimedScore,
+      diffSummary,
+      correctReference: null,
+      reason:
+        `Quote does not match the requested ${claimedCanonical.translation} wording (similarity ${claimedScore.toFixed(2)}), ` +
+        `but matches ${closestTranslation} closely (similarity ${similarityToClosest.toFixed(2)}) — likely an accurate quote ` +
+        'of a different translation than requested.',
+      closestTranslation,
+      similarityToClosest,
+      verdictAgainstClosest,
+      similarityToRequested: claimedScore,
     };
   }
 
@@ -174,5 +268,9 @@ export async function verifyQuote({ quote, claimedReference, version }, deps = {
     diffSummary,
     correctReference: null,
     reason,
+    closestTranslation,
+    similarityToClosest,
+    verdictAgainstClosest,
+    similarityToRequested: claimedScore,
   };
 }

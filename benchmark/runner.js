@@ -265,6 +265,14 @@ async function runCallCondition(condition, caller, fixtures, resultsDir) {
       canonicalText: verdict.canonicalText,
       correctReference: verdict.correctReference,
       diffSummary: verdict.diffSummary,
+      // Cross-translation detection (src/alt-translations.js) — the closest
+      // locally-shipped canon (BSB/WEB/KJV) for this item, computed by
+      // verify_quote unconditionally. Lets RESULTS.md/METHODOLOGY.md report
+      // how many ungrounded misses were actually accurate quotes of a
+      // different public-domain translation than the BSB this benchmark
+      // requested, entirely from this same scoring pass (no extra calls).
+      closestTranslation: verdict.closestTranslation,
+      similarityToClosest: verdict.similarityToClosest,
     });
   }
   return { items, anomalies };

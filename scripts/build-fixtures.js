@@ -15,18 +15,24 @@
  * parses only the verse ranges it needs, and writes them with full
  * provenance — never hand-typed, never from model memory.
  *
- * A secondary `--web` mode is kept for building bible-api.com/WEB fixtures
- * (fixtures/web/*.json) in case a second public-domain translation is
- * useful later (e.g. cross-translation benchmark comparison), but BSB is
- * the default and the one the server/tests/benchmark treat as ground truth.
+ * Secondary `--web` / `--kjv` modes build bible-api.com's WEB and KJV
+ * fixtures (fixtures/web/*.json, fixtures/kjv/*.json) — two more public-
+ * domain translations of the same 34 passages, used by verify_quote's
+ * cross-translation detection (src/alt-translations.js) so a quote that
+ * doesn't match requested-BSB wording can be recognized as an accurate
+ * quote of a *different* translation rather than flatly called a misquote.
+ * BSB stays the default and the one the server/tests/benchmark treat as
+ * ground truth for the requested translation.
  *
  * Usage:
  *   node scripts/build-fixtures.js         # BSB (default, primary)
  *   node scripts/build-fixtures.js --web    # WEB via bible-api.com (secondary)
+ *   node scripts/build-fixtures.js --kjv    # KJV via bible-api.com (secondary)
  */
-import { writeFileSync, mkdirSync } from 'node:fs';
+import { writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { splitSuperscription } from '../src/superscription.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -184,6 +190,13 @@ function buildBsbFixture(reference, verseMap, sourceUrl) {
     if (!text) throw new Error(`Missing verse "${key}" in bsb.txt for reference "${reference}"`);
     parts.push(text);
   }
+  // bsb.txt bakes a psalm's superscription (e.g. "For the choirmaster... A
+  // song.") into the same line as verse 1's body text. Split it off verse 1
+  // only (a superscription, when present, only ever precedes verse 1) so
+  // `text` is the quoted passage alone and the heading is preserved
+  // separately, not silently discarded (see src/superscription.js).
+  const { superscription, body } = splitSuperscription(parts[0]);
+  if (superscription) parts[0] = body;
   return {
     reference,
     translation: 'BSB (Berean Standard Bible, public domain)',
@@ -191,6 +204,7 @@ function buildBsbFixture(reference, verseMap, sourceUrl) {
     source: sourceUrl,
     fetchedAt: new Date().toISOString(),
     text: parts.join(' '),
+    ...(superscription ? { superscription } : {}),
   };
 }
 
@@ -218,51 +232,97 @@ async function buildBsb() {
 }
 
 // ---------------------------------------------------------------------------
-// WEB via bible-api.com (secondary, optional)
+// Secondary public-domain translations via bible-api.com (WEB, KJV) — used by
+// verify_quote's cross-translation detection (src/alt-translations.js) to
+// answer "maybe it's an accurate quote of a DIFFERENT public-domain
+// translation" rather than just flagging a BSB mismatch as a flat misquote.
+// bible-api.com's KJV/WEB text does not carry a psalm's superscription as
+// part of any verse's text at all (confirmed live: Psalm 23/46's verse-1
+// text starts directly with the body, e.g. "The LORD\nis my shepherd..."),
+// unlike bereanbible.com's BSB — so `splitSuperscription` is applied here for
+// symmetry with the BSB path (and in case that ever changes upstream), but
+// is expected to be a no-op for both these corpora today.
 // ---------------------------------------------------------------------------
 
-const WEB_API_BASE = 'https://bible-api.com';
-const WEB_OUT_DIR = path.join(__dirname, '..', 'fixtures', 'web');
+const BIBLE_API_BASE = 'https://bible-api.com';
+const ALT_TRANSLATIONS = {
+  web: { outDir: path.join(__dirname, '..', 'fixtures', 'web'), label: 'WEB (World English Bible, public domain)' },
+  kjv: { outDir: path.join(__dirname, '..', 'fixtures', 'kjv'), label: 'KJV (King James Version, public domain)' },
+};
 
-async function fetchWebPassage(reference) {
-  const url = `${WEB_API_BASE}/${encodeURIComponent(reference)}?translation=web`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`${reference}: bible-api.com responded ${res.status}`);
+async function fetchWithRetry(url, maxRetries = 4) {
+  for (let attempt = 0; ; attempt++) {
+    const res = await fetch(url);
+    if (res.ok) return res;
+    if (res.status === 429 && attempt < maxRetries) {
+      const backoffMs = 3000 * (attempt + 1); // free-tier rate limit; back off harder each retry
+      await new Promise((r) => setTimeout(r, backoffMs));
+      continue;
+    }
+    throw new Error(`bible-api.com responded ${res.status}`);
+  }
+}
+
+async function fetchAltPassage(reference, translationKey) {
+  const url = `${BIBLE_API_BASE}/${encodeURIComponent(reference)}?translation=${translationKey}`;
+  const res = await fetchWithRetry(url);
   const data = await res.json();
   if (!data.text || !data.text.trim()) throw new Error(`${reference}: empty text in response`);
+  const cleaned = data.text.trim().replace(/\n{2,}/g, '\n').replace(/[ \t]+\n/g, '\n');
+  const { superscription, body } = splitSuperscription(cleaned);
   return {
-    reference: data.reference,
-    translation: 'WEB (World English Bible, public domain)',
+    // Use OUR canonical reference string (the PASSAGES entry), not the API's
+    // own `data.reference` — bible-api.com pluralizes "Psalm" to "Psalms"
+    // (e.g. "Psalms 23:1-6"), which would silently break cross-corpus
+    // lookups by reference against the BSB fixtures (keyed "Psalm 23:1-6").
+    reference,
+    translation: ALT_TRANSLATIONS[translationKey].label,
     source: url,
     fetchedAt: new Date().toISOString(),
-    text: data.text.trim().replace(/\n{2,}/g, '\n').replace(/[ \t]+\n/g, '\n'),
+    text: superscription ? body : cleaned,
+    ...(superscription ? { superscription } : {}),
   };
 }
 
-async function buildWeb() {
-  mkdirSync(WEB_OUT_DIR, { recursive: true });
+async function buildAlt(translationKey) {
+  const { outDir } = ALT_TRANSLATIONS[translationKey];
+  mkdirSync(outDir, { recursive: true });
   let ok = 0;
   let failed = 0;
+  let skipped = 0;
   for (const reference of PASSAGES) {
+    const filename = `${slugify(reference)}.json`;
+    const filePath = path.join(outDir, filename);
+    // Resume-safe: bible-api.com's free tier rate-limits aggressively, so a
+    // rerun after a partial failure should not re-spend calls on passages
+    // already fetched successfully.
+    if (existsSync(filePath)) {
+      skipped++;
+      continue;
+    }
     try {
-      const fixture = await fetchWebPassage(reference);
-      const filename = `${slugify(fixture.reference)}.json`;
-      writeFileSync(path.join(WEB_OUT_DIR, filename), JSON.stringify(fixture, null, 2) + '\n', 'utf8');
+      const fixture = await fetchAltPassage(reference, translationKey);
+      writeFileSync(filePath, JSON.stringify(fixture, null, 2) + '\n', 'utf8');
       console.log(`OK   ${fixture.reference} -> ${filename} (${fixture.text.length} chars)`);
       ok++;
     } catch (err) {
       console.error(`FAIL ${reference}: ${err.message}`);
       failed++;
     }
-    await new Promise((r) => setTimeout(r, 250)); // be polite to the free public API
+    await new Promise((r) => setTimeout(r, 1000)); // be polite to the free public API (rate-limits at short intervals)
   }
-  console.log(`\nWEB: fetched ${ok} passages, ${failed} failed.`);
+  console.log(`\n${translationKey.toUpperCase()}: fetched ${ok} passages, ${failed} failed, ${skipped} already cached.`);
   return failed === 0;
 }
 
 async function main() {
-  const mode = process.argv.includes('--web') ? 'web' : 'bsb';
-  const success = mode === 'web' ? await buildWeb() : await buildBsb();
+  const args = process.argv.slice(2);
+  const wantWeb = args.includes('--web');
+  const wantKjv = args.includes('--kjv');
+  let success = true;
+  if (wantWeb) success = (await buildAlt('web')) && success;
+  if (wantKjv) success = (await buildAlt('kjv')) && success;
+  if (!wantWeb && !wantKjv) success = await buildBsb();
   if (!success) process.exitCode = 1;
 }
 

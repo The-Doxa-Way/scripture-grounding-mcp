@@ -21,7 +21,7 @@
   <line x1="70" y1="190.0" x2="690" y2="190.0" class="grid-line" /><text x="58" y="194.0" text-anchor="end" class="axis-label">50%</text>
   <line x1="70" y1="120.0" x2="690" y2="120.0" class="grid-line" /><text x="58" y="124.0" text-anchor="end" class="axis-label">75%</text>
   <line x1="70" y1="50.0" x2="690" y2="50.0" class="grid-line" /><text x="58" y="54.0" text-anchor="end" class="axis-label">100%</text>
-  <rect x="116.5" y="148.8" width="113.7" height="181.2" class="bar" rx="4" /><text x="173.3" y="138.8" text-anchor="middle" class="bar-value">64.7%</text><text x="173.3" y="358.0" text-anchor="middle" class="axis-label">Ungrounded</text><text x="173.3" y="378.0" text-anchor="middle" class="axis-sublabel">(n=34)</text>
+  <rect x="116.5" y="140.6" width="113.7" height="189.4" class="bar" rx="4" /><text x="173.3" y="130.6" text-anchor="middle" class="bar-value">67.6%</text><text x="173.3" y="358.0" text-anchor="middle" class="axis-label">Ungrounded</text><text x="173.3" y="378.0" text-anchor="middle" class="axis-sublabel">(n=34)</text>
   <rect x="323.2" y="50.0" width="113.7" height="280.0" class="bar" rx="4" /><text x="380.0" y="40.0" text-anchor="middle" class="bar-value">100.0%</text><text x="380.0" y="358.0" text-anchor="middle" class="axis-label">Grounded</text><text x="380.0" y="378.0" text-anchor="middle" class="axis-sublabel">(n=34)</text>
   <rect x="529.8" y="50.0" width="113.7" height="280.0" class="bar" rx="4" /><text x="586.7" y="40.0" text-anchor="middle" class="bar-value">100.0%</text><text x="586.7" y="358.0" text-anchor="middle" class="axis-label">Grounded + verify</text><text x="586.7" y="378.0" text-anchor="middle" class="axis-sublabel">(n=34)</text>
   <line x1="70" y1="330" x2="690" y2="330" class="grid-line" />

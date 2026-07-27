@@ -36,13 +36,13 @@
     }
   },
   {
-    "label": "KJV-style wording of Philippians 4:13 diverges enough from BSB: misquote (named translation-bleed case)",
+    "label": "verbatim KJV wording of Philippians 4:13, claimed as BSB: different_translation, not misquote",
     "input": {
       "quote": "I can do all things through Christ which strengtheneth me.",
       "claimedReference": "Philippians 4:13"
     },
     "expected": {
-      "verdict": "misquote",
+      "verdict": "different_translation",
       "similarityScore": 0.7619,
       "correctReference": null
     }
@@ -67,7 +67,7 @@
     },
     "expected": {
       "verdict": "misattribution",
-      "similarityScore": 0.0952,
+      "similarityScore": 0.0976,
       "correctReference": "John 3:16-17"
     }
   },
@@ -115,7 +115,7 @@
     },
     "expected": {
       "verdict": "misquote",
-      "similarityScore": 0.7963,
+      "similarityScore": 0.9053,
       "correctReference": null
     }
   }

@@ -48,7 +48,7 @@ Five MCP tools implement this:
 |---|---|---|---|
 | `get_passage` | Retrieve canonical text for a reference (e.g. `"John 3:16-17"`) | YouVersion Platform API | Committed BSB fixture corpus |
 | `verse_of_the_day` | Retrieve today's Verse of the Day | YouVersion Platform API (`/verse_of_the_days/{day}`) | Deterministic fixture-set rotation, clearly labeled as fixture-mode |
-| `verify_quote` | **The core tool.** Given a quote + claimed reference, fetch canonical text and classify: `exact` / `minor_variance` / `misquote` / `misattribution` / `not_found`, with a word-level diff and similarity score | Same as `get_passage` | Same as `get_passage` |
+| `verify_quote` | **The core tool.** Given a quote + claimed reference, fetch canonical text and classify: `exact` / `minor_variance` / `misquote` / `misattribution` / `different_translation` / `not_found`, with a word-level diff and similarity score. `different_translation` fires when a quote misses the requested translation but is a close (≥0.95) match for another public-domain translation this project ships locally (WEB, KJV — see "Multi-version detection" below) — every call also reports `closestTranslation`/`similarityToClosest` regardless of verdict | Same as `get_passage` | Same as `get_passage` |
 | `grounded_reply` | Demonstrates the full pattern: retrieve a relevant passage for a topic, then generate a reply constrained to quote only that text | Gloo AI Studio (`/ai/v2/chat/completions`) | Deterministic stub reply (no network call) |
 | `verify_register` | **The second gated pillar.** Checks any AI-generated text for register violations — first-person language, reassurance-empathy phrasing, companion/always-here claims, personhood/feeling claims — via a deterministic rule table, not a model call | None (pure function + fixture corpus) | Always keyless |
 
@@ -134,6 +134,41 @@ context, the YouVersion Platform API supplies whichever of its 2,000+
 licensed translations the end user actually wants — the BSB default only
 governs what ships *committed* in this repo.
 
+## Multi-version detection
+
+Scoring against one named translation raises an obvious objection: what if
+the model quoted a *different* translation accurately, and got marked wrong
+for it? So this project checks, rather than assuming. Two more public-domain
+translations of the same 34 passages — WEB (World English Bible) and KJV
+(King James Version), fetched from bible-api.com the same provenance-tracked
+way as BSB (`scripts/build-fixtures.js --web` / `--kjv`) — are committed to
+`fixtures/web/*.json` / `fixtures/kjv/*.json`. `verify_quote`
+(`src/alt-translations.js`) compares every quote against the closest of all
+three local canons and reports it via four always-present fields
+(`closestTranslation`, `similarityToClosest`, `verdictAgainstClosest`,
+`similarityToRequested`). When a quote misses the requested translation but
+is a close (≥0.95) match for a different local canon, the verdict is
+`different_translation` — "accurate KJV quote, but BSB was requested" is a
+real, more forgivable failure than invented wording, and this project
+measures the difference instead of collapsing both into "misquote." Try it
+in the [demo](https://scripture-grounding-demo.vercel.app) with `"I can do
+all things through Christ which strengtheneth me"` claimed as Philippians
+4:13 (verbatim KJV).
+
+Run against this benchmark's own cached ungrounded misses (see
+`benchmark/results/RESULTS.md`'s "Cross-translation check" section), the
+honest answer was **0 of 11**: none of them turned out to be accurate
+WEB/KJV quotes misfiled as BSB misses — reported as-is, not spun.
+
+**Not yet implemented:** with your own free YouVersion key, `get_passage`
+and `verify_quote` already work against any *one* of YouVersion's 2,000+
+licensed translations at a time (the `version` parameter). Extending
+today's closest-canon comparison to check several licensed translations
+(NIV/ESV/NASB/etc.) at once is a materially different use of that access
+than this server's existing single-translation retrieval, and this repo
+does not build or exercise that path ahead of YouVersion's own written
+confirmation that it's covered — that request is in.
+
 ## Fixture corpus
 
 `fixtures/bsb/*.json` — 34 passages spanning narrative, poetry/wisdom,
@@ -155,9 +190,19 @@ provenance:
 }
 ```
 
-Regenerate with `npm run build:fixtures`. A secondary WEB (World English
-Bible) fixture set can be built with `node scripts/build-fixtures.js --web`
-for future cross-translation comparison work, but is not shipped by default.
+A psalm fixture with a BSB superscription (a musical/liturgical heading —
+e.g. "For the choirmaster. Of the sons of Korah. According to Alamoth. A
+song." on Psalm 46) carries it in a separate `superscription` field, split
+out of `text` at build time (`src/superscription.js`) — the heading is
+preserved for provenance/display, but it's not part of the quoted passage,
+so it's never scored as if it were.
+
+Regenerate with `npm run build:fixtures`. Two more public-domain
+translations of the same 34 passages — `fixtures/web/*.json` (WEB) and
+`fixtures/kjv/*.json` (KJV), built with `node scripts/build-fixtures.js
+--web` / `--kjv` — are committed alongside BSB and used by `verify_quote`'s
+multi-version detection (see "Multi-version detection" above), not held
+back for future work.
 
 ## Architecture
 
@@ -166,6 +211,8 @@ src/
   normalize.js          text normalization (smart quotes, verse numbers, case, punctuation)
   diff.js               word-level LCS diff + similarity scoring (no diff library — implemented here)
   fixtures.js            BSB fixture loader + cross-corpus best-match search
+  superscription.js       splits a psalm's BSB superscription off the quoted passage (build- and verify-time)
+  alt-translations.js     WEB/KJV fixture loaders + closest-canon search (different_translation verdict)
   usfm.js                human reference ("John 3:16-17") <-> USFM ("JHN.3.16-17") conversion
   env.js                 local-dev loader for ~/.config/doxa/*.env credential files
   youversion-client.js   YouVersion Platform API client + BSB fixture fallback
@@ -246,12 +293,16 @@ service. Specifically:
   similarity band. The categorical verdict plus the diff summary are meant
   to let a human (or a stricter downstream check) make the final call, not
   to replace one.
-- **One default translation.** BSB is the fixture ground truth; comparing a
-  quote against a *different* legitimate translation's wording will
-  correctly show up as `misquote`/`minor_variance` even when the quote is
-  perfectly accurate in that other translation. Pass `version` /a YouVersion
-  bibleId once a key is configured to compare against a different
-  translation instead.
+- **BSB is the requested/default translation, not the only one checked.**
+  `verify_quote` compares every quote against the closest of three
+  public-domain canons this project ships locally (BSB, WEB, KJV — see
+  "Multi-version detection" above) and reports `different_translation`
+  rather than flatly `misquote`/`minor_variance` when a quote is a close
+  match for WEB or KJV instead of BSB. What it does *not* yet do: the same
+  comparison across YouVersion's 2,000+ *licensed* translations at once —
+  that needs YouVersion's own written sign-off first (requested, pending).
+  Pass `version` / a YouVersion bibleId once a key is configured to compare
+  against one specific other translation in the meantime.
 - **`grounded_reply`'s retrieval is a keyword map, not a real search
   engine.** It demonstrates the retrieve-then-constrain pattern; it is not a
   general-purpose "find me the best verse for X" tool.
@@ -265,7 +316,7 @@ service. Specifically:
 npm test
 ```
 
-181 tests (`node --test`), all deterministic, all offline (fixture/stub mode
+202 tests (`node --test`), all deterministic, all offline (fixture/stub mode
 — no network calls, no API keys required to run the suite). Covers:
 normalization robustness (smart quotes, inline verse numbers, mixed case),
 word-diff correctness, all five `verify_quote` verdicts (including a named

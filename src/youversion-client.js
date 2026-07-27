@@ -54,7 +54,7 @@ export function createYouVersionClient(opts = {}) {
    * Fetch a passage by human reference (e.g. "John 3:16-17").
    * @param {string} reference
    * @param {string} [version] - YouVersion bibleId; defaults to BSB (3034)
-   * @returns {Promise<{reference: string, text: string, translation: string, source: 'youversion-api'|'fixture'}>}
+   * @returns {Promise<{reference: string, text: string, translation: string, source: 'youversion-api'|'fixture', superscription?: string}>}
    */
   async function getPassage(reference, version) {
     if (isConfigured) {
@@ -93,6 +93,11 @@ export function createYouVersionClient(opts = {}) {
       text: fixture.text,
       translation: fixture.translation,
       source: 'fixture',
+      // A psalm's superscription (musical/liturgical heading) is split out
+      // of `text` at fixture-build time (src/superscription.js) — exposed
+      // here separately, never silently dropped, for callers that want to
+      // display or reason about it.
+      ...(fixture.superscription ? { superscription: fixture.superscription } : {}),
       ...(cause ? { note: `YouVersion API call failed (${cause.message}); served from fixture instead.` } : {}),
     };
   }

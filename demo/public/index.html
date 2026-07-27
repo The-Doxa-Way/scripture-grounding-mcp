@@ -198,6 +198,7 @@
   .badge.minor_variance { background: rgba(255,149,0,0.15); color: var(--amber); }
   .badge.misquote, .badge.not_found { background: rgba(229,37,40,0.15); color: var(--red); }
   .badge.misattribution { background: rgba(255,149,0,0.15); color: var(--amber); }
+  .badge.different_translation { background: rgba(255,149,0,0.15); color: var(--amber); }
   .badge.stub { background: rgba(171,171,171,0.15); color: var(--gray); }
   .badge.clean { background: rgba(48,209,88,0.15); color: var(--green); }
   .badge.violations { background: rgba(229,37,40,0.15); color: var(--red); }
@@ -240,7 +241,7 @@
 
   <div class="stats">
     <div class="stat">
-      <div class="n bad">64.7%</div>
+      <div class="n bad">67.6%</div>
       <div class="l">exact-quote rate, ungrounded (model recalling from memory)</div>
     </div>
     <div class="stat">
@@ -248,7 +249,7 @@
       <div class="l">exact-quote rate, grounded (retrieve-then-constrain)</div>
     </div>
     <div class="stat">
-      <div class="n">34 / 181</div>
+      <div class="n">34 / 202</div>
       <div class="l">BSB fixture passages / automated tests, all offline</div>
     </div>
   </div>
@@ -264,13 +265,43 @@
 
   <section class="panel">
     <h2>2. Verify a quote</h2>
-    <p class="hint">Paste a quote and the reference it's claimed to be from. Try changing a word or citing the wrong verse to see a misquote/misattribution verdict.</p>
+    <p class="hint">Paste a quote and the reference it's claimed to be from. Try changing a word or citing the wrong verse to see a misquote/misattribution verdict — or try "I can do all things through Christ which strengtheneth me" claimed as Philippians 4:13 to see a <code>different_translation</code> verdict (see the box below).</p>
     <label for="v-quote">Quote</label>
     <textarea id="v-quote">For God so loved the world that he sent his only Son, that whoever believes in him shall not perish.</textarea>
     <label for="v-ref">Claimed reference</label>
     <input id="v-ref" type="text" value="John 3:16-17" />
     <button id="v-btn">Verify quote</button>
     <div class="out" id="v-out"></div>
+  </section>
+
+  <section class="panel">
+    <h2>What about other translations?</h2>
+    <p class="hint">
+      Fair objection: this benchmark scored quotes against the Berean Standard Bible (BSB) —
+      maybe the model quoted a different translation accurately, and got marked wrong for it.
+      This benchmark's own ungrounded prompt already names BSB explicitly (<em>"Quote &lt;reference&gt;
+      exactly from the Berean Standard Bible"</em>), so that's still a real miss of what was
+      asked — but it's a different, more forgivable failure than invented wording, and this
+      project measures the difference instead of asserting it away.
+    </p>
+    <p class="hint">
+      <strong>Today:</strong> <code>verify_quote</code> compares every quote against the closest
+      of three public-domain canons this project ships — BSB, WEB, and KJV — and returns
+      <code>different_translation</code> instead of <code>misquote</code> when a quote misses BSB
+      but is a close (&ge;0.95 similarity) match for one of the others. Try it in the panel above.
+      Run against this benchmark's own 11 ungrounded misses (zero extra API calls — scored from
+      already-cached output), the honest result was <strong>0 of 11</strong>: none of them turned
+      out to be accurate WEB/KJV quotes. The gap is real, not a translation-mismatch artifact —
+      see <code>benchmark/results/RESULTS.md</code>'s "Cross-translation check" section.
+    </p>
+    <p class="hint">
+      <strong>Not yet:</strong> with your own free YouVersion key, <code>get_passage</code> and
+      <code>verify_quote</code> already work against any one of YouVersion's 2,000+ licensed
+      translations at a time. Extending today's closest-canon comparison to check several of
+      those licensed translations at once is a different use of that access than this server's
+      existing single-translation retrieval, and needs YouVersion's own written sign-off first —
+      that request is in. YouVersion, please say yes.
+    </p>
   </section>
 
   <section class="panel">
@@ -406,6 +437,11 @@
     if (body.correctReference) {
       correction = `<div class="reason">Closest match instead: <strong>${escapeHtml(body.correctReference)}</strong></div>`;
     }
+    let translationNote = '';
+    if (body.verdict === 'different_translation' && body.closestTranslation) {
+      const closestPct = body.similarityToClosest != null ? `${(body.similarityToClosest * 100).toFixed(1)}%` : '—';
+      translationNote = `<div class="reason">Closest local canon instead: <strong>${escapeHtml(body.closestTranslation)}</strong> (similarity ${closestPct})</div>`;
+    }
     container.innerHTML = '';
     container.appendChild(el(`
       <div>
@@ -413,6 +449,7 @@
         <span style="color:var(--text-dim); font-size:0.82rem;"> similarity ${score}</span>
         ${renderDiff(body.diffSummary)}
         ${correction}
+        ${translationNote}
         <div class="reason">${escapeHtml(body.reason)}</div>
         ${canonicalBlock}
       </div>
