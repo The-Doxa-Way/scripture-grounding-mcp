@@ -9,7 +9,8 @@ against the source instead of trusting the model's recall.
 Built for Kaggle's **"Scripture in New Frontiers"** challenge (YouVersion +
 Gloo, July 2026).
 
-**Live demo:** [scripture-grounding-demo.vercel.app](https://scripture-grounding-demo.vercel.app)
+**Live demo:** [doxa.app/scripture-grounding](https://doxa.app/scripture-grounding)
+(mirrored at [scripture-grounding-demo.vercel.app](https://scripture-grounding-demo.vercel.app))
 — try a passage, verify a quote (live red/green diff), and get a Scripture-grounded
 encouragement, all running keyless on the committed BSB fixture corpus. The
 same API backs a ChatGPT custom GPT Action config in `integrations/chatgpt/`.

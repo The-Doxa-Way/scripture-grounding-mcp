@@ -16,10 +16,12 @@ info:
     at github.com/The-Doxa-Way/scripture-grounding-mcp (GPTs can't speak MCP
     directly, so this REST surface mirrors its three most important tools).
 servers:
-  - url: https://scripture-grounding-demo.vercel.app
-    description: Production demo deployment
+  - url: https://doxa.app/scripture-grounding/api
+    description: Production demo deployment (doxa.app rewrite)
+  - url: https://scripture-grounding-demo.vercel.app/api
+    description: Direct Vercel deployment
 paths:
-  /api/passage:
+  /passage:
     get:
       operationId: getPassage
       summary: Retrieve canonical BSB text for a Scripture reference
@@ -67,7 +69,7 @@ paths:
                     type: array
                     items:
                       type: string
-  /api/verify:
+  /verify:
     post:
       operationId: verifyQuote
       summary: Verify a claimed Scripture quote against canonical BSB text
@@ -132,7 +134,7 @@ paths:
                     type: string
         "400":
           description: Missing quote or reference
-  /api/encourage:
+  /encourage:
     post:
       operationId: encourage
       summary: Get a Scripture-grounded encouragement for a topic or question
