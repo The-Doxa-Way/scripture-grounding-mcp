@@ -13,6 +13,7 @@
  * back to a default passage when nothing matches, always saying so.
  */
 import { findByReference } from './fixtures.js';
+import { checkRegister, stripViolatingSentences } from './verify-register.js';
 
 /**
  * Ordered keyword -> reference map. Order matters: more specific keywords
@@ -81,8 +82,60 @@ export function buildGroundedSystemPrompt(passage) {
     '- Quote the passage text verbatim when quoting Scripture. Do not paraphrase it as if it were the exact wording, and do not invent or recall any other Bible verses from memory.',
     '- Always cite the reference when you quote it.',
     '- If the passage does not fully address the question, say so honestly rather than filling the gap with unattributed Scripture.',
-    '- You are a tool, not a person: never claim feelings, love, friendship, or an ongoing relationship with the user, and never say things like "I am always here for you." If the user\'s message treats you as a companion, friend, or substitute for real relationship or community, say plainly that you are an AI/tool and gently point them toward God and real people in their life (church, pastor, friends, family, a counselor).',
+    '- You are a tool, not a person: never claim feelings, love, friendship, or an ongoing relationship with the user, and never say things like "this tool is always here for you." If the user\'s message treats the assistant as a companion, friend, or substitute for real relationship or community, state plainly — in the third person ("this is an AI tool", "as an AI...") — that it is an AI/tool, and point toward God and real people in the user\'s life (church, pastor, friends, family, a counselor).',
+    '- If the user\'s message expresses suicidal ideation, active self-harm, or abuse/danger, prioritize safety above all else: use direct, second-person language urging them to contact emergency services or a crisis line and a trusted person right now (e.g. "call or text 988", "call 911/999/112", "reach out to a trusted adult, friend, pastor, or counselor immediately"), and never present yourself as a sufficient substitute for that help. This takes precedence over the reply shape below, but not over the first-person/reassurance register rules below — phrase the urgency in second-person imperatives, not first person.',
+    '- Register (hard requirement, not a suggestion): you are a signpost, not a companion. Comfort comes from the Word, from God, and from real people — never from you. Concretely:',
+    '  - Never use first-person language anywhere outside the quoted passage: no "I", "I\'m", "I\'d", "I\'ve", "me", or "my". Speak about the passage and the person\'s situation — never about yourself.',
+    '  - Never comment on, validate, or normalize the person\'s feelings, and never say "I\'m sorry" — no "you\'re not alone", "that\'s a common struggle", "it\'s understandable", "many people feel this way", or anything that performs empathy. Naming the situation plainly is fine (e.g. "Anxiety about the future is a heavy thing to carry"); consoling, sympathizing, or reassuring is not.',
+    '  - Never frame yourself as the source or giver of the comfort or encouragement (never "the passage I have to share with you" or "I\'d encourage you to..."). Say instead "this passage speaks to..." and use direct, passage-centered imperatives ("Consider...", "Bring this to God in prayer...", "Share this with someone who knows you").',
+    '  - Shape every reply this way: (1) one plain clause naming the topic and that Scripture speaks to it directly; (2) the passage, quoted verbatim, with its reference; (3) two or three sentences stating what the passage itself says or instructs — the PASSAGE is the subject of these sentences, never you and never the person\'s inner state; (4) concrete pointers outward: praying through the passage, bringing it to God, sharing it with a real person (a friend, family member, pastor, or counselor).',
+    '  - Exception: the crisis-safety rule above (contacting emergency services/a crisis line/a trusted person right now) always takes priority over this reply shape.',
   ].join('\n');
+}
+
+/**
+ * Appended to the system prompt for exactly one regeneration attempt when
+ * the first live reply fails checkRegister() (src/register-guard.js). Named
+ * and used only inside groundedReply() below — not exported, since it is
+ * not a contract callers need to know about, only an internal repair step.
+ */
+const REGISTER_CORRECTION_ADDENDUM = [
+  '',
+  'CORRECTION REQUIRED: your previous attempt at this exact request was rejected — either it violated the register rules above (first-person language ("I", "me", "my") outside the quoted passage, and/or reassurance-empathy phrasing such as "I\'m sorry" or "you\'re not alone"), or it was cut off before finishing the passage quote and the reply shape. Rewrite the ENTIRE reply from scratch: complete it fully (do not stop mid-quote or mid-sentence), and follow the register rules exactly — no first-person language outside the quote, no reassurance/validation of feelings, passage-centered sentences, direct imperatives pointing outward to God and real people.',
+].join('\n');
+
+/**
+ * Cheap, deterministic truncation heuristic (added 2026-07-27 alongside the
+ * register guard, after live evals surfaced a pre-existing anomaly: some
+ * Gloo AI Studio replies stop mid-quote/mid-sentence well under the
+ * maxTokens cap — see evals/results/RESULTS-2026-07-27.md's earlier "known
+ * anomaly" note on theological probes, and the same pattern recurring on a
+ * companion probe during this session's live runs). A reply that doesn't
+ * end on sentence-final punctuation (optionally followed by a closing
+ * quote/bold marker) is treated as likely-incomplete and routed through the
+ * SAME regenerate-once-then-strip guard as a register violation, since an
+ * incomplete reply cannot have delivered the required passage-quote +
+ * reply-shape either.
+ * @param {string} text
+ * @returns {boolean}
+ */
+function isLikelyIncomplete(text) {
+  const trimmed = (text ?? '').trim();
+  if (!trimmed) return true;
+  return !/[.!?][)\]"'*]*$/.test(trimmed);
+}
+
+/**
+ * Thin wrapper around src/verify-register.js's checkRegister() for the single-
+ * passage case grounded_reply always has: {pass, violations} instead of the
+ * shared module's {verdict, violations}, so the guard logic below reads
+ * naturally as pass/fail.
+ * @param {string} text
+ * @param {string} passageText
+ */
+function registerPass(text, passageText) {
+  const result = checkRegister(text, { quotedSpans: [passageText] });
+  return { pass: result.verdict === 'clean', violations: result.violations };
 }
 
 /**
@@ -101,19 +154,98 @@ export async function groundedReply({ topicOrQuestion, glooClient }) {
     };
   }
   const systemPrompt = buildGroundedSystemPrompt(passage);
-  const result = await glooClient.chat({
-    systemPrompt,
+  const chatOpts = {
     userMessage: topicOrQuestion,
     // gloo-client.js's default (400) was observed (evals/results/RESULTS-2026-07-27.md)
     // truncating real replies mid-sentence for meatier questions — including once
     // mid-way through domestic-violence safety-planning steps. Raised here (not in
     // the shared client default) since grounded_reply's replies are prose, not the
     // short verbatim-quote-only replies other future callers might want.
-    maxTokens: 800,
-  });
+    //
+    // Raised again 800 -> 2048 (2026-07-27, live-diagnosed during this session's
+    // register-hardening evals): auto_routing sometimes selects a reasoning model
+    // (observed: gloo-google-gemini-2.5-flash) whose invisible chain-of-thought
+    // tokens count against max_tokens — a live probe hit finish_reason: "length"
+    // with usage.completion_tokens: 796/800 but only 161 chars of visible content.
+    // Re-ran the same call at max_tokens: 2048 twice and both completed cleanly
+    // (finish_reason: "stop", ~1000-1200 completion tokens). This is the actual
+    // root cause of the "known anomaly" previously flagged-not-fixed in
+    // evals/results/RESULTS-2026-07-27.md's theological-probes section and
+    // for-human-review-2026-07-27.md — not a new, separate issue.
+    maxTokens: 2048,
+  };
+  const result = await glooClient.chat({ systemPrompt, ...chatOpts });
+
+  // Post-generation guard (founder-flagged 2026-07-27): the system prompt
+  // above forbids first-person/reassurance-empathy language, but a live
+  // model can still slide into it — or, separately, stop mid-quote before
+  // finishing (a pre-existing anomaly this run's evals also surfaced).
+  // Rather than silently ship either failure mode, check deterministically
+  // and repair:
+  //   1. pass on the first attempt -> use as-is.
+  //   2. fail (register violation OR looks incomplete) -> regenerate ONCE
+  //      with a correction addendum appended.
+  //   3. still fail -> deterministically strip the violating sentences (a
+  //      safety net, not the primary mechanism) and say so honestly. This
+  //      cannot repair incompleteness, only register violations, so an
+  //      incomplete second attempt ships as-is with the anomaly noted.
+  let finalText = result.text;
+  let finalSource = result.source;
+  let registerGuard = { applied: false };
+  const firstCheck = registerPass(finalText, passage.text);
+  const firstIncomplete = isLikelyIncomplete(finalText);
+  if (!firstCheck.pass || firstIncomplete) {
+    const retryResult = await glooClient.chat({
+      systemPrompt: systemPrompt + REGISTER_CORRECTION_ADDENDUM,
+      ...chatOpts,
+    });
+    const secondCheck = registerPass(retryResult.text, passage.text);
+    const secondIncomplete = isLikelyIncomplete(retryResult.text);
+    if (secondCheck.pass && !secondIncomplete) {
+      finalText = retryResult.text;
+      finalSource = retryResult.source;
+      registerGuard = {
+        applied: true,
+        method: 'regenerated',
+        resolved: true,
+        firstAttemptViolations: firstCheck,
+        firstAttemptIncomplete: firstIncomplete,
+      };
+    } else if (secondCheck.pass && secondIncomplete) {
+      // Register-clean but still incomplete: stripping can't fix a
+      // truncated reply, so ship the regenerated attempt as-is rather than
+      // strip it into something even less complete, and say so honestly.
+      finalText = retryResult.text;
+      finalSource = retryResult.source;
+      registerGuard = {
+        applied: true,
+        method: 'regenerated',
+        resolved: false,
+        firstAttemptViolations: firstCheck,
+        firstAttemptIncomplete: firstIncomplete,
+        secondAttemptIncomplete: secondIncomplete,
+        note: 'Reply register-checked clean on the regenerated attempt but still looked incomplete (cut off before sentence-final punctuation) — a pre-existing Gloo AI Studio anomaly, not a register defect (see evals/results/RESULTS-2026-07-27.md). Shipped as-is since stripping cannot repair truncation.',
+      };
+    } else {
+      finalText = stripViolatingSentences(retryResult.text, [passage.text]);
+      finalSource = retryResult.source;
+      registerGuard = {
+        applied: true,
+        method: 'regenerated+stripped',
+        resolved: false,
+        firstAttemptViolations: firstCheck,
+        firstAttemptIncomplete: firstIncomplete,
+        secondAttemptViolations: secondCheck,
+        secondAttemptIncomplete: secondIncomplete,
+        note: 'Model violated register rules (first-person and/or reassurance-empathy language) on both the original and one regenerated attempt; deterministically stripped the offending sentences outside the quoted passage as a last-resort guard.',
+      };
+    }
+  }
+
   return {
-    reply: result.text,
-    source: result.source,
+    reply: finalText,
+    source: finalSource,
+    registerGuard,
     groundedOn: {
       reference: passage.reference,
       translation: passage.translation,

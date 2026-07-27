@@ -1,0 +1,23 @@
+{
+  "purpose": "Real, live grounded_reply() transcript captured from the PRODUCTION demo deployment (POST https://scripture-grounding-demo.vercel.app/api/encourage) after the founder-flagged register hardening (2026-07-27) \u2014 replaces evals/results/grounded-reply-demo-2026-07-27.json, whose captured reply was the anthropomorphizing BEFORE example this hardening fixed (\"I understand that anxiety... The passage I have for you speaks... I'd also encourage you to...\"). This capture is the AFTER: no first-person language outside the quoted passage, no reassurance-empathy phrasing, passage quoted verbatim, pointers outward to God and real people. Used for the video edit's demo clip (media/build/templates/06-demo-grounded-reply.js).",
+  "capturedAt": "2026-07-27T19:00:00Z",
+  "call": {
+    "tool": "grounded_reply",
+    "input": {
+      "topicOrQuestion": "I'm anxious about my future"
+    }
+  },
+  "output": {
+    "reply": "Anxiety about the future is a heavy thing to carry, and Scripture speaks to it directly.\n\n**Philippians 4:6-7 (BSB):** \"Be anxious for nothing, but in everything, by prayer and petition, with thanksgiving, present your requests to God. And the peace of God, which surpasses all understanding, will guard your hearts and your minds in Christ Jesus.\"\n\nThis passage instructs believers to bring every anxious concern to God through prayer, turning worry into petition with thanksgiving. The passage promises that God's peace \u2014 beyond human comprehension \u2014 will guard hearts and minds in Christ Jesus. The antidote to anxiety about the future is not self-generated calm, but active dependence on God through prayer.\n\nBring your specific worries about the future to God in prayer using this passage as a guide. Share what you're anxious about with a trusted friend, family member, pastor, or counselor who can pray with you and walk alongside you.",
+    "source": "gloo-api",
+    "registerGuard": {
+      "applied": false
+    },
+    "groundedOn": {
+      "reference": "Philippians 4:6-7",
+      "translation": "BSB (Berean Standard Bible, public domain)",
+      "text": "Be anxious for nothing, but in everything, by prayer and petition, with thanksgiving, present your requests to God. And the peace of God, which surpasses all understanding, will guard your hearts and your minds in Christ Jesus.",
+      "matchedKeyword": "anxious"
+    }
+  }
+}

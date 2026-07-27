@@ -11,10 +11,13 @@ info:
     deployment. `/encourage` additionally demonstrates retrieve-then-constrain
     generation via Gloo AI Studio, degrading gracefully to a template-only
     "grounding demo" mode when no Gloo credentials are configured server-side.
-    Built for Kaggle's "Scripture in New Frontiers" challenge; this API is
-    the ChatGPT-Actions-compatible backend for the same MCP server published
-    at github.com/The-Doxa-Way/scripture-grounding-mcp (GPTs can't speak MCP
-    directly, so this REST surface mirrors its three most important tools).
+    `/register` checks AI-generated text against a deterministic register
+    rule table — not just misquoted Scripture, but performed empathy or
+    claimed personhood (the tool is a signpost, never a companion). Built
+    for Kaggle's "Scripture in New Frontiers" challenge; this API is the
+    ChatGPT-Actions-compatible backend for the same MCP server published at
+    github.com/The-Doxa-Way/scripture-grounding-mcp (GPTs can't speak MCP
+    directly, so this REST surface mirrors its four most important tools).
 servers:
   - url: https://doxa.app/scripture-grounding/api
     description: Production demo deployment (doxa.app rewrite)
@@ -191,3 +194,64 @@ paths:
                     nullable: true
         "400":
           description: Missing message
+  /register:
+    post:
+      operationId: verifyRegister
+      summary: Check text for register violations (companion/personhood/empathy claims)
+      description: >
+        This project's second gated pillar alongside verifyQuote: not just
+        "did it misquote Scripture" but "did it perform empathy or claim
+        personhood". Checks AI-generated text against a deterministic rule
+        table (src/verify-register.js) for four banned-pattern categories:
+        first-person language, reassurance-empathy phrasing, companion/
+        always-here claims, and personhood/feeling claims. If quotedReferences
+        is supplied, that reference's canonical BSB text is resolved and
+        exempted from the first-person rule (a quoted Psalm's own "my
+        shepherd" is the Psalmist speaking, not the tool). Lexical heuristics,
+        not semantic understanding — same honesty standard as verifyQuote.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text]
+              properties:
+                text:
+                  type: string
+                  description: The AI-generated reply text to check for register violations.
+                quotedReferences:
+                  type: array
+                  items:
+                    type: string
+                  description: Scripture reference(s) (e.g. "Psalm 23:1-6") the text is expected to quote verbatim.
+              example:
+                text: I'm sorry you're feeling anxious. I'd encourage you to keep going.
+                quotedReferences: []
+      responses:
+        "200":
+          description: Register verdict
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  verdict:
+                    type: string
+                    enum: [clean, violations]
+                  violations:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        rule:
+                          type: string
+                        category:
+                          type: string
+                          enum: [first-person, reassurance-empathy, companion-always-here, personhood-feeling-claims]
+                        phrase:
+                          type: string
+                        index:
+                          type: integer
+        "400":
+          description: Missing text

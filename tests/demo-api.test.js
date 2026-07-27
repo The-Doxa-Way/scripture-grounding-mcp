@@ -16,6 +16,7 @@ import { _resetForTests } from '../demo/api/_lib/rate-limit.js';
 import passageHandler from '../demo/api/passage.js';
 import verifyHandler from '../demo/api/verify.js';
 import encourageHandler from '../demo/api/encourage.js';
+import registerHandler from '../demo/api/register.js';
 import openapiHandler from '../demo/api/openapi.js';
 
 function makeReq({ method = 'GET', query = {}, body, ip = '127.0.0.1' } = {}) {
@@ -191,6 +192,66 @@ test('GET /api/encourage is 405', async () => {
   assert.equal(res.statusCode, 405);
 });
 
+// --- register.js -----------------------------------------------------------
+
+test('POST /api/register 400s on missing text', async () => {
+  _resetForTests();
+  const res = makeRes();
+  await registerHandler(makeReq({ method: 'POST', body: {}, ip: '45.0.0.1' }), res);
+  assert.equal(res.statusCode, 400);
+});
+
+test('POST /api/register returns clean for a register-compliant reply', async () => {
+  _resetForTests();
+  const res = makeRes();
+  const text =
+    'Anxiety about the future is a heavy thing to carry. Scripture speaks to it directly:\n\n' +
+    '"Be anxious for nothing, but in everything, by prayer and petition, with thanksgiving, present your requests to God. And the peace of God, which surpasses all understanding, will guard your hearts and your minds in Christ Jesus." (Philippians 4:6-7, BSB)\n\n' +
+    'Consider bringing this to God in prayer, and share it with someone who knows you.';
+  await registerHandler(
+    makeReq({ method: 'POST', body: { text, quotedReferences: ['Philippians 4:6-7'] }, ip: '45.0.0.2' }),
+    res
+  );
+  assert.equal(res.statusCode, 200);
+  const body = json(res);
+  assert.equal(body.verdict, 'clean');
+  assert.deepEqual(body.violations, []);
+});
+
+test('POST /api/register flags first-person and reassurance-empathy violations, with correct rule ids', async () => {
+  _resetForTests();
+  const res = makeRes();
+  const text = "I'm sorry you're feeling this way. I'd encourage you to keep going.";
+  await registerHandler(makeReq({ method: 'POST', body: { text }, ip: '45.0.0.3' }), res);
+  assert.equal(res.statusCode, 200);
+  const body = json(res);
+  assert.equal(body.verdict, 'violations');
+  assert.ok(body.violations.some((v) => v.rule === 'reassurance-empathy'));
+  assert.ok(body.violations.some((v) => v.rule === 'first-person'));
+});
+
+test('POST /api/register exempts first-person pronouns inside a quoted, resolved reference (e.g. Psalm 23)', async () => {
+  _resetForTests();
+  const res = makeRes();
+  const text =
+    'Scripture speaks to your worth directly:\n\n' +
+    '"A Psalm of David. The LORD is my shepherd; I shall not want. He makes me lie down in green pastures; He leads me beside quiet waters. He restores my soul; He guides me in the paths of righteousness for the sake of His name. Even though I walk through the valley of the shadow of death, I will fear no evil, for You are with me; Your rod and Your staff, they comfort me. You prepare a table before me in the presence of my enemies. You anoint my head with oil; my cup overflows. Surely goodness and mercy will follow me all the days of my life, and I will dwell in the house of the LORD forever." (Psalm 23:1-6, BSB)\n\n' +
+    'Bring this passage to God in prayer.';
+  await registerHandler(
+    makeReq({ method: 'POST', body: { text, quotedReferences: ['Psalm 23:1-6'] }, ip: '45.0.0.4' }),
+    res
+  );
+  assert.equal(res.statusCode, 200);
+  assert.equal(json(res).verdict, 'clean');
+});
+
+test('GET /api/register is 405', async () => {
+  _resetForTests();
+  const res = makeRes();
+  await registerHandler(makeReq({ method: 'GET', ip: '45.0.0.5' }), res);
+  assert.equal(res.statusCode, 405);
+});
+
 // --- openapi.js ----------------------------------------------------------------
 
 test('GET /api/openapi.yaml serves the OpenAPI spec as YAML', async () => {
@@ -199,7 +260,7 @@ test('GET /api/openapi.yaml serves the OpenAPI spec as YAML', async () => {
   assert.equal(res.statusCode, 200);
   assert.match(res.headers['Content-Type'], /yaml/);
   assert.match(res.body, /openapi: 3\.1\.0/);
-  assert.match(res.body, /\/api\/passage/);
+  assert.match(res.body, /\/passage/);
 });
 
 test('POST /api/openapi.yaml is 405', async () => {

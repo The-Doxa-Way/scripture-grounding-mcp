@@ -2,14 +2,19 @@
 /**
  * Scripture Grounding MCP server.
  *
- * Exposes four tools over stdio (Model Context Protocol):
+ * Exposes five tools over stdio (Model Context Protocol):
  *   - get_passage       retrieve canonical passage text (YouVersion API, BSB fixture fallback)
  *   - verse_of_the_day   retrieve today's verse of the day (YouVersion API, fixture fallback)
  *   - verify_quote       classify a claimed Scripture quote: exact / minor_variance / misquote / misattribution / not_found
  *   - grounded_reply     demonstrate retrieve-then-constrain generation via Gloo AI Studio
+ *   - verify_register    classify AI-generated text for anthropomorphizing/companion register violations (src/verify-register.js)
  *
- * The one idea underneath all four: an LLM should never quote Scripture
- * from memory. It should retrieve canonical text and be checked against it.
+ * The one idea underneath the first four: an LLM should never quote
+ * Scripture from memory. It should retrieve canonical text and be checked
+ * against it. verify_register is this project's second gated pillar,
+ * founder-flagged 2026-07-27: an AI tool should never perform empathy or
+ * claim personhood either — that's checked by code (a shared, deterministic
+ * rule table), not left to a system prompt alone.
  * "Measured, transparent, improving" — not "solved".
  */
 import { z } from 'zod';
@@ -21,6 +26,7 @@ import { createYouVersionClient } from './youversion-client.js';
 import { createGlooClient } from './gloo-client.js';
 import { verifyQuote } from './verify-quote.js';
 import { groundedReply } from './grounded-reply.js';
+import { checkRegister } from './verify-register.js';
 
 // Local-dev convenience: pull YOUVERSION_APP_KEY / GLOO_CLIENT_ID / GLOO_CLIENT_SECRET
 // from ~/.config/doxa/*.env if present, without overriding real env vars a
@@ -121,6 +127,36 @@ server.registerTool(
   },
   async ({ topic_or_question }) => {
     const result = await groundedReply({ topicOrQuestion: topic_or_question, glooClient: gloo });
+    return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+  }
+);
+
+server.registerTool(
+  'verify_register',
+  {
+    title: 'Verify register (not a companion)',
+    description:
+      'Checks AI-generated text for register violations: first-person language, reassurance-empathy ' +
+      'phrasing, companion/always-here claims, or personhood/feeling claims — the deterministic rule table ' +
+      'behind grounded_reply\'s always-on register guard (src/verify-register.js). If the text quotes ' +
+      'Scripture verbatim, pass the reference(s) so that quoted text is exempted from the first-person rule ' +
+      '(a quoted Psalm saying "my shepherd" is the Psalmist speaking, not the tool). Lexical heuristics, not ' +
+      'semantic understanding — same honesty standard as verify_quote.',
+    inputSchema: {
+      text: z.string().describe('The AI-generated reply text to check for register violations'),
+      quoted_references: z
+        .array(z.string())
+        .optional()
+        .describe('Scripture reference(s) (e.g. "Psalm 23:1-6") the text is expected to quote verbatim, so that quoted text is exempted from the first-person rule'),
+    },
+  },
+  async ({ text, quoted_references }) => {
+    const quotedSpans = [];
+    for (const reference of quoted_references ?? []) {
+      const resolved = await canonicalLookup(reference);
+      if (resolved?.text) quotedSpans.push(resolved.text);
+    }
+    const result = checkRegister(text, { quotedSpans });
     return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
   }
 );
