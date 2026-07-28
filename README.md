@@ -28,6 +28,37 @@ wrong. That's the failure mode this project targets: not "the model doesn't
 know Scripture," but **"there's no verification step between the model's
 output and the user."**
 
+### Why we care — in Scripture's own words
+
+This exchange is from a real Doxa Engage session, quoted verbatim (every
+Scripture quotation below was verified word-for-word against the BSB via
+the same live retrieval path this server uses — the four verses check out
+`exact`):
+
+> **Me:** What is the problem with misquoting Scripture?
+>
+> **Doxa:** The core problem is captured precisely in 2 Timothy 2:15: "Make
+> every effort to present yourself approved to God, an unashamed workman who
+> accurately handles the word of truth." The word "accurately" implies
+> there's a real way to handle it inaccurately, and the stakes are high
+> because, as 2 Timothy 3:16 says, Scripture is God-breathed. To misquote it
+> is to put words in God's mouth.
+>
+> Jesus himself named this directly in Matthew 22:29: "You are mistaken
+> because you do not know the Scriptures or the power of God." Misquoting
+> Scripture doesn't just misinform, it can lead people away from God's
+> actual character and power, replacing the real thing with something subtly
+> different.
+>
+> There's also a pastoral consequence. 2 Timothy 2:14 warns about careless
+> handling of words: "Remind the believers of these things, charging them
+> before God to avoid quarreling over words, which succeeds only in leading
+> the listeners to ruin." People make real life decisions based on what they
+> believe God said. Getting it wrong matters.
+>
+> *Get encouragement at [doxa.app](https://doxa.app)*
+
+
 ## The approach: retrieve, don't recall
 
 ```mermaid
@@ -114,6 +145,19 @@ and have a working Scripture-grounding server with zero setup.
   Gloo's chat completions endpoint instead of running the stub.
 
 Never commit these files or values — `.gitignore` excludes `*.env` already.
+
+## Provenance: built new for this challenge
+
+Everything in this repository — the MCP server, `verify_quote`'s diff
+engine, the register guard, the fixtures pipeline, the benchmark and its
+runner, the evals, the demo, the notebook — was written new inside the
+challenge window (July 27–31, 2026); the git history is the receipt. No code
+was ported from Doxa's products, which remain closed-source and separate.
+What we brought from Doxa was not code: the conviction that Scripture
+deserves verification, hard lessons from the safety evals we run on our own
+product, our brand, and our house translation choice (BSB). We say this
+plainly because a hackathon rewards new work, and because this project's
+whole ethic is that claims should be checkable.
 
 ## Why BSB as the default translation
 
