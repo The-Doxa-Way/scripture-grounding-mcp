@@ -148,6 +148,12 @@ length (a two-word slip across 9,401 words of Romans is reported as
 "exact"). Quote-side chapter boundaries are aligned heuristically
 (sequential alignment) and disclosed as such in every long-passage verdict.
 
+This claim is reproducible in one command. `npm run test:books` retrieves
+all 66 books keyless, verifies a perfect word-for-word read-through of each
+(Genesis to Revelation, similarity exactly 1), then plants a one-word
+corruption mid-book and confirms every one is caught. About 40 seconds on a
+laptop. Test it yourself.
+
 ### Bring your own keys (BYOK) for the full pipeline
 
 - **YouVersion Platform API**: register your own App Key at
