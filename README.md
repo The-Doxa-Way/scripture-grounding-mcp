@@ -261,6 +261,19 @@ portal](https://developers.youversion.com) will see it succeed instead):
 | 1, 59, 116, 1713 (bible.com's own ids for KJV, ESV, NLT, CSB) | KJV / ESV / NLT / CSB | N/A: these ids 404 "not found" against the Platform API; not (yet) in this catalog at all, a different failure than a licensing gate |
 | 12 | ASV (American Standard Version, public domain) | Yes: 200 on a real passage fetch, which is why this feature's own real end-to-end test (see `tests/verify-quote.test.js` and this repo's PR history) uses ASV rather than a commercial translation: none of the popular licensed ones are actually fetchable with this project's own key |
 
+One boundary, stated plainly so no deployer trips it by accident. The
+Platform Terms of Use provide that a developer "shall not use AI Technology
+in a manner that generates output for or to Users without the prior written
+approval of YouVersion." That clause is wider than the multi-version
+comparison flag: it covers ANY deployment where an AI application serves
+Platform-fetched text to end users, including plain `get_passage` with a
+`version` id. The `version` parameter works technically today with your own
+key; whether your AI application may serve that text to your users is
+between you and YouVersion under their terms. This project's own posture:
+every user-facing surface we host runs keyless on public-domain text, the
+comparison flag ships off, and our written-approval request for both uses
+is in.
+
 YouVersion, please say yes.
 
 ## Corpus
