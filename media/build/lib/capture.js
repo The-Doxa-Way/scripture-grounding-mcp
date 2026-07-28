@@ -26,9 +26,16 @@ export function chromeAvailable() {
 export { CHROME_PATH };
 
 /**
- * @param {{name: string, html: string, duration: number, fps?: number, framesRoot: string}} opts
+ * @param {{name: string, html: string, duration: number, fps?: number, framesRoot: string, viewport?: {width: number, height: number, deviceScaleFactor?: number}}} opts
  */
-export async function captureClipFrames({ name, html, duration, fps = 30, framesRoot }) {
+export async function captureClipFrames({
+  name,
+  html,
+  duration,
+  fps = 30,
+  framesRoot,
+  viewport = { width: 1920, height: 1080, deviceScaleFactor: 1 },
+}) {
   const dir = path.join(framesRoot, name);
   fs.rmSync(dir, { recursive: true, force: true });
   fs.mkdirSync(dir, { recursive: true });
@@ -36,7 +43,7 @@ export async function captureClipFrames({ name, html, duration, fps = 30, frames
   const browser = await puppeteer.launch({
     executablePath: CHROME_PATH,
     headless: true,
-    defaultViewport: { width: 1920, height: 1080, deviceScaleFactor: 1 },
+    defaultViewport: viewport,
     args: ['--force-color-profile=srgb', '--hide-scrollbars', '--font-render-hinting=none'],
   });
   try {
