@@ -18,7 +18,7 @@ licensed library track); BSB text only on screen.
 against the canonical text.*
 
 CAPTION: Ask an AI to quote Scripture. It answers from memory.
-CAPTION: YouVersion's founder: the best models misquote Scripture 15–60% of the time.
+CAPTION: YouVersion's CEO: the best models misquote Scripture 15–60% of the time.
 CAPTION: It sounds right. That's the problem.
 
 ## 0:25–0:45 — Why it matters
