@@ -137,7 +137,7 @@ and have a working Scripture-grounding server with zero setup.
   (or in `~/.config/doxa/youversion-api.env` as `YOUVERSION_APP_KEY=...`,
   which `src/env.js` loads automatically as a local-dev convenience). Once
   configured, `get_passage` / `verse_of_the_day` call the live API, unlocking
-  2,000+ licensed translations instead of the 34-passage BSB fixture set.
+  the YouVersion Platform's licensed library — 1,475 Bible versions in 1,244 languages per YouVersion's June 2026 announcement — instead of the 34-passage BSB fixture set.
 - **Gloo AI Studio** — register at [studio.ai.gloo.com](https://studio.ai.gloo.com)
   and create API credentials (OAuth2 client-credentials: a client id +
   secret). Set `GLOO_CLIENT_ID` / `GLOO_CLIENT_SECRET` (or
@@ -174,7 +174,7 @@ This is a measurement-methodology choice, not a theological one: a
 benchmark needs one fixed baseline to score consistently against, and BSB
 being public domain means the whole corpus, the whole benchmark, and this
 whole repo can be open-sourced with no licensing friction. In a live app
-context, the YouVersion Platform API supplies whichever of its 2,000+
+context, the YouVersion Platform API supplies whichever of its 1,400+
 licensed translations the end user actually wants — the BSB default only
 governs what ships *committed* in this repo.
 
@@ -206,7 +206,7 @@ WEB/KJV quotes misfiled as BSB misses — reported as-is, not spun.
 
 **Licensed-translation comparison (implemented, flag-gated, DEFAULT OFF):**
 with your own free YouVersion key, `get_passage` and `verify_quote` already
-work against any *one* of YouVersion's 2,000+ licensed translations at a
+work against any *one* of YouVersion's 1,400+ licensed versions at a
 time (the `version` parameter). Extending today's closest-canon comparison
 to check several licensed translations (NIV/ESV/NASB/etc.) live, via your
 own key — never a committed fixture, never a shared credential, licensed
@@ -404,7 +404,7 @@ service. Specifically:
   "Multi-version detection" above) and reports `different_translation`
   rather than flatly `misquote`/`minor_variance` when a quote is a close
   match for WEB or KJV instead of BSB. What it does *not* yet do: the same
-  comparison across YouVersion's 2,000+ *licensed* translations at once —
+  comparison across YouVersion's 1,400+ *licensed* versions at once —
   that needs YouVersion's own written sign-off first (requested, pending).
   Pass `version` / a YouVersion bibleId once a key is configured to compare
   against one specific other translation in the meantime.

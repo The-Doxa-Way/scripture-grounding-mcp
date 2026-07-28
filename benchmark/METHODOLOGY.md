@@ -47,7 +47,7 @@ public domain (dedicated 2023) and because it is a single fixed baseline
 every condition can be scored against consistently. This does **not** imply
 BSB is "more correct" than other translations — translation choice is a
 separate axis this methodology deliberately holds constant. (In an actual
-deployed app, the YouVersion Platform API supplies whichever of its 2,000+
+deployed app, the YouVersion Platform API supplies whichever of its 1,400+
 licensed translations the end user has chosen; the benchmark's fixed BSB
 baseline is a measurement-methodology choice, not a product default.)
 

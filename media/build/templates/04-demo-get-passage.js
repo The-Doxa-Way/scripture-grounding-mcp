@@ -33,7 +33,7 @@ export function build(DATA) {
         <div class="divider" id="divider" style="opacity:0"></div>
         <div id="response" style="opacity:0">
           <div class="passage-text serif">&ldquo;${esc(p.text)}&rdquo;</div>
-          <div class="citation"><span class="ref">${esc(p.reference)}</span> &middot; ${esc(p.translation)} &middot; via YouVersion Platform API</div>
+          <div class="citation"><span class="ref">${esc(p.reference)}</span> &middot; ${esc(p.translation)} &middot; via YouVersion Platform API &middot; 1,475 versions &middot; 1,244 languages</div>
         </div>
       </div>
     </div>
