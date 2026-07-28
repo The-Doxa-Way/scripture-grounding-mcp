@@ -128,7 +128,12 @@ server.registerTool(
     inputSchema: {
       quote: z.string().describe('The quote text to verify'),
       claimed_reference: z.string().describe('The Scripture reference the quote is claimed to be from'),
-      version: z.string().optional().describe('Optional Bible version/translation id (currently informational; fixture corpus is BSB)'),
+      version: z
+        .string()
+        .optional()
+        .describe(
+          'Optional YouVersion bibleId to verify against (requires YOUVERSION_APP_KEY; defaults to BSB, which also works keyless from the committed corpus)'
+        ),
     },
   },
   async ({ quote, claimed_reference, version }) => {

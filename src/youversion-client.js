@@ -39,12 +39,19 @@ const APP_KEY_HEADER = 'x-yvp-app-key';
 const DEFAULT_BIBLE_ID = '3034';
 /**
  * Cap on how many chapters a single multi-chapter request may fetch from the
- * live API (non-BSB versions only — BSB multi-chapter requests are served
- * from the committed corpus with zero API calls). Romans (16) fits; Psalms
- * (150) gets a clear error advising chapter-range requests instead of
- * silently hammering the API.
+ * live API (non-BSB versions only; BSB multi-chapter requests are served
+ * from the committed corpus with zero API calls). 31 covers every New
+ * Testament book (Matthew and Acts have 28 chapters) plus Proverbs; the ten
+ * longest Old Testament books (Genesis 50 ... Psalms 150) get a clear error
+ * advising chapter-range requests instead of silently hammering the API.
+ * Deployers with their own key and their own rate-limit judgment can raise
+ * it via YOUVERSION_MAX_STITCH_CHAPTERS.
  */
-const MAX_STITCH_CHAPTERS = 25;
+const DEFAULT_MAX_STITCH_CHAPTERS = 31;
+function maxStitchChapters() {
+  const configured = Number(process.env.YOUVERSION_MAX_STITCH_CHAPTERS);
+  return Number.isInteger(configured) && configured > 0 ? configured : DEFAULT_MAX_STITCH_CHAPTERS;
+}
 const BSB_TRANSLATION_LABEL = 'BSB (Berean Standard Bible, public domain)';
 
 /**
@@ -130,7 +137,7 @@ export function createYouVersionClient(opts = {}) {
         return {
           reference: data.reference ?? reference,
           text: data.content ?? '',
-          translation: bibleId === DEFAULT_BIBLE_ID ? BSB_TRANSLATION_LABEL : String(bibleId),
+          translation: bibleId === DEFAULT_BIBLE_ID ? BSB_TRANSLATION_LABEL : `YouVersion bibleId ${bibleId}`,
           source: 'youversion-api',
         };
       } catch (err) {
@@ -163,17 +170,19 @@ export function createYouVersionClient(opts = {}) {
     const first = ref.scope === 'book' ? 1 : ref.chapter;
     // Chapter count comes from the BSB corpus (shared versification at chapter level).
     const last = ref.scope === 'book' ? chapterCount(ref.code) : ref.endChapter;
+    const cap = maxStitchChapters();
     const total = last - first + 1;
-    if (total > MAX_STITCH_CHAPTERS) {
+    if (total > cap) {
       return {
         reference,
         text: null,
-        translation: String(bibleId),
+        translation: `YouVersion bibleId ${bibleId}`,
         source: 'youversion-api',
         error:
-          `"${reference}" spans ${total} chapters — more than the ${MAX_STITCH_CHAPTERS}-chapter cap for live ` +
-          'per-chapter stitching against a non-BSB version. Request it in chapter ranges instead ' +
-          '(or use the default BSB, which is served from the local corpus without API calls).',
+          `"${reference}" spans ${total} chapters, more than the ${cap}-chapter cap for live ` +
+          'per-chapter stitching against a non-BSB version. Request it in chapter ranges instead, ' +
+          'use the default BSB (served from the local corpus without API calls), or raise ' +
+          'YOUVERSION_MAX_STITCH_CHAPTERS if your key and rate-limit budget allow it.',
       };
     }
     const segments = [];
@@ -191,7 +200,7 @@ export function createYouVersionClient(opts = {}) {
         return {
           reference,
           text: null,
-          translation: String(bibleId),
+          translation: `YouVersion bibleId ${bibleId}`,
           source: 'youversion-api',
           error: `Chapter fetch failed at ${id} for version ${bibleId} (${err.message}) — refusing to return a partial ${reference}.`,
         };
@@ -200,7 +209,7 @@ export function createYouVersionClient(opts = {}) {
     return {
       reference,
       text: segments.map((s) => s.text).join('\n\n'),
-      translation: String(bibleId),
+      translation: `YouVersion bibleId ${bibleId}`,
       source: 'youversion-api',
       segments,
       chapterCount: segments.length,
@@ -286,7 +295,7 @@ export function createYouVersionClient(opts = {}) {
         return {
           reference: data.reference ?? votd.passage_id,
           text: data.content ?? '',
-          translation: bibleId === DEFAULT_BIBLE_ID ? 'BSB (Berean Standard Bible, public domain)' : String(bibleId),
+          translation: bibleId === DEFAULT_BIBLE_ID ? 'BSB (Berean Standard Bible, public domain)' : `YouVersion bibleId ${bibleId}`,
           source: 'youversion-api',
         };
       } catch (err) {
