@@ -13,7 +13,7 @@ Ask an AI assistant to quote Psalm forty-six, verses one to three — exactly.
 It answers instantly, confidently — and gets it wrong. Almost right. Which is
 worse.
 
-YouVersion's founder says the best AI models misquote Scripture fifteen to
+YouVersion's CEO says the best AI models misquote Scripture fifteen to
 sixty percent of the time. And for Scripture, close isn't faithful.
 
 So we built the missing bridge — the Scripture Grounding MCP. Open source,

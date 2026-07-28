@@ -5,7 +5,7 @@
 
 ## The frontier nobody named
 
-Billions of people now spend hours a day inside AI conversations, where Scripture is quoted and misquoted daily. YouVersion's founder said publicly that leading AI models misquote Scripture 15 to 60% of the time.
+Billions of people now spend hours a day inside AI conversations, where Scripture is quoted and misquoted daily. YouVersion's CEO said publicly that leading AI models misquote Scripture 15 to 60% of the time.
 
 People misquote Scripture because they quote from memory instead of opening the Book. Models fail the same way: statistical memory instead of the page. And the remedy hasn't changed in two thousand years: **read the passage, then quote it**. So we built a Model Context Protocol server where **the model never quotes from memory**. It reads the passage first, like a careful reader.
 
