@@ -16,7 +16,7 @@ test('getPassage in fixture mode returns an error (not a throw) for a reference 
   const result = await client.getPassage('Nonexistent 99:99');
   assert.equal(result.source, 'fixture');
   assert.equal(result.text, null);
-  assert.match(result.error, /No fixture found/);
+  assert.match(result.error, /could not be resolved/);
 });
 
 test('verseOfTheDay in fixture mode deterministically returns a real fixture, marked as fixture-mode', async () => {

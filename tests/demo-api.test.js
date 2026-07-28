@@ -128,13 +128,33 @@ test('GET /api/passage 400s on a missing reference', async () => {
   assert.equal(res.statusCode, 400);
 });
 
-test('GET /api/passage 404s with the available-references list for an unknown reference', async () => {
+test('GET /api/passage 404s with supported-format examples for an unresolvable reference', async () => {
   _resetForTests();
   const res = makeRes();
   await passageHandler(makeReq({ query: { reference: '2 Hezekiah 3:1' }, ip: '20.0.0.3' }), res);
   assert.equal(res.statusCode, 404);
   const body = json(res);
-  assert.ok(Array.isArray(body.availableReferences) && body.availableReferences.length > 0);
+  assert.match(body.error, /could not be resolved/);
+  assert.ok(Array.isArray(body.supportedFormats) && body.supportedFormats.length > 0);
+});
+
+test('GET /api/passage serves whole-Bible corpus references outside the fixture set (chapter + whole book)', async () => {
+  _resetForTests();
+  const res = makeRes();
+  await passageHandler(makeReq({ query: { reference: 'Romans 8' }, ip: '20.0.0.31' }), res);
+  assert.equal(res.statusCode, 200);
+  const body = json(res);
+  assert.equal(body.source, 'bsb-corpus');
+  assert.equal(body.reference, 'Romans 8');
+  assert.match(body.text, /no condemnation/);
+
+  const res2 = makeRes();
+  await passageHandler(makeReq({ query: { reference: 'Romans' }, ip: '20.0.0.32' }), res2);
+  assert.equal(res2.statusCode, 200);
+  const book = json(res2);
+  assert.equal(book.chapterCount, 16);
+  assert.equal(book.segments.length, 16);
+  assert.equal(book.segments[7].reference, 'Romans 8');
 });
 
 test('POST /api/passage also works (body.reference)', async () => {

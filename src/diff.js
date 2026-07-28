@@ -106,6 +106,28 @@ export function wordDiff(a, b) {
 }
 
 /**
+ * For sequential chunked alignment (src/long-verify.js): the length of the
+ * SMALLEST prefix of `b` that already contains a full-length LCS with `a`,
+ * plus that LCS length. Backtracking through the LCS table (wordDiff) is
+ * tie-broken arbitrarily, so it can pair a's final tokens with occurrences
+ * deep in b's tail — overshooting a chapter boundary when b's tail is
+ * really the NEXT chapter's text. dp[n][j] is monotone in j, so the minimal
+ * j with dp[n][j] === dp[n][m] is exactly "everything of a that can match
+ * has matched by here" — the right hand-off point to the next segment.
+ * @param {string[]} a - canonical segment tokens
+ * @param {string[]} b - quote window tokens
+ * @returns {{lcsLength: number, consumed: number}}
+ */
+export function lcsConsumedPrefix(a, b) {
+  if (a.length === 0 || b.length === 0) return { lcsLength: 0, consumed: 0 };
+  const dp = lcsTable(a, b);
+  const lcsLength = dp[a.length][b.length];
+  let consumed = 0;
+  while (consumed < b.length && dp[a.length][consumed] < lcsLength) consumed++;
+  return { lcsLength, consumed };
+}
+
+/**
  * Word-level similarity score between two token arrays, as a Sorensen-Dice
  * coefficient over the LCS: 2*|LCS| / (|a| + |b|). Returns 1.0 for two empty
  * arrays (vacuously identical) and 0.0 if only one side is empty.

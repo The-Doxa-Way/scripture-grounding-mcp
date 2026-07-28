@@ -12,8 +12,10 @@ Gloo, July 2026).
 **Live demo:** [doxa.app/scripture-grounding](https://doxa.app/scripture-grounding)
 (mirrored at [scripture-grounding-demo.vercel.app](https://scripture-grounding-demo.vercel.app))
 — try a passage, verify a quote (live red/green diff), and get a Scripture-grounded
-encouragement, all running keyless on the committed BSB fixture corpus. The
-same API backs a ChatGPT custom GPT Action config in `integrations/chatgpt/`.
+encouragement, all running keyless on committed public-domain BSB text — the
+whole Bible, verse to book scale (see `data/PROVENANCE.md`). The same API
+backs a ChatGPT custom GPT Action config in `integrations/chatgpt/`. Where
+this goes next: [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## The problem
 
@@ -77,7 +79,7 @@ Five MCP tools implement this:
 
 | Tool | What it does | Backing API | Keyless fallback |
 |---|---|---|---|
-| `get_passage` | Retrieve canonical text for a reference (e.g. `"John 3:16-17"`) | YouVersion Platform API | Committed BSB fixture corpus |
+| `get_passage` | Retrieve canonical text for a reference at any scale — verse range (`"John 3:16-17"`), whole chapter (`"Romans 8"`), chapter range (`"Romans 1-3"`), cross-chapter range (`"John 3:16-4:2"`), or whole book (`"Romans"`); multi-chapter results carry per-chapter `segments` | YouVersion Platform API (multi-chapter: stitched per-chapter calls for non-BSB versions, capped at 25 chapters) | Committed whole-Bible BSB corpus (`data/bsb.txt`) |
 | `verse_of_the_day` | Retrieve today's Verse of the Day | YouVersion Platform API (`/verse_of_the_days/{day}`) | Deterministic fixture-set rotation, clearly labeled as fixture-mode |
 | `verify_quote` | **The core tool.** Given a quote + claimed reference, fetch canonical text and classify: `exact` / `minor_variance` / `misquote` / `misattribution` / `different_translation` / `not_found`, with a word-level diff and similarity score. `different_translation` fires when a quote misses the requested translation but is a close (≥0.95) match for another public-domain translation this project ships locally (WEB, KJV — see "Multi-version detection" below) — every call also reports `closestTranslation`/`similarityToClosest` regardless of verdict | Same as `get_passage` | Same as `get_passage` |
 | `grounded_reply` | Demonstrates the full pattern: retrieve a relevant passage for a topic, then generate a reply constrained to quote only that text. Every reply carries an always-present `disclosure` field naming Gloo AI Studio's model and its own opaque alignment layer as the source of the generated commentary, distinct from the quoted passage | Gloo AI Studio (`/ai/v2/chat/completions`) | Deterministic stub reply (no network call), `disclosure` field says so explicitly |
@@ -122,11 +124,27 @@ or in an MCP client's JSON config:
 ### Works out of the box, keyless
 
 With no API keys configured, every tool still runs — `get_passage`,
-`verse_of_the_day`, and `verify_quote` serve the committed, fetched (never
-hand-typed) **Berean Standard Bible (BSB)** fixture corpus, and
+`verse_of_the_day`, and `verify_quote` serve committed, fetched (never
+hand-typed) **Berean Standard Bible (BSB)** text: the curated fixture corpus
+first, then the complete BSB (`data/bsb.txt`, 31,102 verses, public domain —
+provenance in `data/PROVENANCE.md`) for everything else. Any reference
+works, from `"John 3:16"` to `"Romans"` (the whole book), keyless.
 `grounded_reply` runs in a deterministic stub mode. This keyless BSB mode is
 a first-class feature, not a degraded fallback: anyone can clone this repo
 and have a working Scripture-grounding server with zero setup.
+
+### Read (and verify) a whole book
+
+"Read me the book of Romans" is a first-class request, not an edge case:
+`get_passage("Romans")` returns all 16 chapters (with per-chapter
+`segments`), and `verify_quote` can then check a full read-through —
+an AI's spoken transcript, a generated devotional's long quotation —
+chapter-by-chapter: word-level diffs per segment, omitted-chapter
+detection, and an `exact` verdict that means literally word-for-word at any
+length (a two-word slip across 9,401 words of Romans is reported as
+`minor_variance` with the exact chapter pinpointed, never rounded up to
+"exact"). Quote-side chapter boundaries are aligned heuristically
+(sequential alignment) and disclosed as such in every long-passage verdict.
 
 ### Bring your own keys (BYOK) for the full pipeline
 
@@ -137,7 +155,7 @@ and have a working Scripture-grounding server with zero setup.
   (or in `~/.config/doxa/youversion-api.env` as `YOUVERSION_APP_KEY=...`,
   which `src/env.js` loads automatically as a local-dev convenience). Once
   configured, `get_passage` / `verse_of_the_day` call the live API, unlocking
-  the YouVersion Platform's licensed library — 1,475 Bible versions in 1,244 languages per YouVersion's June 2026 announcement — instead of the 34-passage BSB fixture set.
+  the YouVersion Platform's licensed library — 1,475 Bible versions in 1,244 languages per YouVersion's June 2026 announcement — instead of the committed public-domain BSB corpus.
 - **Gloo AI Studio** — register at [studio.ai.gloo.com](https://studio.ai.gloo.com)
   and create API credentials (OAuth2 client-credentials: a client id +
   secret). Set `GLOO_CLIENT_ID` / `GLOO_CLIENT_SECRET` (or
@@ -242,16 +260,22 @@ portal](https://developers.youversion.com) will see it succeed instead):
 
 YouVersion, please say yes.
 
-## Fixture corpus
+## Corpus
 
-`fixtures/bsb/*.json` — 34 passages spanning narrative, poetry/wisdom,
-prophecy, gospel, epistle, and apocalyptic genres. Built by
-`scripts/build-fixtures.js`, which downloads
-[bereanbible.com/bsb.txt](https://bereanbible.com/bsb.txt) (the official
-whole-Bible BSB text file, "dedicated to the public domain" per its own
-header) fresh every run and extracts only the needed verses — **never**
-hand-typed, never from a model's memory. Each fixture records its own
-provenance:
+Two committed layers, one source, both public domain:
+
+- **`data/bsb.txt`** — the complete BSB, byte-for-byte as downloaded from
+  [bereanbible.com/bsb.txt](https://bereanbible.com/bsb.txt) ("dedicated to
+  the public domain" per its own header), with URL/date/SHA-256 recorded in
+  `data/PROVENANCE.md`. Parsed lazily by `src/bible.js`; powers keyless
+  retrieval and verification at any scale.
+- **`fixtures/bsb/*.json`** — 34 curated passages spanning narrative,
+  poetry/wisdom, prophecy, gospel, epistle, and apocalyptic genres: the
+  benchmark's frozen ground truth and `verify_quote`'s misattribution-search
+  corpus. Built by `scripts/build-fixtures.js`, which downloads the same
+  bsb.txt fresh every run and extracts only the needed verses — **never**
+  hand-typed, never from a model's memory. Each fixture records its own
+  provenance:
 
 ```json
 {
@@ -384,14 +408,23 @@ fixtures were added, and the 34-passage corpus stays frozen.
 This is a submission-scale project, not a production Scripture-verification
 service. Specifically:
 
-- **34 fixture passages, not the whole Bible.** `verify_quote`'s
-  misattribution search (finding which OTHER passage a quote actually
-  matches) only searches this fixture corpus. A quote that misattributes to
-  a real verse *outside* the 34 fixtures will report `not_found`, not
+- **Misattribution search is corpus-bounded (34 curated passages).**
+  Retrieval and claimed-reference verification now cover the whole committed
+  BSB, but `verify_quote`'s misattribution search (finding which OTHER
+  passage a quote actually matches) still only searches the curated fixture
+  corpus. A quote that misattributes to a real verse *outside* the 34
+  fixtures will report by its similarity to the claimed reference, not
   `misattribution` — the tool cannot tell "quote doesn't match anything we
-  checked" apart from "quote is entirely fabricated" at that scale. Scaling
-  the corpus (or wiring misattribution search through the live YouVersion
-  API, which doesn't currently expose full-text search) is future work.
+  checked" apart from "quote is entirely fabricated" at that scale.
+  Whole-Bible misattribution search (31,102 verses, prefilter + windowed
+  LCS, synoptic-parallel handling) is item 2 on
+  [docs/ROADMAP.md](docs/ROADMAP.md).
+- **Long-passage segmentation is heuristic.** Chapter/book-scale
+  verification aligns the quote to chapters sequentially; a mostly-garbled
+  chapter can blur attribution across a boundary (the aggregate verdict
+  stays honest — errors push it DOWN). Omitted chapters are detected and
+  cap the verdict at `misquote`; every long verdict discloses the
+  heuristic.
 - **Word-level similarity, not semantic similarity.** `verify_quote` scores
   wording overlap, not meaning. A theologically faithful paraphrase and a
   subtly-wrong-in-meaning-but-word-similar misquote can land in the same

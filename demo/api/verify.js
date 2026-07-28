@@ -2,9 +2,10 @@
  * POST /api/verify {quote, reference} — the full verify_quote verdict object.
  *
  * Calls src/verify-quote.js with no injected `canonicalLookup`, so it uses
- * that module's own default: the committed BSB fixture corpus
- * (src/fixtures.js), never the YouVersion API — same keyless policy as
- * api/passage.js.
+ * that module's own default: the curated BSB fixtures, then the committed
+ * whole-Bible BSB corpus (src/bible.js) — never the YouVersion API. Same
+ * keyless policy as api/passage.js; long passages (chapters/books) verify
+ * via the chunked chapter-by-chapter path.
  */
 import { verifyQuote } from '../../src/verify-quote.js';
 import { withGate, sendJson } from './_lib/http.js';
