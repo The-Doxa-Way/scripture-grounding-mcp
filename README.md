@@ -524,4 +524,9 @@ for review rather than auto-graded with fake confidence.
 
 ## License
 
-MIT © The Doxa Way Ltd. See `LICENSE`.
+MIT © The Doxa Way Ltd (registered in England and Wales). See `LICENSE`.
+
+This project and its Scripture in New Frontiers challenge entry are by The
+Doxa Way Ltd. Garth Watson, founder and sole director of The Doxa Way Ltd,
+contributes to this repository and represents the company in the challenge.
+Contact: hello@doxa.app
