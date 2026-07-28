@@ -10,7 +10,7 @@ specifies *how* the numbers were produced, so the run is reproducible.
 
 ## Motivation
 
-In March 2026, YouVersion founder Bobby Gruenewald said publicly (as widely
+In March 2026, YouVersion CEO Bobby Gruenewald said publicly (as widely
 reported in the Christian press, e.g. Christian Daily International,
 2026-03-16) that the best AI models misquote Scripture roughly **15%–60%**
 of the time depending on model, translation, and passage obscurity. That range is wide because methodology varies a lot between

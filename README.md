@@ -19,7 +19,7 @@ this goes next: [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## The problem
 
-YouVersion's founder said publicly in March 2026 (as widely reported in the
+YouVersion's CEO said publicly in March 2026 (as widely reported in the
 Christian press) that the best AI models misquote Scripture roughly
 **15%–60%** of the time, depending on model, translation, and how obscure
 the passage is. The exact number varies with methodology. But the shape of
