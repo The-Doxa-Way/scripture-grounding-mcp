@@ -98,7 +98,7 @@ asking a model to behave. See "Register guard" below.
 git clone https://github.com/The-Doxa-Way/scripture-grounding-mcp.git
 cd scripture-grounding-mcp
 npm install
-npm test              # 220 tests, all fixture/stub-mode, zero external calls
+npm test              # 255 tests, all fixture/stub-mode, zero external calls
 npm start              # runs the MCP server over stdio
 ```
 
@@ -454,7 +454,7 @@ service. Specifically:
 npm test
 ```
 
-220 tests (`node --test`), all deterministic, all offline (fixture/stub mode
+255 tests (`node --test`), all deterministic, all offline (fixture/stub mode
 — no network calls, no API keys required to run the suite). Covers:
 normalization robustness (smart quotes, inline verse numbers, mixed case),
 word-diff correctness, all five `verify_quote` verdicts (including a named

@@ -128,6 +128,17 @@ describe('bible.js parses the committed BSB and serves any scope', () => {
     assert.equal(range.reference, 'Jude 1:3-4');
   });
 
+  test('single-chapter book ranges STARTING at 1 are verse ranges — the standard whole-book citation works', () => {
+    // Review finding 2026-07-28: these threw "chapter N out of range".
+    assert.equal(getBibleText(resolveRef(parseHumanRef('Jude 1-25'))).reference, 'Jude 1');
+    assert.equal(getBibleText(resolveRef(parseHumanRef('Obadiah 1-21'))).reference, 'Obadiah 1');
+    assert.equal(getBibleText(resolveRef(parseHumanRef('Jude 1-3'))).reference, 'Jude 1:1-3');
+    assert.equal(getBibleText(resolveRef(parseHumanRef('Philemon 1-3'))).reference, 'Philemon 1:1-3');
+    assert.equal(getBibleText(resolveRef(parseHumanRef('3 John 1-4'))).reference, '3 John 1:1-4');
+    // and a bare "Jude 1" is still the whole (only) chapter
+    assert.equal(getBibleText(resolveRef(parseHumanRef('Jude 1'))).reference, 'Jude 1');
+  });
+
   test('bounds-checking fails loud with real counts in the message', () => {
     assert.throws(() => resolveRef(parseHumanRef('Philippians 5')), /4 chapters/);
     assert.throws(() => resolveRef(parseHumanRef('John 3:99')), /out of range/);

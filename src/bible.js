@@ -124,10 +124,15 @@ export function resolveRef(parsed) {
   let out = { ...parsed };
 
   if (chapters === 1 && out.scope !== 'book') {
-    // Single-chapter book: a bare number is a VERSE, not a chapter.
+    // Single-chapter book: bare numbers are VERSES, not chapters. "Jude 3"
+    // is Jude 1:3, and "Jude 1-25" / "Obadiah 1-21" (the standard citation
+    // shape for the whole of a one-chapter book) are verse ranges of
+    // chapter 1 — including ranges that START at 1 (review finding,
+    // 2026-07-28). Only a bare "Jude 1" stays chapter-scoped (the whole
+    // chapter, which for these books is also the whole book).
     if (out.scope === 'chapter' && out.chapter > 1) {
       out = { ...out, scope: 'verse', chapter: 1, verseStart: out.chapter, verseEnd: out.chapter };
-    } else if (out.scope === 'chapter-range' && out.chapter > 1) {
+    } else if (out.scope === 'chapter-range') {
       out = { ...out, scope: 'verse', verseStart: out.chapter, verseEnd: out.endChapter, chapter: 1, endChapter: undefined };
     }
   }

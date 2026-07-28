@@ -5,9 +5,10 @@ info:
   description: >
     Keyless REST API for the scripture-grounding-mcp project's core pattern:
     retrieve canonical Scripture text, then verify any claimed quote against
-    it, rather than trusting a model's memory. Backed entirely by the
-    committed, public-domain Berean Standard Bible (BSB) fixture corpus (34
-    passages) — no YouVersion API key is used or required by this
+    it, rather than trusting a model's memory. Backed entirely by committed,
+    public-domain Berean Standard Bible (BSB) text — the whole Bible
+    (31,086 verses), any reference from a single verse to a whole book — no
+    YouVersion API key is used or required by this
     deployment. `/encourage` additionally demonstrates retrieve-then-constrain
     generation via Gloo AI Studio, degrading gracefully to a template-only
     "grounding demo" mode when no Gloo credentials are configured server-side.
@@ -75,6 +76,9 @@ paths:
                           type: string
                         text:
                           type: string
+                        superscription:
+                          type: string
+                          description: A psalm's liturgical heading, split out of the text (present only where the BSB has one).
         "404":
           description: Reference could not be resolved (unrecognized book, out-of-range chapter/verse, or unparseable shape)
           content:
@@ -165,6 +169,39 @@ paths:
                   similarityToRequested:
                     type: number
                     nullable: true
+                  remoteVersionsChecked:
+                    type: array
+                    nullable: true
+                    description: Licensed translations additionally checked when the flag-gated multi-version path is enabled (null on this keyless deployment).
+                    items:
+                      type: object
+                  comparisonMode:
+                    type: string
+                    enum: [chunked]
+                    description: Present (as "chunked") when a long passage was verified chapter-by-chapter.
+                  segmentBreakdown:
+                    type: array
+                    description: Long-passage mode only — per-chapter match stats.
+                    items:
+                      type: object
+                      properties:
+                        reference:
+                          type: string
+                        canonicalWords:
+                          type: integer
+                        matchedWords:
+                          type: integer
+                        coverage:
+                          type: number
+                        omitted:
+                          type: boolean
+                          description: True when this chapter is missing from the quote entirely (caps the verdict at misquote).
+                  segmentsCompared:
+                    type: integer
+                    description: Long-passage mode only.
+                  segmentsWithDifferences:
+                    type: integer
+                    description: Long-passage mode only.
         "400":
           description: Missing quote or reference
   /encourage:
