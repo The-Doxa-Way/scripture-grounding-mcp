@@ -2,7 +2,6 @@
 
 **An open MCP server that makes any AI assistant quote Scripture accurately — built on the YouVersion Platform and Gloo AI Studio.**
 
-*(Kaggle writeup draft — target ≤500 words. Benchmark numbers below are filled from `benchmark/results/RESULTS.md` (real run, 2026-07-27, Gloo AI Studio auto_routing, 34-passage BSB corpus) — nothing ships with a placeholder.)*
 
 ## The frontier nobody named
 
