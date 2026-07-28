@@ -12,7 +12,8 @@
   },
   "files": [
     "src",
-    "fixtures"
+    "fixtures",
+    "data"
   ],
   "scripts": {
     "start": "node src/index.js",

@@ -5,9 +5,10 @@ info:
   description: >
     Keyless REST API for the scripture-grounding-mcp project's core pattern:
     retrieve canonical Scripture text, then verify any claimed quote against
-    it, rather than trusting a model's memory. Backed entirely by the
-    committed, public-domain Berean Standard Bible (BSB) fixture corpus (34
-    passages) — no YouVersion API key is used or required by this
+    it, rather than trusting a model's memory. Backed entirely by committed,
+    public-domain Berean Standard Bible (BSB) text — the whole Bible
+    (31,086 verses), any reference from a single verse to a whole book — no
+    YouVersion API key is used or required by this
     deployment. `/encourage` additionally demonstrates retrieve-then-constrain
     generation via Gloo AI Studio, degrading gracefully to a template-only
     "grounding demo" mode when no Gloo credentials are configured server-side.
@@ -18,21 +19,24 @@ info:
     ChatGPT-Actions-compatible backend for the same MCP server published at
     github.com/The-Doxa-Way/scripture-grounding-mcp (GPTs can't speak MCP
     directly, so this REST surface mirrors its four most important tools).
+# ChatGPT Actions requires exactly ONE server (multiple hostnames are dropped
+# with a validation warning) — the direct Vercel URL
+# (https://scripture-grounding-demo.vercel.app/api) serves the same API if the
+# doxa.app rewrite is ever unavailable.
 servers:
   - url: https://doxa.app/scripture-grounding/api
     description: Production demo deployment (doxa.app rewrite)
-  - url: https://scripture-grounding-demo.vercel.app/api
-    description: Direct Vercel deployment
 paths:
   /passage:
     get:
       operationId: getPassage
       summary: Retrieve canonical BSB text for a Scripture reference
       description: >
-        Looks up a reference (e.g. "John 3:16-17") in the committed BSB
-        fixture corpus. If the reference isn't in the corpus, returns a 404
-        with the full list of available references — never invents text for
-        an unrecognized reference.
+        Retrieves canonical text from the committed public-domain BSB corpus
+        (the whole Bible) at any scale: verse ranges ("John 3:16-17"),
+        chapters ("Romans 8"), chapter ranges, cross-chapter ranges, or
+        whole books ("Romans"). Never invents text; 404 only for
+        unresolvable references.
       parameters:
         - name: reference
           in: query
@@ -56,11 +60,27 @@ paths:
                     type: string
                   source:
                     type: string
-                    enum: [fixture]
+                    enum: [fixture, bsb-corpus]
                   sourceUrl:
                     type: string
+                  chapterCount:
+                    type: integer
+                    description: Present on multi-chapter results.
+                  segments:
+                    type: array
+                    description: Per-chapter text, present on multi-chapter results.
+                    items:
+                      type: object
+                      properties:
+                        reference:
+                          type: string
+                        text:
+                          type: string
+                        superscription:
+                          type: string
+                          description: A psalm's liturgical heading, split out of the text (present only where the BSB has one).
         "404":
-          description: Reference not in the fixture corpus
+          description: Reference could not be resolved (unrecognized book, out-of-range chapter/verse, or unparseable shape)
           content:
             application/json:
               schema:
@@ -68,26 +88,23 @@ paths:
                 properties:
                   error:
                     type: string
-                  availableReferences:
+                  supportedFormats:
                     type: array
+                    description: Example reference shapes this API accepts.
                     items:
                       type: string
   /verify:
     post:
       operationId: verifyQuote
       summary: Verify a claimed Scripture quote against canonical BSB text
+      # ChatGPT Actions rejects operation descriptions over 300 chars — keep
+      # this one under the limit (full semantics: gpt-instructions.md).
       description: >
-        The core grounding tool. Given a quote and the reference it is
-        claimed to be from, fetches canonical BSB text and classifies the
-        quote as exact, minor_variance, misquote, misattribution (the quote
-        actually matches a DIFFERENT passage in the corpus better),
-        different_translation (the quote misses BSB but closely matches
-        another public-domain translation this project ships locally — WEB
-        or KJV), or not_found. Returns a similarity score and a word-level
-        diff summary, plus closestTranslation/similarityToClosest/
-        verdictAgainstClosest/similarityToRequested on every call. Never
-        asserts a quote is correct from memory — only what could be
-        verified against the corpus.
+        The core grounding tool. Fetches canonical BSB text for the claimed
+        reference and returns a verdict — exact, minor_variance, misquote,
+        misattribution, different_translation, or not_found — with a
+        similarity score and word diff. Chapters/books verify
+        chapter-by-chapter with a per-segment breakdown.
       requestBody:
         required: true
         content:
@@ -152,22 +169,53 @@ paths:
                   similarityToRequested:
                     type: number
                     nullable: true
+                  remoteVersionsChecked:
+                    type: array
+                    nullable: true
+                    description: Licensed translations additionally checked when the flag-gated multi-version path is enabled (null on this keyless deployment).
+                    items:
+                      type: object
+                  comparisonMode:
+                    type: string
+                    enum: [chunked]
+                    description: Present (as "chunked") when a long passage was verified chapter-by-chapter.
+                  segmentBreakdown:
+                    type: array
+                    description: Long-passage mode only — per-chapter match stats.
+                    items:
+                      type: object
+                      properties:
+                        reference:
+                          type: string
+                        canonicalWords:
+                          type: integer
+                        matchedWords:
+                          type: integer
+                        coverage:
+                          type: number
+                        omitted:
+                          type: boolean
+                          description: True when this chapter is missing from the quote entirely (caps the verdict at misquote).
+                  segmentsCompared:
+                    type: integer
+                    description: Long-passage mode only.
+                  segmentsWithDifferences:
+                    type: integer
+                    description: Long-passage mode only.
         "400":
           description: Missing quote or reference
   /encourage:
     post:
       operationId: encourage
       summary: Get a Scripture-grounded encouragement for a topic or question
+      # ChatGPT Actions rejects operation descriptions over 300 chars — keep
+      # this one under the limit (full semantics: gpt-instructions.md).
       description: >
-        Retrieves a relevant BSB passage for a topic/question via a keyword
-        map (e.g. "anxious" -> Philippians 4:6-7), then generates a reply
-        constrained to quote ONLY that retrieved passage, verbatim, with Gloo
-        AI Studio if server credentials are configured — otherwise returns a
-        deterministic, no-network "grounding demo" stub reply. The response's
-        `source` field always says which mode served the reply
-        ("gloo-api" | "stub"), never presenting one as the other. The
-        response's `disclosure` field is always present too, and MUST be
-        surfaced to the user alongside the reply (see gpt-instructions.md).
+        Retrieves a relevant BSB passage for the topic, then returns a reply
+        constrained to quote only that passage, verbatim (Gloo AI Studio when
+        configured server-side, else a deterministic stub — `source` says
+        which). Always surface the returned `disclosure` field verbatim
+        alongside the reply.
       requestBody:
         required: true
         content:
@@ -226,17 +274,14 @@ paths:
     post:
       operationId: verifyRegister
       summary: Check text for register violations (companion/personhood/empathy claims)
+      # ChatGPT Actions rejects operation descriptions over 300 chars — keep
+      # this one under the limit (full semantics: gpt-instructions.md).
       description: >
-        This project's second gated pillar alongside verifyQuote: not just
-        "did it misquote Scripture" but "did it perform empathy or claim
-        personhood". Checks AI-generated text against a deterministic rule
-        table (src/verify-register.js) for four banned-pattern categories:
-        first-person language, reassurance-empathy phrasing, companion/
-        always-here claims, and personhood/feeling claims. If quotedReferences
-        is supplied, that reference's canonical BSB text is resolved and
-        exempted from the first-person rule (a quoted Psalm's own "my
-        shepherd" is the Psalmist speaking, not the tool). Lexical heuristics,
-        not semantic understanding — same honesty standard as verifyQuote.
+        Checks AI-generated text against a deterministic rule table for
+        register violations: first-person language, reassurance-empathy
+        phrasing, companion/always-here claims, personhood/feeling claims.
+        quotedReferences exempts quoted Scripture from the first-person
+        rule. Lexical heuristics, not semantics.
       requestBody:
         required: true
         content:

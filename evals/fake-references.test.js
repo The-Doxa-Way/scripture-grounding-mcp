@@ -22,13 +22,16 @@
  *     src/usfm.js's BOOK_ABBREVIATIONS, added 2026-07-27 adversarial-review
  *     fix). humanRefToUsfm resolves these successfully (an LLM client
  *     abbreviating a real book is not the same failure mode as a fabricated
- *     reference); the invariant under test here is narrower for this
- *     category — get_passage's tiny (34-verse) fixture corpus still requires
- *     an exact reference-string match in keyless mode, so an abbreviated
- *     reference correctly still returns text: null there, never invented text.
+ *     reference). Since the whole-Bible BSB corpus landed (src/bible.js,
+ *     2026-07-28), keyless mode RESOLVES these to real text — so the
+ *     invariant under test for this category is that the text returned is
+ *     byte-verifiable against data/bsb.txt itself (checked here with an
+ *     independent parse of the raw file, not via src/bible.js), never
+ *     invented.
  */
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 
 import { humanRefToUsfm } from '../src/usfm.js';
 import { createYouVersionClient } from '../src/youversion-client.js';
@@ -55,15 +58,35 @@ const GARBAGE_STRINGS = ['asdklfjasdf', '???', '', '   ', 'the quick brown fox j
 /**
  * Common, unambiguous abbreviations of REAL books that src/usfm.js's
  * BOOK_ABBREVIATIONS table resolves successfully (see humanRefToUsfm tests
- * below) — kept under this name because every OTHER describe block in this
- * file still exercises the same real invariant for them: get_passage's tiny
- * fixture corpus only holds 34 exact verse strings, so an abbreviated
- * reference (not stored under that exact abbreviated string) still correctly
- * returns text: null / not_found in keyless fixture mode, never fabricated
- * text — resolving the abbreviation is not the same thing as having that
- * exact verse in the offline corpus.
+ * below). Since the whole-Bible corpus landed, keyless get_passage serves
+ * these with REAL text (source: 'bsb-corpus') — the anti-fabrication
+ * invariant for them is verified against an INDEPENDENT parse of
+ * data/bsb.txt (RAW_VERSE_BY_REF below), not via src/bible.js, so the test
+ * cannot inherit a bug from the module it checks.
  */
 const AMBIGUOUS_ABBREVIATIONS = ['Phil 4:13', 'Jn 3:16', 'Gen 1:1', '1 Cor 13:4', 'Ps 23:1'];
+
+/** Full-name bsb.txt key for each abbreviation above. */
+const ABBREVIATION_TO_BSB_KEY = {
+  'Phil 4:13': 'Philippians 4:13',
+  'Jn 3:16': 'John 3:16',
+  'Gen 1:1': 'Genesis 1:1',
+  '1 Cor 13:4': '1 Corinthians 13:4',
+  'Ps 23:1': 'Psalm 23:1',
+};
+
+/**
+ * Independent ground truth: parse the needed verse lines straight out of the
+ * committed raw data/bsb.txt with this file's own three-line parser.
+ */
+const RAW_BSB = readFileSync(new URL('../data/bsb.txt', import.meta.url), 'utf8');
+const RAW_VERSE_BY_REF = Object.fromEntries(
+  Object.entries(ABBREVIATION_TO_BSB_KEY).map(([abbr, key]) => {
+    const line = RAW_BSB.split('\n').find((l) => l.startsWith(`${key}\t`));
+    if (!line) throw new Error(`eval setup: "${key}" not found in data/bsb.txt`);
+    return [abbr, line.slice(line.indexOf('\t') + 1).trim()];
+  })
+);
 
 const ALL_NONEXISTENT_REFERENCES = [...NONEXISTENT_BOOK_REFS, ...OUT_OF_RANGE_REFS];
 
@@ -137,7 +160,7 @@ describe('humanRefToUsfm never silently invents a passage id for input it cannot
 describe('get_passage (fixture mode) returns clean not_found for every non-existent/malformed reference — never invented text', () => {
   const client = createYouVersionClient({ appKey: undefined }); // fixture mode: no live network possible
 
-  for (const ref of [...ALL_NONEXISTENT_REFERENCES, ...GARBAGE_STRINGS, ...AMBIGUOUS_ABBREVIATIONS]) {
+  for (const ref of [...ALL_NONEXISTENT_REFERENCES, ...GARBAGE_STRINGS]) {
     test(`getPassage("${ref}") returns text: null with an error, never fabricated text`, async () => {
       const result = await client.getPassage(ref);
       assert.equal(result.text, null);
@@ -146,22 +169,50 @@ describe('get_passage (fixture mode) returns clean not_found for every non-exist
       assert.ok(result.error.length > 0);
     });
   }
+
+  // Whole-Bible corpus (2026-07-28): abbreviated real references now resolve
+  // keyless. Anti-fabrication invariant: the served text must be verifiable
+  // byte-for-byte against this eval's OWN independent parse of data/bsb.txt.
+  // (`.includes`, not equality, because a psalm's superscription is split off
+  // the raw line by design — the body is a strict suffix of the raw line.)
+  for (const ref of AMBIGUOUS_ABBREVIATIONS) {
+    test(`getPassage("${ref}") serves REAL corpus text, byte-verifiable against raw data/bsb.txt`, async () => {
+      const result = await client.getPassage(ref);
+      assert.equal(result.source, 'bsb-corpus');
+      assert.ok(typeof result.text === 'string' && result.text.length > 0);
+      assert.ok(
+        RAW_VERSE_BY_REF[ref].includes(result.text),
+        `text for "${ref}" is not contained in the raw bsb.txt verse line:\n  served: ${result.text}\n  raw:    ${RAW_VERSE_BY_REF[ref]}`
+      );
+    });
+  }
 });
 
 describe('get_passage (injected-fake live mode) falls back cleanly for non-existent/malformed references, even when a live client is configured', () => {
-  // AMBIGUOUS_ABBREVIATIONS behaves like OUT_OF_RANGE_REFS here post-fix:
-  // humanRefToUsfm resolves them to a syntactically valid USFM id (it's a
-  // real book), so the live client DOES reach fetch — a real deployment
-  // would get real text back; this fake-404 fetch simulates the case where
-  // that USFM id isn't one this test cares to serve, and the assertion is
-  // just that a 404 still falls back cleanly, never fabricating text.
-  for (const ref of [...OUT_OF_RANGE_REFS, ...AMBIGUOUS_ABBREVIATIONS]) {
+  for (const ref of OUT_OF_RANGE_REFS) {
     test(`getPassage("${ref}") with a configured client + a fake 404 response falls back to fixture with no text`, async () => {
       const client = createYouVersionClient({ appKey: 'fake-key', fetchImpl: notFoundFetch });
       const result = await client.getPassage(ref);
       assert.equal(result.text, null);
       assert.equal(result.source, 'fixture');
       assert.match(result.note ?? result.error, /YouVersion API/);
+    });
+  }
+
+  // Abbreviated REAL references reach fetch (valid USFM id); on a live-API
+  // 404 the client now falls back to the committed whole-Bible corpus and
+  // serves REAL text — disclosed via `note`, verified against this eval's
+  // independent raw-bsb.txt parse, never fabricated.
+  for (const ref of AMBIGUOUS_ABBREVIATIONS) {
+    test(`getPassage("${ref}") with a configured client + a fake 404 response falls back to REAL corpus text with a disclosure note`, async () => {
+      const client = createYouVersionClient({ appKey: 'fake-key', fetchImpl: notFoundFetch });
+      const result = await client.getPassage(ref);
+      assert.equal(result.source, 'bsb-corpus');
+      assert.match(result.note, /YouVersion API/);
+      assert.ok(
+        RAW_VERSE_BY_REF[ref].includes(result.text),
+        `fallback text for "${ref}" is not contained in the raw bsb.txt verse line`
+      );
     });
   }
 
@@ -207,12 +258,29 @@ describe('verify_quote never verifies a nonexistent reference as exact/minor_var
     });
   }
 
-  for (const ref of [...GARBAGE_STRINGS, ...AMBIGUOUS_ABBREVIATIONS]) {
+  for (const ref of GARBAGE_STRINGS) {
     test(`verifyQuote against malformed reference "${ref}" fails safe as not_found, never throws, never invents text`, async () => {
       await assert.doesNotReject(() => verifyQuote({ quote: 'purple elephants dance on tuesdays', claimedReference: ref }));
       const result = await verifyQuote({ quote: 'purple elephants dance on tuesdays', claimedReference: ref });
       assert.equal(result.verdict, 'not_found');
       assert.equal(result.canonicalText, null);
+    });
+  }
+
+  // Abbreviated REAL references now resolve to real corpus text, so a
+  // garbage quote against them is judged against REAL canon: never
+  // exact/minor_variance, and the canonicalText surfaced is byte-verifiable
+  // against the raw bsb.txt line — real text, not invention.
+  for (const ref of AMBIGUOUS_ABBREVIATIONS) {
+    test(`verifyQuote against abbreviated real reference "${ref}" judges a garbage quote against REAL corpus text, never invents`, async () => {
+      await assert.doesNotReject(() => verifyQuote({ quote: 'purple elephants dance on tuesdays', claimedReference: ref }));
+      const result = await verifyQuote({ quote: 'purple elephants dance on tuesdays', claimedReference: ref });
+      assert.notEqual(result.verdict, 'exact');
+      assert.notEqual(result.verdict, 'minor_variance');
+      assert.ok(
+        result.canonicalText === null || RAW_VERSE_BY_REF[ref].includes(result.canonicalText),
+        `canonicalText for "${ref}" is not contained in the raw bsb.txt verse line`
+      );
     });
   }
 
@@ -224,8 +292,11 @@ describe('verify_quote never verifies a nonexistent reference as exact/minor_var
         const result = await verifyQuote({ quote, claimedReference: ref });
         if (result.canonicalText !== null) {
           assert.ok(
-            REAL_FIXTURE_TEXTS.has(result.canonicalText),
-            `canonicalText for ref="${ref}" quote="${quote}" was not a real fixture text: ${result.canonicalText}`
+            // Real = a curated fixture's text, or literally present in the
+            // raw committed bsb.txt (corpus-served text is always a
+            // substring of its source line) — never invented content.
+            REAL_FIXTURE_TEXTS.has(result.canonicalText) || RAW_BSB.includes(result.canonicalText),
+            `canonicalText for ref="${ref}" quote="${quote}" was not real corpus-backed text: ${result.canonicalText}`
           );
         }
         if (result.correctReference !== null) {

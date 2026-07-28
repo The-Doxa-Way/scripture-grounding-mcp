@@ -235,7 +235,8 @@
       An open MCP server + API that retrieves canonical Scripture text and
       verifies any quote against it — instead of trusting an LLM's recall.
       Everything below runs keyless on the committed, public-domain Berean
-      Standard Bible (BSB) fixture corpus.
+      Standard Bible (BSB) — the whole Bible, any reference from a single
+      verse to a whole book.
     </p>
   </header>
 
@@ -249,14 +250,14 @@
       <div class="l">exact-quote rate, grounded (retrieve-then-constrain)</div>
     </div>
     <div class="stat">
-      <div class="n">34 / 220</div>
-      <div class="l">BSB fixture passages / automated tests, all offline</div>
+      <div class="n">31,086 / 255</div>
+      <div class="l">BSB verses served keyless / automated tests, all offline</div>
     </div>
   </div>
 
   <section class="panel">
     <h2>1. Try a passage</h2>
-    <p class="hint">Retrieve canonical BSB text for a reference. Try "John 3:16-17" or "Psalm 23:1-6".</p>
+    <p class="hint">Retrieve canonical BSB text for a reference. Try "John 3:16-17", "Romans 8" — or the whole book: "Romans".</p>
     <label for="p-ref">Reference</label>
     <input id="p-ref" type="text" value="John 3:16-17" placeholder="e.g. Romans 8:28-39" />
     <button id="p-btn">Get passage</button>
@@ -303,9 +304,9 @@
       declined to build this at all pending the founder's own explicit direction, which was then
       given). It ships gated <strong>off by default</strong> behind an explicit environment-variable
       opt-in, pending YouVersion's own written sign-off that this specific use is covered — that
-      request is in. This <em>hosted</em> demo holds no server-side YouVersion credential and stays
-      fixture-only either way (see the repo README); the licensed-comparison path is for
-      self-hosted, bring-your-own-key deployments of this server. YouVersion, please say yes.
+      request is in. This <em>hosted</em> demo holds no server-side YouVersion credential and serves
+      only committed public-domain text either way (see the repo README); the licensed-comparison
+      path is for self-hosted, bring-your-own-key deployments of this server. YouVersion, please say yes.
     </p>
   </section>
 

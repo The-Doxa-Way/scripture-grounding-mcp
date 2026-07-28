@@ -52,6 +52,17 @@ const SUPERSCRIPTION_SENTENCE_PATTERNS = [
   /^a (maskil|miktam|shiggaion)( of david)?\.?$/i,
   /^according to [a-z][a-z\s-]*\.?$/i, // "According to Alamoth.", "According to Gittith.", "According to Muth-labben."
   /^to the tune of [a-z][a-z\s-]*\.?$/i,
+  // Historic-note and attribution variants, added 2026-07-28 for the
+  // whole-Bible corpus (src/bible.js). Vocabulary confirmed by surveying
+  // every "Psalm N:1" line in data/bsb.txt (awk first-sentence survey) —
+  // same conservative bar as above: each pattern's leading anchor is
+  // heading-exclusive wording that never begins real passage text.
+  /^(a (psalm|prayer|maskil|miktam|shiggaion) of david|of david),? (when|which|for) .{0,200}\.?$/i, // "A Psalm of David, when he fled from his son Absalom.", "Of David, when he pretended...", "A Shiggaion of David, which he sang...", "A Psalm of David, for remembrance."
+  /^a (maskil|miktam|psalm|song|prayer) of (asaph|solomon|heman the ezrahite|ethan the ezrahite|the sons of korah|jeduthun|moses the man of god)\.?$/i,
+  /^a psalm of (thanksgiving|praise)\.?$/i,
+  /^a prayer of one who is afflicted, when .{0,200}\.?$/i, // Psalm 102
+  /^for the (choir\s?master|director of music)[,:] .{0,200}\.?$/i, // "For the choirmaster: To the tune of ...", "For the choirmaster, to be accompanied by flutes."
+  /^of david the servant of the lord, who .{0,200}\.?$/i, // Psalm 18
 ];
 
 /**

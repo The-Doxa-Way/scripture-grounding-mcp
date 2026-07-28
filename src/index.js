@@ -37,11 +37,22 @@ loadDoxaEnvFiles();
 const youVersion = createYouVersionClient();
 const gloo = createGlooClient();
 
-/** verify_quote's canonical-text source: live YouVersion API with BSB-fixture fallback. */
+/**
+ * verify_quote's canonical-text source: live YouVersion API with local
+ * fallback (curated fixtures, then the committed whole-Bible BSB corpus).
+ * `segments` (one per chapter, present on multi-chapter results) feed the
+ * chunked long-passage verification path.
+ */
 async function canonicalLookup(reference, version) {
   const result = await youVersion.getPassage(reference, version);
   if (!result.text) return null;
-  return { reference: result.reference, text: result.text, translation: result.translation, source: result.source };
+  return {
+    reference: result.reference,
+    text: result.text,
+    translation: result.translation,
+    source: result.source,
+    ...(result.segments ? { segments: result.segments } : {}),
+  };
 }
 
 // Licensed-translation multi-version comparison (founder-directed 2026-07-27):
@@ -63,12 +74,14 @@ server.registerTool(
   {
     title: 'Get canonical passage',
     description:
-      'Retrieve canonical Scripture text for a reference (e.g. "John 3:16-17"). ' +
-      'Uses the YouVersion Platform API when YOUVERSION_APP_KEY is set; otherwise ' +
-      'falls back to the committed public-domain BSB (Berean Standard Bible) fixture ' +
-      'corpus, which requires no key at all.',
+      'Retrieve canonical Scripture text for a reference at any scale: a verse range ' +
+      '("John 3:16-17"), a whole chapter ("Romans 8"), a chapter range ("Romans 1-3"), a ' +
+      'cross-chapter range ("John 3:16-4:2"), or a whole book ("Romans" — e.g. for reading a ' +
+      'book aloud). Uses the YouVersion Platform API when YOUVERSION_APP_KEY is set; otherwise ' +
+      'serves the committed public-domain BSB (Berean Standard Bible) corpus — the whole Bible, ' +
+      'no key required. Multi-chapter results include per-chapter `segments`.',
     inputSchema: {
-      reference: z.string().describe('Scripture reference, e.g. "John 3:16-17" or "Psalm 23"'),
+      reference: z.string().describe('Scripture reference, e.g. "John 3:16-17", "Romans 8", or "Romans"'),
       version: z
         .string()
         .optional()
@@ -110,7 +123,8 @@ server.registerTool(
       'claimed reference), or not_found (reference or match not available). Returns the ' +
       'verdict, canonical text, a word-level diff summary, and a similarity score — this ' +
       'never asserts the quote is correct from memory, only what could be verified against ' +
-      'the corpus.',
+      'the corpus. Long passages (whole chapters/books, e.g. checking an AI\'s read-through ' +
+      'of Romans) are verified chapter-by-chapter with a per-segment breakdown.',
     inputSchema: {
       quote: z.string().describe('The quote text to verify'),
       claimed_reference: z.string().describe('The Scripture reference the quote is claimed to be from'),

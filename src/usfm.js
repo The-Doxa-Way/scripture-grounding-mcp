@@ -7,10 +7,13 @@
  * "Psalm 23") also work as "PSA.23". Common book abbreviations (e.g. "Jn",
  * "1 Cor", "Ps") are also recognized — see BOOK_TO_USFM.
  *
- * Limitation (documented, not silently swallowed): only same-chapter ranges
- * are supported, since that covers every reference this project needs.
- * Cross-chapter ranges (e.g. "John 3:16-4:2") would need a different USFM
- * shape and are NOT implemented — humanRefToUsfm throws for them.
+ * humanRefToUsfm produces SINGLE passage ids, and the YouVersion API only
+ * accepts same-chapter ranges in one id (confirmed by live testing) — so it
+ * still throws for anything wider than one chapter. Wider scopes (whole
+ * books, chapter ranges, cross-chapter verse ranges) are handled by
+ * parseHumanRef below, whose structured result lets callers compose multiple
+ * per-chapter ids (src/youversion-client.js) or read straight from the
+ * committed whole-Bible corpus (src/bible.js).
  */
 import { deSmarten } from './normalize.js';
 
@@ -190,32 +193,123 @@ const BOOK_ABBREVIATIONS = {
 const ALL_BOOKS = { ...BOOK_TO_USFM, ...BOOK_ABBREVIATIONS };
 
 /**
- * @param {string} reference e.g. "John 3:16-17", "Psalm 23", "1 Corinthians 13:4-7", "Jn 3:16"
- * @returns {string} USFM passage id, e.g. "JHN.3.16-17" or "PSA.23"
- * @throws {Error} if the book name isn't recognized or the reference spans chapters
+ * Resolve a human book name or abbreviation to its USFM 3-letter code.
+ * @param {string} name e.g. "Psalm", "1 Cor", "song of songs"
+ * @returns {string|null}
  */
-export function humanRefToUsfm(reference) {
-  // deSmarten so an en/em-dash verse range ("Psalm 46:1–3", common LLM
+export function bookNameToCode(name) {
+  return ALL_BOOKS[name.trim().toLowerCase().replace(/\s+/g, ' ')] ?? null;
+}
+
+/**
+ * @typedef {Object} ParsedRef
+ * @property {string} book - book name exactly as the user wrote it
+ * @property {string} code - USFM 3-letter book code
+ * @property {'verse'|'chapter'|'chapter-range'|'cross-chapter'|'book'} scope
+ * @property {number} [chapter] - start chapter (verse/chapter/chapter-range/cross-chapter)
+ * @property {number} [verseStart] - (verse/cross-chapter)
+ * @property {number} [verseEnd] - (verse)
+ * @property {number} [endChapter] - (chapter-range/cross-chapter)
+ * @property {number} [endVerse] - (cross-chapter)
+ */
+
+/**
+ * Parse a human Scripture reference into a structured form covering every
+ * scope this project supports:
+ *   "John 3:16" / "John 3:16-17"   -> verse
+ *   "Romans 8"                     -> chapter
+ *   "Romans 1-3"                   -> chapter-range
+ *   "John 3:16-4:2"                -> cross-chapter
+ *   "Romans"                       -> book
+ * Purely syntactic — bounds-checking against the actual corpus (and the
+ * single-chapter-book convention, "Jude 3" = Jude 1:3) happens in
+ * src/bible.js's resolveRef, which knows chapter/verse counts.
+ * @param {string} reference
+ * @returns {ParsedRef}
+ * @throws {Error} if the book name isn't recognized or the shape doesn't parse
+ */
+export function parseHumanRef(reference) {
+  // deSmarten so an en/em-dash range ("Psalm 46:1–3", common LLM
   // typesetting) parses the same as a plain hyphen range.
-  const trimmed = deSmarten(reference).trim();
+  const trimmed = deSmarten(String(reference ?? '')).trim();
 
-  // "Book Chapter" (no verse) -> chapter-level passage, e.g. "Psalm 23" -> PSA.23
-  const chapterOnly = trimmed.match(/^(.+?)\s+(\d+)$/);
-  const verseMatch = trimmed.match(/^(.+?)\s+(\d+):(\d+)(?:-(\d+))?$/);
+  const lookup = (book) => {
+    const code = bookNameToCode(book);
+    if (!code) throw new Error(`Unrecognized book name "${book}" in reference "${reference}"`);
+    return code;
+  };
 
+  const crossChapter = trimmed.match(/^(.+?)\s+(\d+):(\d+)\s*-\s*(\d+):(\d+)$/);
+  if (crossChapter) {
+    const [, book, c1, v1, c2, v2] = crossChapter;
+    if (Number(c2) === Number(c1)) {
+      // "John 3:16-3:17" is really a same-chapter range.
+      return { book, code: lookup(book), scope: 'verse', chapter: Number(c1), verseStart: Number(v1), verseEnd: Number(v2) };
+    }
+    return {
+      book,
+      code: lookup(book),
+      scope: 'cross-chapter',
+      chapter: Number(c1),
+      verseStart: Number(v1),
+      endChapter: Number(c2),
+      endVerse: Number(v2),
+    };
+  }
+
+  const verseMatch = trimmed.match(/^(.+?)\s+(\d+):(\d+)(?:\s*-\s*(\d+))?$/);
   if (verseMatch) {
     const [, book, chapter, vStart, vEnd] = verseMatch;
-    const code = ALL_BOOKS[book.trim().toLowerCase()];
-    if (!code) throw new Error(`Unrecognized book name "${book}" in reference "${reference}"`);
-    return vEnd ? `${code}.${chapter}.${vStart}-${vEnd}` : `${code}.${chapter}.${vStart}`;
+    return {
+      book,
+      code: lookup(book),
+      scope: 'verse',
+      chapter: Number(chapter),
+      verseStart: Number(vStart),
+      verseEnd: vEnd ? Number(vEnd) : Number(vStart),
+    };
   }
+
+  const chapterRange = trimmed.match(/^(.+?)\s+(\d+)\s*-\s*(\d+)$/);
+  if (chapterRange) {
+    const [, book, c1, c2] = chapterRange;
+    return { book, code: lookup(book), scope: 'chapter-range', chapter: Number(c1), endChapter: Number(c2) };
+  }
+
+  const chapterOnly = trimmed.match(/^(.+?)\s+(\d+)$/);
   if (chapterOnly) {
     const [, book, chapter] = chapterOnly;
-    const code = ALL_BOOKS[book.trim().toLowerCase()];
-    if (!code) throw new Error(`Unrecognized book name "${book}" in reference "${reference}"`);
-    return `${code}.${chapter}`;
+    return { book, code: lookup(book), scope: 'chapter', chapter: Number(chapter) };
+  }
+
+  if (trimmed && bookNameToCode(trimmed)) {
+    return { book: trimmed, code: bookNameToCode(trimmed), scope: 'book' };
+  }
+
+  throw new Error(
+    `Could not parse reference "${reference}". Supported shapes: "Book Chapter:Verse[-Verse]", ` +
+      '"Book Chapter[-Chapter]", "Book Chapter:Verse-Chapter:Verse", or a book name alone (e.g. "Romans").'
+  );
+}
+
+/**
+ * @param {string} reference e.g. "John 3:16-17", "Psalm 23", "1 Corinthians 13:4-7", "Jn 3:16"
+ * @returns {string} USFM passage id, e.g. "JHN.3.16-17" or "PSA.23"
+ * @throws {Error} if the book name isn't recognized or the reference is wider
+ *   than one chapter (the YouVersion API takes same-chapter ids only — wider
+ *   scopes are composed from multiple ids by src/youversion-client.js)
+ */
+export function humanRefToUsfm(reference) {
+  const parsed = parseHumanRef(reference);
+  if (parsed.scope === 'verse') {
+    const { code, chapter, verseStart, verseEnd } = parsed;
+    return verseEnd !== verseStart ? `${code}.${chapter}.${verseStart}-${verseEnd}` : `${code}.${chapter}.${verseStart}`;
+  }
+  if (parsed.scope === 'chapter') {
+    return `${parsed.code}.${parsed.chapter}`;
   }
   throw new Error(
-    `Could not parse reference "${reference}" as "Book Chapter:Verse[-Verse]" or "Book Chapter" (cross-chapter ranges are not supported)`
+    `Reference "${reference}" spans more than one chapter — no single USFM passage id exists for it. ` +
+      'Use parseHumanRef and compose per-chapter ids instead.'
   );
 }
