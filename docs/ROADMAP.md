@@ -1,9 +1,9 @@
 # Roadmap
 
-What this project ships today, and the backlog we intend to build next — in
-public, in this repo. Items are ordered by intent, not promised dates. The
-governing rule for everything below is the project's one idea: **the model
-never quotes from memory** — and its honesty bar: named limitations, measured
+What this project ships today, and the backlog we intend to build next, in
+public, in this repo. Items are ordered by intent. No dates are promised. The
+governing rule for everything below is the project's one idea, **the model
+never quotes from memory**, and its honesty bar: named limitations, measured
 claims, no capability theater.
 
 ## Shipped (built inside the challenge window)
@@ -11,11 +11,11 @@ claims, no capability theater.
 - MCP server with five tools: `get_passage`, `verse_of_the_day`,
   `verify_quote`, `grounded_reply`, `verify_register`.
 - Keyless whole-Bible corpus: the complete public-domain Berean Standard
-  Bible, committed with provenance (`data/PROVENANCE.md`) — any reference
+  Bible, committed with provenance (`data/PROVENANCE.md`): any reference
   from a single verse to a whole book ("Romans"), no API key required.
 - Long-passage verification: chapter-by-chapter chunked diffing with
   per-segment breakdown, omitted-chapter detection, and word-for-word
-  "exact" semantics at any length — so "an AI read Romans aloud; was it
+  "exact" semantics at any length, so "an AI read Romans aloud; was it
   word-perfect?" is a checkable question.
 - Benchmark: 34 passages × 3 conditions on Gloo AI Studio (67.6% exact
   ungrounded vs 100% grounded), reproducible with free challenge keys.
@@ -28,18 +28,18 @@ claims, no capability theater.
 ## Next: pending YouVersion's written AI-use approval
 
 The licensed multi-version path is **already implemented behind a flag**
-(`YOUVERSION_MULTI_VERSION=1` + your own App Key — see README): cross-checking
+(`YOUVERSION_MULTI_VERSION=1` plus your own App Key; see README): cross-checking
 a quote against licensed translations so "accurate NIV quote, wrong
 translation requested" is distinguished from "misquote." It ships default-off
 because YouVersion Platform's terms require written approval for production
 AI use. The approval request is drafted; the feature turns on the day the
-letter arrives. Bible text stays free wherever this project touches users —
-that is a permanent commitment, not a pricing decision.
+letter arrives. Bible text stays free wherever this project touches users.
+That is a permanent commitment.
 
 ## Near-term engineering backlog
 
 1. **Read-aloud / audio frontier**: a `read_book` orchestration guide +
-   examples for voice assistants — sequential chapter retrieval with
+   examples for voice assistants: sequential chapter retrieval with
    `verify_quote` run on the transcript afterward, so spoken Scripture can be
    audited word-for-word against canon. (The retrieval and verification
    primitives shipped in-window; this item is the integration recipe and
@@ -48,7 +48,7 @@ that is a permanent commitment, not a pricing decision.
    misattribution check searches the 34-passage curated corpus; extend it to
    all 31,102 verses with a bag-of-words prefilter + windowed LCS, so "real
    verse, wrong reference" is caught corpus-wide. Requires careful synoptic-
-   parallel handling (Matthew/Mark/Luke share near-identical passages) — the
+   parallel handling (Matthew/Mark/Luke share near-identical passages); the
    margin-over-claimed-reference rule already guards against false flags, but
    we will measure before we ship.
 3. **Reading plans / VOTD calendars**: thin structured endpoints over the
@@ -56,8 +56,8 @@ that is a permanent commitment, not a pricing decision.
    don't hand-roll Bible structure.
 4. **Semantic register guard**: today's `verify_register` is a deterministic
    lexical rule table (disclosed as such). Explore a model-graded second
-   opinion — kept clearly separated from the deterministic layer, never
-   replacing it, because a guard you can't audit is a guard you can't trust.
+   opinion, kept clearly separated from the deterministic layer and never
+   replacing it. A guard you can't audit is a guard you can't trust.
 5. **More public-domain corpora**: WEB and KJV are shipped for
    cross-translation detection at passage scale; extend both to whole-Bible
    scale, and add public-domain non-English texts (e.g. Reina-Valera 1909)
@@ -68,7 +68,7 @@ that is a permanent commitment, not a pricing decision.
 ## Frontier integrations (the challenge's own list)
 
 - **Games / interactive media**: `verify_quote` as a content-pipeline CI
-  step — every Scripture string in game assets checked against canon at
+  step: every Scripture string in game assets checked against canon at
   build time.
 - **Wearables / voice**: the read-aloud recipe above, plus VOTD push.
 - **Social / creator tools**: a "check this quote" share-card generator on
@@ -81,8 +81,8 @@ that is a permanent commitment, not a pricing decision.
 - Expand the corpus beyond 34 passages (stratified by genre) and publish
   updated exact-quote rates.
 - Long-passage benchmark: seeded-error book reads (N errors per 1,000 words)
-  scored by segment attribution accuracy — measuring the chunked verifier
-  itself, not just the models.
+  scored by segment attribution accuracy. This measures the chunked verifier
+  itself as well as the models.
 
 ## Doxa
 

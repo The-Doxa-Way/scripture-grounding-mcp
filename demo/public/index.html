@@ -1,4 +1,4 @@
-<title>Scripture Grounding — live demo</title>
+<title>Scripture Grounding · live demo</title>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="description" content="Live demo: an MCP server + API that makes an LLM verify Scripture quotes against canonical text instead of quoting from memory." />
@@ -229,13 +229,13 @@
 
 <div class="wrap">
   <header class="hero">
-    <div class="eyebrow">scripture-grounding-mcp — live demo</div>
+    <div class="eyebrow">scripture-grounding-mcp · live demo</div>
     <h1>The model never quotes from memory.</h1>
     <p class="sub">
       An open MCP server + API that retrieves canonical Scripture text and
-      verifies any quote against it — instead of trusting an LLM's recall.
+      verifies any quote against it, instead of trusting an LLM's recall.
       Everything below runs keyless on the committed, public-domain Berean
-      Standard Bible (BSB) — the whole Bible, any reference from a single
+      Standard Bible (BSB): the whole Bible, any reference from a single
       verse to a whole book.
     </p>
   </header>
@@ -257,7 +257,7 @@
 
   <section class="panel">
     <h2>1. Try a passage</h2>
-    <p class="hint">Retrieve canonical BSB text for a reference. Try "John 3:16-17", "Romans 8" — or the whole book: "Romans".</p>
+    <p class="hint">Retrieve canonical BSB text for a reference. Try "John 3:16-17", "Romans 8", or the whole book: "Romans".</p>
     <label for="p-ref">Reference</label>
     <input id="p-ref" type="text" value="John 3:16-17" placeholder="e.g. Romans 8:28-39" />
     <button id="p-btn">Get passage</button>
@@ -266,7 +266,7 @@
 
   <section class="panel">
     <h2>2. Verify a quote</h2>
-    <p class="hint">Paste a quote and the reference it's claimed to be from. Try changing a word or citing the wrong verse to see a misquote/misattribution verdict — or try "I can do all things through Christ which strengtheneth me" claimed as Philippians 4:13 to see a <code>different_translation</code> verdict (see the box below).</p>
+    <p class="hint">Paste a quote and the reference it's claimed to be from. Try changing a word or citing the wrong verse to see a misquote/misattribution verdict, or try "I can do all things through Christ which strengtheneth me" claimed as Philippians 4:13 to see a <code>different_translation</code> verdict (see the box below).</p>
     <label for="v-quote">Quote</label>
     <textarea id="v-quote">For God so loved the world that he sent his only Son, that whoever believes in him shall not perish.</textarea>
     <label for="v-ref">Claimed reference</label>
@@ -278,32 +278,32 @@
   <section class="panel">
     <h2>What about other translations?</h2>
     <p class="hint">
-      Fair objection: this benchmark scored quotes against the Berean Standard Bible (BSB) —
+      Fair objection: this benchmark scored quotes against the Berean Standard Bible (BSB);
       maybe the model quoted a different translation accurately, and got marked wrong for it.
       This benchmark's own ungrounded prompt already names BSB explicitly (<em>"Quote &lt;reference&gt;
       exactly from the Berean Standard Bible"</em>), so that's still a real miss of what was
-      asked — but it's a different, more forgivable failure than invented wording, and this
+      asked, but it is a different, more forgivable failure than invented wording, and this
       project measures the difference instead of asserting it away.
     </p>
     <p class="hint">
       <strong>Today:</strong> <code>verify_quote</code> compares every quote against the closest
-      of three public-domain canons this project ships — BSB, WEB, and KJV — and returns
+      of three public-domain canons this project ships (BSB, WEB, and KJV) and returns
       <code>different_translation</code> instead of <code>misquote</code> when a quote misses BSB
       but is a close (&ge;0.95 similarity) match for one of the others. Try it in the panel above.
-      Run against this benchmark's own 11 ungrounded misses (zero extra API calls — scored from
+      Run against this benchmark's own 11 ungrounded misses (zero extra API calls, scored from
       already-cached output), the honest result was <strong>0 of 11</strong>: none of them turned
-      out to be accurate WEB/KJV quotes. The gap is real, not a translation-mismatch artifact —
+      out to be accurate WEB/KJV quotes. The gap is real; no translation-mismatch artifact explains it away,
       see <code>benchmark/results/RESULTS.md</code>'s "Cross-translation check" section.
     </p>
     <p class="hint">
       <strong>Implemented and tested, off by default:</strong> with your own free YouVersion key,
       <code>get_passage</code> and <code>verify_quote</code> already work against any one of
       YouVersion's 1,400+ licensed versions at a time. Extending today's closest-canon
-      comparison to check several of those licensed translations at once — live, via your own key,
-      never a committed fixture — is now built and tested in the open-source repo (a prior pass
+      comparison to check several of those licensed translations at once (live, via your own key,
+      never a committed fixture) is now built and tested in the open-source repo (a prior pass
       declined to build this at all pending the founder's own explicit direction, which was then
       given). It ships gated <strong>off by default</strong> behind an explicit environment-variable
-      opt-in, pending YouVersion's own written sign-off that this specific use is covered — that
+      opt-in, pending YouVersion's own written sign-off that this specific use is covered; that
       request is in. This <em>hosted</em> demo holds no server-side YouVersion credential and serves
       only committed public-domain text either way (see the repo README); the licensed-comparison
       path is for self-hosted, bring-your-own-key deployments of this server. YouVersion, please say yes.
@@ -321,7 +321,7 @@
 
   <section class="panel">
     <h2>4. Verify the register</h2>
-    <p class="hint">Paste any AI reply (or one from above). Checks for first-person language, reassurance-empathy phrasing, and companion/personhood claims — the tool is a signpost, never a companion. If the text quotes Scripture verbatim, name the reference so that quote is exempted from the first-person check.</p>
+    <p class="hint">Paste any AI reply (or one from above). Checks for first-person language, reassurance-empathy phrasing, and companion/personhood claims. The tool is a signpost, never a companion. If the text quotes Scripture verbatim, name the reference so that quote is exempted from the first-person check.</p>
     <label for="r-text">Text</label>
     <textarea id="r-text">I'm sorry you're feeling anxious. I'd encourage you to keep going — you're not alone.</textarea>
     <label for="r-ref">Quoted reference (optional)</label>
@@ -388,7 +388,7 @@
       return { ok: res.ok, status: res.status, body };
     } catch (err) {
       if (err.name === 'AbortError') {
-        return { ok: false, status: 0, body: { error: 'This is taking longer than expected — the request timed out after 25s. Please try again.' } };
+        return { ok: false, status: 0, body: { error: 'This is taking longer than expected: the request timed out after 25s. Please try again.' } };
       }
       throw err;
     } finally {
@@ -409,7 +409,7 @@
     container.innerHTML = '';
     container.appendChild(el(`
       <div class="scripture">
-        <span class="ref">${escapeHtml(body.reference)} — ${escapeHtml(body.translation)}</span>
+        <span class="ref">${escapeHtml(body.reference)} · ${escapeHtml(body.translation)}</span>
         ${escapeHtml(body.text)}
       </div>
     `));
@@ -449,12 +449,12 @@
       container.appendChild(el(`<div class="error-box">${escapeHtml(body?.error || 'Request failed.')}</div>`));
       return;
     }
-    const score = body.similarityScore != null ? `${(body.similarityScore * 100).toFixed(1)}%` : '—';
+    const score = body.similarityScore != null ? `${(body.similarityScore * 100).toFixed(1)}%` : 'n/a';
     let canonicalBlock = '';
     if (body.canonicalText) {
       canonicalBlock = `
         <div class="scripture" style="margin-top:0.7rem;">
-          <span class="ref">${escapeHtml(body.claimedReference)} — ${escapeHtml(body.canonicalTranslation)}</span>
+          <span class="ref">${escapeHtml(body.claimedReference)} · ${escapeHtml(body.canonicalTranslation)}</span>
           ${escapeHtml(body.canonicalText)}
         </div>`;
     }
@@ -464,7 +464,7 @@
     }
     let translationNote = '';
     if (body.verdict === 'different_translation' && body.closestTranslation) {
-      const closestPct = body.similarityToClosest != null ? `${(body.similarityToClosest * 100).toFixed(1)}%` : '—';
+      const closestPct = body.similarityToClosest != null ? `${(body.similarityToClosest * 100).toFixed(1)}%` : 'n/a';
       translationNote = `<div class="reason">Closest local canon instead: <strong>${escapeHtml(body.closestTranslation)}</strong> (similarity ${closestPct})</div>`;
     }
     container.innerHTML = '';
@@ -492,7 +492,7 @@
     if (body.groundedOn) {
       grounded = `
         <div class="scripture" style="margin-top:0.7rem;">
-          <span class="ref">Grounded on ${escapeHtml(body.groundedOn.reference)} — ${escapeHtml(body.groundedOn.translation)}</span>
+          <span class="ref">Grounded on ${escapeHtml(body.groundedOn.reference)} · ${escapeHtml(body.groundedOn.translation)}</span>
           ${escapeHtml(body.groundedOn.text)}
         </div>`;
     }
