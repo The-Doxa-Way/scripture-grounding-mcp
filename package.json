@@ -18,6 +18,7 @@
   "scripts": {
     "start": "node src/index.js",
     "test": "node --test \"tests/**/*.test.js\" \"evals/*.test.js\"",
+    "test:books": "node scripts/verify-all-books.js",
     "build:fixtures": "node scripts/build-fixtures.js",
     "benchmark": "node benchmark/runner.js --model gloo --condition all",
     "evals": "node evals/run-safety-evals.js"
