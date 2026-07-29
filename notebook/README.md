@@ -26,6 +26,22 @@ scripts/dump-test-vectors.js` from the repo root) — re-run that if `src/verify
 `src/normalize.js`, or `src/diff.js` ever change, then re-execute the notebook so the
 cross-check cell re-verifies against fresh ground truth.
 
+## Hosted HTML render
+
+The executed notebook is published, login-free, at
+[doxa.app/scripture-grounding/notebook](https://doxa.app/scripture-grounding/notebook)
+(the demo app serves it; see `demo/vercel.json`). Regenerate that page after
+re-executing the notebook:
+
+```bash
+uvx --from nbconvert jupyter nbconvert --to html --embed-images \
+  --output-dir demo/public --output notebook \
+  notebook/scripture-grounding-benchmark.ipynb
+```
+
+then set the page `<title>` to `Scripture Grounding · benchmark notebook` (nbconvert
+titles the page after the filename) and redeploy the demo.
+
 ## Uploading to Kaggle
 
 Two supported ways for the notebook to find the rest of the repo (both are handled by
