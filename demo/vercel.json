@@ -5,6 +5,8 @@
   },
   "rewrites": [
     { "source": "/api/openapi.yaml", "destination": "/api/openapi" },
+    { "source": "/notebook", "destination": "/notebook.html" },
+    { "source": "/notebook/", "destination": "/notebook.html" },
     { "source": "/", "destination": "/public/index.html" }
   ]
 }

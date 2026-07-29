@@ -336,6 +336,8 @@
       ·
       <a href="https://github.com/The-Doxa-Way/scripture-grounding-mcp/blob/main/docs/writeup.md" target="_blank" rel="noopener">Writeup</a>
       ·
+      <a id="notebook-link" href="/notebook" target="_blank" rel="noopener">Benchmark notebook</a>
+      ·
       <a id="openapi-link" href="/api/openapi.yaml" target="_blank" rel="noopener">OpenAPI spec</a>
     </div>
     <div style="margin-top:0.6rem;">
@@ -547,6 +549,7 @@
   }
 
   document.getElementById('openapi-link').href = `${API_BASE}/api/openapi.yaml`;
+  document.getElementById('notebook-link').href = `${API_BASE}/notebook`;
 
   wireButton('p-btn', 'p-out', async (out) => {
     const reference = document.getElementById('p-ref').value;
