@@ -32,7 +32,7 @@ model's output and the user."**
 
 ### Why we care: in Scripture's own words
 
-This exchange is from a real Doxa Engage session, quoted verbatim (every
+This exchange is from a real Doxa Engage session in the Doxa App (https://doxa.app), quoted verbatim (every
 Scripture quotation below was verified word-for-word against the BSB via
 the same live retrieval path this server uses, the four verses check out
 `exact`):
