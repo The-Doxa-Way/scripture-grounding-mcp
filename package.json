@@ -1,7 +1,7 @@
 {
   "name": "scripture-grounding-mcp",
   "version": "0.1.0",
-  "description": "An MCP server that grounds LLM Scripture quotation in canonical text retrieved via the YouVersion Platform API, with values-aligned generation via Gloo AI Studio. Built for the Kaggle \"Scripture in New Frontiers\" challenge.",
+  "description": "An MCP server that grounds LLM Scripture quotation in canonical text — retrieval and verification only, never generation. Runs keyless on the committed public-domain BSB corpus, with the YouVersion Platform API as an optional upgrade. Built for the Kaggle \"Scripture in New Frontiers\" challenge.",
   "type": "module",
   "engines": {
     "node": ">=20"
@@ -20,8 +20,7 @@
     "test": "node --test \"tests/**/*.test.js\" \"evals/*.test.js\"",
     "test:books": "node scripts/verify-all-books.js",
     "build:fixtures": "node scripts/build-fixtures.js",
-    "benchmark": "node benchmark/runner.js --model gloo --condition all",
-    "evals": "node evals/run-safety-evals.js"
+    "benchmark": "node benchmark/runner.js --model stub --condition all"
   },
   "license": "MIT",
   "author": "The Doxa Way Ltd",
@@ -35,7 +34,6 @@
     "scripture",
     "bible",
     "youversion",
-    "gloo-ai",
     "kaggle"
   ],
   "dependencies": {

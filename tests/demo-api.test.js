@@ -2,12 +2,9 @@
  * Tests for the demo/ Vercel API route glue (demo/api/*.js) and the shared
  * CORS/rate-limit/JSON helpers (demo/api/_lib/http.js). These exercise the
  * plain (req, res) handlers directly with fake request/response objects —
- * no Vercel runtime, no network. `encourage.js` builds its Gloo client from
- * process.env at import time; since this test suite never sets
- * GLOO_CLIENT_ID/GLOO_CLIENT_SECRET (and demo/ never calls src/env.js's
- * local-dev credential loader), it always exercises the deterministic stub
- * path — zero network, matching this repo's existing test-hermeticity
- * convention.
+ * no Vercel runtime, no network. Every route is local retrieval over the
+ * committed BSB corpus or a deterministic check, so the whole suite is
+ * hermetic by construction, matching this repo's test convention.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -15,7 +12,6 @@ import { applyCors, sendJson, withGate } from '../demo/api/_lib/http.js';
 import { _resetForTests } from '../demo/api/_lib/rate-limit.js';
 import passageHandler from '../demo/api/passage.js';
 import verifyHandler from '../demo/api/verify.js';
-import encourageHandler from '../demo/api/encourage.js';
 import registerHandler from '../demo/api/register.js';
 import openapiHandler from '../demo/api/openapi.js';
 
@@ -208,47 +204,6 @@ test('GET /api/verify is 405', async () => {
   _resetForTests();
   const res = makeRes();
   await verifyHandler(makeReq({ method: 'GET', ip: '30.0.0.3' }), res);
-  assert.equal(res.statusCode, 405);
-});
-
-// --- encourage.js --------------------------------------------------------------
-
-test('POST /api/encourage 400s on a missing message', async () => {
-  _resetForTests();
-  const res = makeRes();
-  await encourageHandler(makeReq({ method: 'POST', body: {}, ip: '40.0.0.1' }), res);
-  assert.equal(res.statusCode, 400);
-});
-
-test('POST /api/encourage degrades gracefully to stub mode with no Gloo credentials configured', async () => {
-  _resetForTests();
-  assert.equal(process.env.GLOO_CLIENT_ID, undefined, 'test must run keyless to prove the fallback path');
-  const res = makeRes();
-  await encourageHandler(makeReq({ method: 'POST', body: { message: "I'm anxious about my future" }, ip: '40.0.0.2' }), res);
-  assert.equal(res.statusCode, 200);
-  const body = json(res);
-  assert.equal(body.source, 'stub');
-  assert.match(body.reply, /stub mode/);
-  assert.equal(body.groundedOn.reference, 'Philippians 4:6-7');
-});
-
-test('POST /api/encourage forwards groundedReply\'s disclosure field verbatim, unfiltered (stub mode)', async () => {
-  _resetForTests();
-  assert.equal(process.env.GLOO_CLIENT_ID, undefined, 'test must run keyless to prove the stub disclosure');
-  const res = makeRes();
-  await encourageHandler(makeReq({ method: 'POST', body: { message: "I'm anxious about my future" }, ip: '40.0.0.4' }), res);
-  assert.equal(res.statusCode, 200);
-  const body = json(res);
-  assert.equal(
-    body.disclosure,
-    'This reply is a deterministic offline stub (no AI generation). Only the quoted passage is canonical Scripture text.'
-  );
-});
-
-test('GET /api/encourage is 405', async () => {
-  _resetForTests();
-  const res = makeRes();
-  await encourageHandler(makeReq({ method: 'GET', ip: '40.0.0.3' }), res);
   assert.equal(res.statusCode, 405);
 });
 

@@ -194,7 +194,7 @@
     border-radius: 4px;
     margin-bottom: 0.6rem;
   }
-  .badge.exact, .badge.gloo-api { background: rgba(48,209,88,0.15); color: var(--green); }
+  .badge.exact { background: rgba(48,209,88,0.15); color: var(--green); }
   .badge.minor_variance { background: rgba(255,149,0,0.15); color: var(--amber); }
   .badge.misquote, .badge.not_found { background: rgba(229,37,40,0.15); color: var(--red); }
   .badge.misattribution { background: rgba(255,149,0,0.15); color: var(--amber); }
@@ -311,16 +311,7 @@
   </section>
 
   <section class="panel">
-    <h2>3. Try an encouragement</h2>
-    <p class="hint">Describe how you're feeling. A relevant passage is retrieved first, then a reply is generated constrained to quote only that passage.</p>
-    <label for="e-msg">Message</label>
-    <input id="e-msg" type="text" value="I'm anxious about my future" />
-    <button id="e-btn">Get encouragement</button>
-    <div class="out" id="e-out"></div>
-  </section>
-
-  <section class="panel">
-    <h2>4. Verify the register</h2>
+    <h2>3. Verify the register</h2>
     <p class="hint">Paste any AI reply (or one from above). Checks for first-person language, reassurance-empathy phrasing, and companion/personhood claims. The tool is a signpost, never a companion. If the text quotes Scripture verbatim, name the reference so that quote is exempted from the first-person check.</p>
     <label for="r-text">Text</label>
     <textarea id="r-text">I'm sorry you're feeling anxious. I'd encourage you to keep going — you're not alone.</textarea>
@@ -376,9 +367,9 @@
    * @param {string} path
    * @param {RequestInit} [opts]
    * @param {number} [timeoutMs] - if set, aborts the request after this many ms
-   *   and resolves with a friendly timeout error instead of throwing (the
-   *   encourage endpoint can invoke a live LLM and is the one call slow
-   *   enough to need this — see the e-btn wiring below).
+   *   and resolves with a friendly timeout error instead of throwing. Every
+   *   endpoint here is local retrieval or a deterministic check, so none
+   *   currently needs it.
    */
   async function callApi(path, opts, timeoutMs) {
     const controller = timeoutMs ? new AbortController() : null;
@@ -483,35 +474,6 @@
     `));
   }
 
-  function renderEncourage(container, ok, body) {
-    if (!ok) {
-      container.innerHTML = '';
-      container.appendChild(el(`<div class="error-box">${escapeHtml(body?.error || 'Request failed.')}</div>`));
-      return;
-    }
-    const sourceLabel = body.source === 'gloo-api' ? 'live generation' : 'grounding demo (retrieval-only)';
-    let grounded = '';
-    if (body.groundedOn) {
-      grounded = `
-        <div class="scripture" style="margin-top:0.7rem;">
-          <span class="ref">Grounded on ${escapeHtml(body.groundedOn.reference)} · ${escapeHtml(body.groundedOn.translation)}</span>
-          ${escapeHtml(body.groundedOn.text)}
-        </div>`;
-    }
-    const disclosure = body.disclosure
-      ? `<div class="reason">${escapeHtml(body.disclosure)}</div>`
-      : '';
-    container.innerHTML = '';
-    container.appendChild(el(`
-      <div>
-        <span class="badge ${body.source}">${escapeHtml(sourceLabel)}</span>
-        <div style="white-space:pre-wrap; margin-top:0.3rem;">${escapeHtml(body.reply || body.error || '')}</div>
-        ${grounded}
-        ${disclosure}
-      </div>
-    `));
-  }
-
   function renderRegister(container, ok, body) {
     if (!ok) {
       container.innerHTML = '';
@@ -566,16 +528,6 @@
       body: JSON.stringify({ quote, reference }),
     });
     renderVerify(out, ok, body);
-  });
-
-  wireButton('e-btn', 'e-out', async (out) => {
-    const message = document.getElementById('e-msg').value;
-    const { ok, body } = await callApi('api/encourage', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message }),
-    }, 25000);
-    renderEncourage(out, ok, body);
   });
 
   wireButton('r-btn', 'r-out', async (out) => {

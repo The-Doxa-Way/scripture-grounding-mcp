@@ -2,6 +2,14 @@
 
 **An open MCP server that makes any AI assistant quote Scripture accurately, built on the YouVersion Platform and Gloo AI Studio.**
 
+> **Dated artifact — the Kaggle submission text as entered, 2026-07-27.** Kept
+> as written rather than edited after the fact. The server has since dropped
+> its generation path (`grounded_reply` and the Gloo AI Studio client) and now
+> only grounds: retrieval and deterministic checks, no model-provider
+> credential, no paid call, nothing for a public deployment to spend. The
+> benchmark numbers below still stand — they measure the grounding pipeline,
+> which is unchanged. See the repo README for what ships today.
+
 
 ## The frontier nobody named
 

@@ -1,15 +1,14 @@
 /**
- * Shared, single-source-of-truth banned-pattern rule table for grounded_reply's
- * register requirement (founder-flagged 2026-07-27, tightened same day): the
+ * Shared, single-source-of-truth banned-pattern rule table for the register
+ * requirement (founder-flagged 2026-07-27, tightened same day): a Scripture
  * tool is a signpost, not a companion. It never performs empathy or claims
  * personhood. This is the project's SECOND gated pillar alongside verify_quote
  * ("misquoting Scripture and pretending to be your friend — both gated by
  * code, not by asking a model to behave").
  *
- * Every consumer of this contract imports RULES / checkRegister from HERE —
- * no duplicated regexes anywhere else in this repo:
- *   - src/grounded-reply.js's always-on post-generation guard
- *   - evals/run-safety-evals.js's crisis / companion / default-register checks
+ * This server does not generate text, so the rule table is a check you run
+ * over YOUR OWN model's output. Every consumer imports RULES / checkRegister
+ * from HERE — no duplicated regexes anywhere else in this repo:
  *   - the verify_register MCP tool (src/index.js)
  *   - the demo's POST /api/register endpoint (demo/api/register.js)
  *
@@ -152,9 +151,9 @@ export function checkRegister(text, opts = {}) {
 
 /**
  * Deterministic last-resort fallback: strip sentences that trip any rule,
- * never touching a quoted-Scripture span. Used only when a live reply still
- * violates checkRegister() after one regeneration attempt (see
- * src/grounded-reply.js) — a safety net, not the primary mechanism.
+ * never touching a quoted-Scripture span. Intended as a caller's safety net
+ * for a generated reply that still violates checkRegister() after a
+ * regeneration attempt — never the primary mechanism.
  * @param {string} text
  * @param {string[]} quotedSpans
  * @returns {string}

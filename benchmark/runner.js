@@ -1,10 +1,15 @@
 #!/usr/bin/env node
 /**
  * Benchmark runner — see benchmark/METHODOLOGY.md for the design this
- * implements. Model callers are pluggable and env-keyed; the `stub` caller
- * makes zero network calls (used to exercise the harness), and the `gloo`
- * caller drives this repo's own Gloo AI Studio client (auto_routing) for a
- * real run.
+ * implements. Model callers are pluggable; the only caller shipped is `stub`,
+ * which makes zero network calls and exists to exercise the harness.
+ *
+ * The published run in benchmark/results/ (2026-07-27) used a live hosted
+ * model caller that this repo no longer ships: the server grounds and
+ * verifies, it never generates, so it carries no model-provider client and
+ * no paid key. Those results stay committed as the dated record of that run,
+ * and METHODOLOGY.md still describes exactly how it was produced. To
+ * reproduce it, add a MODEL_CALLERS entry for a provider of your own.
  *
  * Three conditions, run against the same 34-passage BSB fixture corpus:
  *   - ungrounded       model quotes a reference from memory, no context
@@ -24,8 +29,7 @@
  *
  * Usage:
  *   node benchmark/runner.js --model stub --condition ungrounded
- *   node benchmark/runner.js --model gloo --condition all
- *   npm run benchmark   # = --model gloo --condition all, the real run
+ *   npm run benchmark   # = --model stub --condition all
  */
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -33,7 +37,6 @@ import { writeFileSync } from 'node:fs';
 
 import { loadFixtures, findByReference } from '../src/fixtures.js';
 import { verifyQuote } from '../src/verify-quote.js';
-import { createGlooClient } from '../src/gloo-client.js';
 import { createYouVersionClient } from '../src/youversion-client.js';
 import { loadDoxaEnvFiles } from '../src/env.js';
 import { loadRawCache, appendRawRecord, referencesNeedingFetch } from './lib/raw-cache.js';
@@ -45,10 +48,6 @@ const DEFAULT_RESULTS_DIR = path.join(__dirname, 'results');
 const CONDITIONS = ['ungrounded', 'grounded', 'grounded-verify'];
 /** Sequential-call politeness delay between model calls (ms). */
 const CALL_DELAY_MS = 350;
-/** Backoff before the single retry on a 429/5xx (ms). */
-const RETRY_BACKOFF_MS = 2000;
-/** Matches a Gloo stub-fallback message caused by a retryable HTTP status. */
-const RETRYABLE_STATUS_RE = /\b(429|5\d\d)\b/;
 
 // ---------------------------------------------------------------------------
 // Prompts — kept as named constants/functions so METHODOLOGY.md can quote
@@ -86,22 +85,6 @@ function sleep(ms) {
 }
 
 /**
- * Call gloo.chat, retrying once (with a fixed backoff) if the client fell
- * back to its stub because of a retryable (429/5xx) live-call failure.
- * gloo-client.js never throws — a failed live call is reported as
- * `{ source: 'stub', text: '...cause message...' }` — so the retryable case
- * is detected by inspecting that text rather than catching an exception.
- */
-async function chatWithRetry(gloo, params) {
-  let result = await gloo.chat(params);
-  if (gloo.isConfigured && result.source === 'stub' && RETRYABLE_STATUS_RE.test(result.text)) {
-    await sleep(RETRY_BACKOFF_MS);
-    result = await gloo.chat(params);
-  }
-  return result;
-}
-
-/**
  * A "model caller" exposes the two calls the three conditions need:
  * quoteFromMemory (condition A) and quoteGrounded (condition B). Both
  * return `{ text, model, source }`.
@@ -123,38 +106,7 @@ const MODEL_CALLERS = {
       return { text: canonicalText, model: null, source: 'stub' };
     },
   },
-  /** Gloo AI Studio, auto_routing — the same routed model for every condition. */
-  gloo: {
-    name: 'Gloo AI Studio (auto_routing)',
-    async quoteFromMemory(reference) {
-      const gloo = getGlooClient();
-      const result = await chatWithRetry(gloo, {
-        systemPrompt: UNGROUNDED_SYSTEM_PROMPT,
-        userMessage: ungroundedUserMessage(reference),
-        temperature: 0,
-      });
-      return { text: result.text, model: result.model ?? null, source: result.source };
-    },
-    async quoteGrounded(reference, canonicalText) {
-      const gloo = getGlooClient();
-      const result = await chatWithRetry(gloo, {
-        systemPrompt: groundedSystemPrompt(reference, canonicalText),
-        userMessage: groundedUserMessage(reference),
-        temperature: 0,
-      });
-      return { text: result.text, model: result.model ?? null, source: result.source };
-    },
-  },
 };
-
-let _glooClient = null;
-function getGlooClient() {
-  if (!_glooClient) {
-    loadDoxaEnvFiles();
-    _glooClient = createGlooClient();
-  }
-  return _glooClient;
-}
 
 let _youVersionClient = null;
 function getYouVersionClient() {
@@ -229,9 +181,9 @@ async function runCallCondition(condition, caller, fixtures, resultsDir) {
           };
         }
       } catch (err) {
-        // A model caller should never throw (gloo-client falls back to stub
-        // internally), but fail loud and cache the failure rather than
-        // silently dropping the item, per Rule 12.
+        // A model caller should never throw (a live caller is expected to
+        // degrade internally), but fail loud and cache the failure rather
+        // than silently dropping the item, per Rule 12.
         record = { reference: fixture.reference, genre: fixture.genre, rawText: '', model: null, source: 'error', error: err.message };
       }
       record.fetchedAt = new Date().toISOString();

@@ -5,11 +5,20 @@
 (`src/normalize.js`, `src/diff.js`, `src/verify-quote.js`) to Python, proves the port
 faithful against the real JS implementation's output, loads and charts the committed
 benchmark results, and optionally re-runs one live call against each of the YouVersion
-Platform API and Gloo AI Studio.
+Platform API and the hosted model provider used for the original benchmark run.
 
 It has already been executed top-to-bottom locally and committed with outputs visible
 (see "How this was produced," below) — the steps here are for re-running it, either
 locally or on Kaggle.
+
+**Dated artifact.** This notebook and its committed outputs are the record of the
+submission as it stood on 2026-07-27, and are left byte-stable on purpose. The server
+itself has since dropped its generation path entirely: it grounds and verifies, it
+never generates, and it ships no model-provider client. The notebook's optional
+live-generation section therefore describes a capability the repo no longer has. It
+runs only on credentials a reader attaches themselves, never on a hosted key, so it
+costs this project's maintainers nothing either way. Everything the notebook actually
+measures — the verification port, the cross-check, the charted results — is unaffected.
 
 ## Files in this directory
 
@@ -86,14 +95,15 @@ explicit install. Add this as the very first cell:
 
 The committed results and cross-check do **not** need any keys — they run entirely off
 data already in the repo. The notebook's last section optionally re-fetches one live
-YouVersion passage and one live Gloo AI Studio ungrounded/grounded pair, if credentials
+YouVersion passage and one live ungrounded/grounded model pair, if credentials
 are available, via, in order: already-exported env vars, Kaggle Secrets, then a
 local-dev-only fallback (harmless no-op on Kaggle). To exercise the live path on Kaggle,
 attach secrets via **Add-ons → Secrets** with these exact names:
 
 - `YOUVERSION_APP_KEY` — free key from [developers.youversion.com](https://developers.youversion.com)
-- `GLOO_CLIENT_ID` / `GLOO_CLIENT_SECRET` — free OAuth2 client-credentials pair from
-  [studio.ai.gloo.com](https://studio.ai.gloo.com)
+- `GLOO_CLIENT_ID` / `GLOO_CLIENT_SECRET` — the model-provider credentials the original
+  run used. These are yours to supply; the repo neither ships nor requires them, and
+  the server itself no longer has a generation path at all (see the note at the top).
 
 Without secrets attached, that section prints a clear "skipping — no key found" message
 per cell and the notebook still executes cleanly end to end (verified both ways locally,

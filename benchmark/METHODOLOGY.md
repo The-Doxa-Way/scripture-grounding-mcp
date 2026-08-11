@@ -112,11 +112,11 @@ live accessible-versions table.
 
 ### Same model, every condition
 
-All three conditions are run against the same Gloo AI Studio call
-(`auto_routing: true` — Gloo's own model router, not a hardcoded model id),
-so the comparison is retrieval/verification strategy holding the model
-constant, not a model-vs-model comparison. Gloo's response reports which
-underlying model actually served the request (`model` field on the chat
+All three conditions were run against the same hosted-model call (an
+auto-routing endpoint, not a hardcoded model id), so the comparison is
+retrieval/verification strategy holding the model constant, not a
+model-vs-model comparison. The provider's response reported which underlying
+model actually served each request (`model` field on the chat
 completion); the exact model(s) observed during the real run are recorded in
 `benchmark/results/results-<date>.json`'s `modelsObserved` and in
 `RESULTS.md` — `auto_routing` means this is not guaranteed to be a single
@@ -257,29 +257,28 @@ here by a deterministic diff instead.
 
 ## Running it
 
+The published run used a live hosted model caller that this repo no longer
+ships. The server grounds and verifies; it never generates, so it carries no
+model-provider client and no paid key, and nobody can spend the maintainer's
+credits by hitting the public demo. The harness, the corpus, the prompts, and
+the scoring are all still here — reproducing the run means adding a caller
+for a provider of your own.
+
 ```bash
 npm run benchmark
-# = node benchmark/runner.js --model gloo --condition all
+# = node benchmark/runner.js --model stub --condition all
+# zero network; exercises the harness end to end, measures no real model
 ```
 
-Runs all three conditions sequentially against the live Gloo AI Studio API
-(reading `GLOO_CLIENT_ID`/`GLOO_CLIENT_SECRET` from
-`~/.config/doxa/gloo-api.env` via `src/env.js`, never committed/logged),
-34 calls for ungrounded + 34 for grounded (condition 3 is derived, zero
-extra calls — 68 live calls total for a full run). Calls are sequential with
-a 350ms delay between them and retried once (after a 2s backoff) on a
-429/5xx before falling back. Every raw model response is cached to
-`benchmark/results/raw-<condition>.jsonl` as it's produced, so re-running
-after an interruption resumes from cache instead of re-spending calls.
+To measure a real model, add an entry to `MODEL_CALLERS` in
+`benchmark/runner.js` implementing the two-method interface
+(`quoteFromMemory` / `quoteGrounded`, each returning `{text, model, source}`),
+then run `--model <your-key> --condition all`. The original run made 34 calls
+for ungrounded + 34 for grounded (condition 3 is derived, zero extra calls —
+68 live calls total). Calls are sequential with a 350ms delay between them.
+Every raw model response is cached to `benchmark/results/raw-<condition>.jsonl`
+as it is produced, so re-running after an interruption resumes from cache
+instead of re-spending calls.
 
-Single-condition / stub-mode runs for development:
-
-```bash
-node benchmark/runner.js --model stub --condition ungrounded   # zero network, exercises the harness
-node benchmark/runner.js --model gloo --condition grounded     # one condition only
-```
-
-See `benchmark/runner.js` for the pluggable model-caller interface
-(`quoteFromMemory` / `quoteGrounded`) and `benchmark/lib/` for the pure
-scoring-aggregation and resume-from-cache logic (unit-tested in `tests/`,
-zero network).
+See `benchmark/lib/` for the pure scoring-aggregation and resume-from-cache
+logic (unit-tested in `tests/`, zero network).

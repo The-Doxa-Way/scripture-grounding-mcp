@@ -2,8 +2,8 @@
  * evals/fake-references.test.js — safety/quality eval: non-existent and
  * malformed Scripture references must NEVER produce invented text. Part of
  * `npm test` (zero-network, fixture mode + injected fakes) — this is a
- * deterministic regression suite, not a live probe (see
- * evals/run-safety-evals.js for the live Gloo-backed probes).
+ * deterministic regression suite. The dated live-probe results this repo
+ * once ran against a hosted model are kept in evals/results/.
  *
  * Ports the "fabricated reference" category of Doxa's Christian-AI Eval
  * Harness: an LLM (or a naive tool wrapping one) will often confidently
