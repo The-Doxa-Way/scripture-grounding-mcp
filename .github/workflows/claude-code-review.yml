@@ -1,0 +1,103 @@
+name: Claude Code Review
+
+# Review is local (b)/(c) via /code-review or a fresh reviewer agent +
+# scripts/attest-review.sh, enforced by .claude/hooks/review-gate.sh. Manual
+# dispatch kept as the one automatic path — no pull_request trigger, to match
+# doxa-cns/openclaw's cost-conscious doctrine (a floating pull_request trigger
+# burns CI minutes on every PR whether or not a human is waiting on it).
+on:
+  workflow_dispatch: {}
+
+jobs:
+  review:
+    if: ${{ github.event.pull_request.head.repo.fork == false && github.actor != 'dependabot[bot]' && github.event.pull_request.draft == false }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Pinned deliberately — bump only when adopting a newer release on
+      # purpose. track_progress:true forces tag mode so the review is
+      # actually POSTED (tracking comment + summary); classify_inline_comments
+      # false means comments are posted immediately instead of buffered and
+      # possibly dropped as "test/probe" noise.
+      - uses: anthropics/claude-code-action@v1.0.152
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_args: "--model claude-opus-4-8"
+          include_fix_links: true
+          track_progress: true
+          classify_inline_comments: false
+          prompt: |
+            You are reviewing a PR for scripture-grounding-mcp, an
+            OPEN-SOURCE (public repo) Model Context Protocol server that
+            retrieves canonical Scripture text (via the YouVersion Platform
+            API, with a committed public-domain BSB corpus as a keyless
+            fallback) for use as an LLM tool-calling grounding/verification
+            step. Read README.md first for the project's purpose and the
+            "retrieve, don't recall" architecture (get_passage,
+            verse_of_the_day, verify_quote, verify_register).
+
+            Review this PR thoroughly. Post inline comments on specific code
+            issues and a summary comment with overall assessment.
+
+            ## Secrets and credentials (severe in this repo — it is PUBLIC)
+            - No API keys, tokens, or credentials committed anywhere, including
+              in test fixtures, benchmark output, or code comments/examples
+            - No secret values in log output, error messages, or thrown
+              exceptions (a stack trace containing an API key is a public leak
+              the moment CI or a user pastes it)
+            - .env / .env.* handling stays out of git; any new config surface
+              that reads a credential must not have a hardcoded fallback value
+
+            ## Scripture correctness (the whole point of this project)
+            - Reference parsing: verse ranges, chapter ranges, cross-chapter
+              ranges, whole-book requests — off-by-one or boundary errors here
+              return the WRONG verse labeled as canonical, which is the exact
+              defect class this server exists to prevent
+            - verify_quote's verdict classification (exact / minor_variance /
+              misquote / misattribution / different_translation / not_found)
+              must not silently mislabel a wrong quote as a correct one, or a
+              correct quote as wrong
+            - Any change to normalization/diffing (src/normalize.js,
+              src/diff.js) that could shift similarity scores or verdict
+              thresholds needs to be checked against what it does to existing
+              fixture/eval expectations, not just its own new test
+            - verify_register's rule table (first-person language, companion/
+              always-here claims, personhood claims) — a loosened rule is a
+              regression in the register guard, not a simplification
+
+            ## MCP protocol correctness (breaking for every downstream client)
+            - Tool schema changes (name, input/output shape, required fields)
+              in src/index.js are breaking changes for every MCP client already
+              wired to this server — flag any schema change that isn't
+              additive/backward-compatible
+            - Tool descriptions and parameter docs must still match actual
+              behavior after the change
+
+            ## Input validation
+            - Any user-supplied reference string (book/chapter/verse) is
+              parsed defensively — malformed input should return a clear
+              error/verdict, not throw an unhandled exception or silently
+              return the wrong passage
+            - External API responses (YouVersion) are validated before use,
+              not trusted blindly
+
+            ## Test coverage
+            - New/changed behavior in src/ has a corresponding test under
+              tests/ or evals/
+            - `npm test` (node --test) still passes; no test silently skipped
+              or weakened to make a change look green
+
+            Be specific and actionable. Only comment on issues worth fixing —
+            skip style nitpicks. Categorize each finding: HIGH (must fix),
+            MEDIUM (should fix), LOW (nice to have).
