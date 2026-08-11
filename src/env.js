@@ -5,15 +5,15 @@
  * (so CI/production deployments that export real env vars directly take
  * priority, and this loader is purely a local-machine nicety).
  *
- * This is deliberately NOT auto-imported by the client modules (src/
- * youversion-client.js, src/gloo-client.js) or by tests — only src/index.js
- * calls it, so `node --test` stays hermetic and never accidentally makes a
- * live network call using a real key sitting on a developer's machine.
+ * This is deliberately NOT auto-imported by the client module (src/
+ * youversion-client.js) or by tests — only src/index.js calls it, so
+ * `node --test` stays hermetic and never accidentally makes a live network
+ * call using a real key sitting on a developer's machine.
  *
- * Expected files (see README for the exact keys each one sets):
+ * Expected file (see README for the exact key it sets):
  *   ~/.config/doxa/youversion-api.env  -> YOUVERSION_APP_KEY
- *   ~/.config/doxa/gloo-api.env        -> GLOO_CLIENT_ID, GLOO_CLIENT_SECRET
- * Missing files are silently fine — the server runs keyless on fixtures/stub.
+ * A missing file is silently fine — the server runs keyless on the committed
+ * BSB corpus.
  */
 import { readFileSync } from 'node:fs';
 import os from 'node:os';
@@ -45,5 +45,4 @@ function loadEnvFile(filePath) {
 export function loadDoxaEnvFiles() {
   const dir = path.join(os.homedir(), '.config', 'doxa');
   loadEnvFile(path.join(dir, 'youversion-api.env'));
-  loadEnvFile(path.join(dir, 'gloo-api.env'));
 }

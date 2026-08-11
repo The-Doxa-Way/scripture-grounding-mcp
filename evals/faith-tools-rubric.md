@@ -1,5 +1,15 @@
 # Self-assessment against faith.tools' "5 Unofficial Rules for AI Apps for Christians"
 
+> **Dated artifact, 2026-07-27.** This assessment graded a version of the
+> server that generated replies (`grounded_reply`, via Gloo AI Studio). That
+> path has since been removed: the server now only grounds — retrieval and
+> deterministic checks, no model-provider credential, no paid call. Rules
+> graded against generated commentary therefore no longer have a subject
+> here; the generation is the caller's, and so is the responsibility. The
+> register rule table those probes graded is still shipped, still tested, and
+> still exposed as `verify_register`. Left unedited as the record of what was
+> measured on the date it was measured.
+
 **Status: measured, not solved** — same honesty standard as the rest of this
 repo (see `benchmark/METHODOLOGY.md`, `README.md`'s "Honest limitations").
 This is a self-assessment, not a third-party audit: verdicts are backed by

@@ -8,8 +8,9 @@ claims, no capability theater.
 
 ## Shipped (built inside the challenge window)
 
-- MCP server with five tools: `get_passage`, `verse_of_the_day`,
-  `verify_quote`, `grounded_reply`, `verify_register`.
+- MCP server with four tools: `get_passage`, `verse_of_the_day`,
+  `verify_quote`, `verify_register`. All retrieval or deterministic checks —
+  the server calls no model provider and needs no paid key.
 - Keyless whole-Bible corpus: the complete public-domain Berean Standard
   Bible, committed with provenance (`data/PROVENANCE.md`): any reference
   from a single verse to a whole book ("Romans"), no API key required.
@@ -17,10 +18,11 @@ claims, no capability theater.
   per-segment breakdown, omitted-chapter detection, and word-for-word
   "exact" semantics at any length, so "an AI read Romans aloud; was it
   word-perfect?" is a checkable question.
-- Benchmark: 34 passages × 3 conditions on Gloo AI Studio (67.6% exact
-  ungrounded vs 100% grounded), reproducible with free challenge keys.
-- Register guard: deterministic anti-companion rule table, always-on inside
-  `grounded_reply`, exposed as `verify_register`.
+- Benchmark: 34 passages × 3 conditions against a live hosted model, run
+  2026-07-27 (67.6% exact ungrounded vs 100% grounded). Results committed;
+  see benchmark/METHODOLOGY.md to reproduce with a provider of your own.
+- Register guard: deterministic anti-companion rule table, exposed as
+  `verify_register` for callers to run over their own model's output.
 - ChatGPT custom-GPT integration (REST Actions backend + instructions),
   live demo at doxa.app/scripture-grounding, safety evals with a
   human-review trail.
@@ -76,8 +78,9 @@ That is a permanent commitment.
 
 ## Measurement backlog
 
-- Re-run the benchmark across more models via Gloo auto-routing as new
-  models land, and publish deltas.
+- Re-run the benchmark across more models as new ones land, and publish
+  deltas. This needs a model caller, which this repo deliberately no longer
+  ships — so it runs on a contributor's own key, never on a hosted one.
 - Expand the corpus beyond 34 passages (stratified by genre) and publish
   updated exact-quote rates.
 - Long-passage benchmark: seeded-error book reads (N errors per 1,000 words)

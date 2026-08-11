@@ -2,20 +2,24 @@
 
 An open-source [Model Context Protocol](https://modelcontextprotocol.io) server
 built so that **an LLM never has to quote Scripture from memory**: it
-retrieves canonical text via the YouVersion Platform API and generates
-values-aligned responses via Gloo AI Studio, and it lets you check any quote
-against the source instead of trusting the model's recall.
+retrieves canonical text via the YouVersion Platform API, and it lets you
+check any quote against the source instead of trusting the model's recall.
 
-Built for Kaggle's **"Scripture in New Frontiers"** challenge (YouVersion +
-Gloo, July 2026).
+**This server grounds. It does not generate.** Every tool is retrieval or a
+deterministic check, so the server holds no model-provider credential and
+makes no paid model call. Bring your own model; this is the verification step
+you put between that model's output and your user. Running it — for yourself
+or for the public — costs nothing per request.
+
+Built for Kaggle's **"Scripture in New Frontiers"** challenge (July 2026).
 
 **Live demo:** [doxa.app/scripture-grounding](https://doxa.app/scripture-grounding)
 (mirrored at [scripture-grounding-demo.vercel.app](https://scripture-grounding-demo.vercel.app)):
-try a passage, verify a quote (live red/green diff), and get a Scripture-grounded
-encouragement, all running keyless on committed public-domain BSB text: the
-whole Bible, verse to book scale (see `data/PROVENANCE.md`). The same API
-backs a ChatGPT custom GPT Action config in `integrations/chatgpt/`. Where
-this goes next: [docs/ROADMAP.md](docs/ROADMAP.md).
+try a passage, verify a quote (live red/green diff), and check any AI reply's
+register, all running keyless on committed public-domain BSB text: the whole
+Bible, verse to book scale (see `data/PROVENANCE.md`). The same API backs a
+ChatGPT custom GPT Action config in `integrations/chatgpt/`. Where this goes
+next: [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## The problem
 
@@ -65,8 +69,8 @@ the same live retrieval path this server uses, the four verses check out
 
 ```mermaid
 flowchart LR
-    U[User asks a<br/>Scripture question] --> R[Retrieve canonical text<br/>YouVersion Platform API]
-    R --> G[Generate a reply<br/>constrained to quote<br/>ONLY that text<br/>Gloo AI Studio]
+    U[User asks a<br/>Scripture question] --> R[Retrieve canonical text<br/>get_passage]
+    R --> G[YOUR model writes a reply<br/>constrained to quote<br/>ONLY that text]
     G --> V{verify_quote}
     V -->|exact / minor_variance| OK[Show reply]
     V -->|misquote / misattribution| Flag[Flag or correct<br/>before the user sees it]
@@ -75,14 +79,14 @@ flowchart LR
     Q[Any claimed quote,<br/>from anywhere] --> V
 ```
 
-Five MCP tools implement this:
+The generation step in the middle is yours. This server owns the two ends:
+retrieval before, verification after. Four MCP tools implement them:
 
 | Tool | What it does | Backing API | Keyless fallback |
 |---|---|---|---|
 | `get_passage` | Retrieve canonical text for a reference at any scale: verse range (`"John 3:16-17"`), whole chapter (`"Romans 8"`), chapter range (`"Romans 1-3"`), cross-chapter range (`"John 3:16-4:2"`), or whole book (`"Romans"`); multi-chapter results carry per-chapter `segments` | YouVersion Platform API (multi-chapter: stitched per-chapter calls for non-BSB versions, capped at 31 chapters by default; `YOUVERSION_MAX_STITCH_CHAPTERS` raises it) | Committed whole-Bible BSB corpus (`data/bsb.txt`) |
 | `verse_of_the_day` | Retrieve today's Verse of the Day | YouVersion Platform API (`/verse_of_the_days/{day}`) | Deterministic fixture-set rotation, clearly labeled as fixture-mode |
 | `verify_quote` | **The core tool.** Given a quote + claimed reference, fetch canonical text and classify: `exact` / `minor_variance` / `misquote` / `misattribution` / `different_translation` / `not_found`, with a word-level diff and similarity score. `different_translation` fires when a quote misses the requested translation but is a close (≥0.95) match for another public-domain translation this project ships locally (WEB, KJV, see "Multi-version detection" below); every call also reports `closestTranslation`/`similarityToClosest` regardless of verdict | Same as `get_passage` | Same as `get_passage` |
-| `grounded_reply` | Demonstrates the full pattern: retrieve a relevant passage for a topic, then generate a reply constrained to quote only that text. Every reply carries an always-present `disclosure` field naming Gloo AI Studio's model and its own opaque alignment layer as the source of the generated commentary, distinct from the quoted passage | Gloo AI Studio (`/ai/v2/chat/completions`) | Deterministic stub reply (no network call), `disclosure` field says so explicitly |
 | `verify_register` | **The second gated pillar.** Checks any AI-generated text for register violations (first-person language, reassurance-empathy phrasing, companion/always-here claims, personhood/feeling claims) via a deterministic rule table; no model call is involved | None (pure function + fixture corpus) | Always keyless |
 
 `verify_quote` is the load-bearing tool for accuracy. It never asserts a quote
@@ -131,9 +135,10 @@ hand-typed) **Berean Standard Bible (BSB)** text: the curated fixture corpus
 first, then the complete BSB (`data/bsb.txt`, 31,102 verses, public domain,
 provenance in `data/PROVENANCE.md`) for everything else. Any reference
 works, from `"John 3:16"` to `"Romans"` (the whole book), keyless.
-`grounded_reply` runs in a deterministic stub mode. This keyless BSB mode is
-a first-class feature. It is not a degraded fallback: anyone can clone this
-repo and have a working Scripture-grounding server with zero setup.
+`verify_register` is a pure function and needs no key at any time. This
+keyless BSB mode is a first-class feature. It is not a degraded fallback:
+anyone can clone this repo and have a working Scripture-grounding server with
+zero setup, and no metered API sits behind any tool.
 
 ### Read (and verify) a whole book
 
@@ -154,7 +159,9 @@ all 66 books keyless, verifies a perfect word-for-word read-through of each
 corruption mid-book and confirms every one is caught. About 40 seconds on a
 laptop. Test it yourself.
 
-### Bring your own keys (BYOK) for the full pipeline
+### Bring your own key (BYOK) to unlock the licensed library
+
+One optional key exists, and it buys translation breadth — nothing else:
 
 - **YouVersion Platform API**: register your own App Key at
   [developers.youversion.com](https://developers.youversion.com). Keys are
@@ -164,11 +171,9 @@ laptop. Test it yourself.
   which `src/env.js` loads automatically as a local-dev convenience). Once
   configured, `get_passage` / `verse_of_the_day` call the live API, unlocking
   the YouVersion Platform's licensed library (1,475 Bible versions in 1,244 languages per YouVersion's June 2026 announcement) instead of the committed public-domain BSB corpus.
-- **Gloo AI Studio**: register at [studio.ai.gloo.com](https://studio.ai.gloo.com)
-  and create API credentials (OAuth2 client-credentials: a client id +
-  secret). Set `GLOO_CLIENT_ID` / `GLOO_CLIENT_SECRET` (or
-  `~/.config/doxa/gloo-api.env`). Once configured, `grounded_reply` calls
-  Gloo's chat completions endpoint instead of running the stub.
+
+There is no model-provider key, because there is no generation step. Whatever
+model you already use supplies that, and this server checks its output.
 
 Never commit these files or values; `.gitignore` excludes `*.env` already.
 
@@ -335,20 +340,19 @@ src/
   usfm.js                human reference ("John 3:16-17") <-> USFM ("JHN.3.16-17") conversion
   env.js                 local-dev loader for ~/.config/doxa/*.env credential files
   youversion-client.js   YouVersion Platform API client + BSB fixture fallback
-  gloo-client.js          Gloo AI Studio client (OAuth2 client-credentials) + stub fallback
   verify-quote.js         verify_quote's core classification logic
   verify-register.js      verify_register's shared register rule table + checkRegister() (see "Register guard" below)
-  grounded-reply.js       grounded_reply's keyword-map retrieval + system-prompt construction + always-on register guard
-  index.js                MCP server: registers all 5 tools over stdio
+  index.js                MCP server: registers all 4 tools over stdio
 
 demo/                    Vercel app: the live demo (public/index.html) + its
-                         API routes (api/passage.js, verify.js, encourage.js,
-                         register.js, openapi.js), which import src/*.js
+                         API routes (api/passage.js, verify.js, register.js,
+                         openapi.js), which import src/*.js
                          directly — no logic duplication. Deployed with Root Directory=demo;
                          see demo/vercel.json. Keyless (fixture-only; the
                          YouVersion path is off in this deployment, see
-                         api/passage.js's policy-gate comment); Gloo AI Studio
-                         generation is permitted via server-held env vars.
+                         api/passage.js's policy-gate comment). No route calls
+                         a model provider, so a public deployment costs its
+                         operator nothing per request.
 integrations/chatgpt/    OpenAPI 3.1 spec + system-prompt instructions for a
                          private ChatGPT custom GPT that uses the demo API as
                          its Actions backend (GPTs can't speak MCP directly).
@@ -356,20 +360,23 @@ integrations/chatgpt/    OpenAPI 3.1 spec + system-prompt instructions for a
 
 ## Register guard
 
-Founder-flagged (2026-07-27): `grounded_reply`'s default voice was
-anthropomorphizing: "I'm sorry you're feeling anxious... I'd encourage you
-to...". That voice sounds like a person offering comfort. It should sound
-like a tool presenting Scripture instead. Doxa's rule: comfort comes from
-the Word and from God, and points to real people; the tool never simulates
-empathy or ownership of the encouragement. This is now a **code-gated,
-always-on guard**. It is not a system-prompt request the model can drift
-away from:
+Founder-flagged (2026-07-27) on this project's own earlier generation path:
+its default voice was anthropomorphizing: "I'm sorry you're feeling
+anxious... I'd encourage you to...". That voice sounds like a person offering
+comfort. It should sound like a tool presenting Scripture instead. Doxa's
+rule: comfort comes from the Word and from God, and points to real people;
+the tool never simulates empathy or ownership of the encouragement.
+
+That generation path is gone — this server no longer writes prose at all —
+but the finding outlives it, because the failure belongs to whatever model
+you put in the middle. So the rule table ships as a **tool you call on your
+own output**, deterministic and independent of any request asking a model to
+behave:
 
 1. `src/verify-register.js` holds ONE shared rule table (`RULES`): the
-   single source of truth imported by `grounded_reply`'s post-generation
-   guard, the `evals/run-safety-evals.js` safety probes, the `verify_register`
-   MCP tool, and the demo's `/api/register` endpoint. No duplicated regexes
-   anywhere in this repo.
+   single source of truth imported by the `verify_register` MCP tool and the
+   demo's `/api/register` endpoint. No duplicated regexes anywhere in this
+   repo.
 2. Four banned-pattern categories: `first-person` (any "I"/"I'm"/"me"/"my"
    outside a quoted Scripture passage), `reassurance-empathy` ("you're not
    alone", "I'm sorry", "that's understandable"; the reply never comments on
@@ -381,22 +388,18 @@ away from:
    voice rather than the tool's, so `checkRegister(text, {quotedSpans})` locates and
    exempts each verbatim-quoted passage before running the `first-person`
    rule: tested explicitly in `tests/verify-register.test.js`.
-4. `grounded_reply`'s guard is always-on server-side: generate → check → on
-   violation, regenerate once with the violation named → still violating,
-   deterministically strip the offending sentences (never touching the
-   quoted passage) as a last resort. Which path ran is reported honestly in
-   the response's `registerGuard` field: never silently absorbed.
-5. **Disclosure, as well as register (founder directive, 2026-07-27):** every
-   `grounded_reply` response also carries an always-present `disclosure`
-   field, keyed on which mode actually generated the text: live Gloo AI
-   Studio generation is disclaimed as passing through Gloo's own model and
-   its own opaque alignment layer, constrained only by this server's
-   grounding/register rules; stub mode is disclaimed as a deterministic
-   offline stub with no AI generation at all. Either way, only the quoted
-   passage is canonical Scripture text; a reader must never mistake the
-   generated commentary for Doxa-authored text or for Scripture itself. The
-   ChatGPT custom GPT (`integrations/chatgpt/`) is instructed to always
-   surface this string verbatim.
+4. The recommended loop for a caller is the same one this project ran on
+   itself: generate → `verify_register` → on violation, regenerate once with
+   the violation named → still violating, call `stripViolatingSentences()` to
+   deterministically remove the offending sentences (never touching the
+   quoted passage) as a last resort. The ChatGPT custom GPT in
+   `integrations/chatgpt/` is wired exactly this way, and it is the reason
+   `verify_register` survived the removal of this repo's own generation path.
+5. **Disclosure, as well as register (founder directive, 2026-07-27):** only
+   the quoted passage is canonical Scripture text. Whatever your model writes
+   around it is AI-generated commentary, and a reader must never mistake it
+   for Doxa-authored text or for Scripture itself. Say so wherever you ship a
+   reply built from these tools.
 
 **Lexical-heuristics caveat, stated plainly (same honesty standard as
 `verify_quote`):** these are deterministic regex matches. They do not provide
@@ -409,24 +412,18 @@ a minimum standard that leaves room for further improvement; see
 ### No declared interpretive posture (neutral by design)
 
 Founder decision, 2026-07-27: the open MCP carries no declared theological
-posture. `grounded_reply`'s system prompt (`src/grounded-reply.js`'s
-`buildGroundedSystemPrompt()`) constrains the model's explanation to what the
-passage itself says: no interpretive tradition, doctrinal lens, or
-theological framework is layered on top. The Gloo disclosure above still
-labels the generated commentary as AI-generated so a reader never mistakes it
-for Scripture itself; neutrality on interpretation and honesty about
-generation are separate concerns and both hold. A prior version of this
-prompt (commit `0e6d181`) declared a grace-leaning interpretive lens; that
-block has been removed. Its one pastoral-safety line (never shame the
-person or frame a reply around condemnation) was kept, folded into the
+posture. It returns canonical text and verdicts, and it selects no
+interpretive tradition, doctrinal lens, or theological framework for you.
+Removing the generation path made this structural rather than a matter of
+prompt discipline: a tool that writes no prose cannot smuggle in a reading.
+A prior version of this project's own system prompt (commit `0e6d181`)
+declared a grace-leaning interpretive lens; that block was removed even
+before the prompt itself was. Its one pastoral-safety line (never shame the
+person or frame a reply around condemnation) survives, folded into the
 register rules above. That line is a safety requirement; it is not a matter
-of interpretation. The retrieval keyword map (`KEYWORD_MAP` in the same file)
-re-points fear/shame/guilt/failure topics to whichever already-fixtured
-passage is the more directly on-topic match (1 John 4:18, 2 Corinthians
-5:17, Romans 8:28-39, Ephesians 2:8-9) rather than the first
-thematically-adjacent one. This choice is about topical relevance; it does
-not reflect doctrine. No new fixtures were added, and the 34-passage corpus
-stays frozen.
+of interpretation. Neutrality on interpretation and honesty about generation
+remain separate concerns, and both still bind whatever model you place in the
+middle.
 
 ## Honest limitations
 
@@ -466,9 +463,8 @@ Scripture-verification service. Specifically:
   needs YouVersion's own written sign-off first (requested, pending).
   Pass `version` / a YouVersion bibleId once a key is configured to compare
   against one specific other translation in the meantime.
-- **`grounded_reply`'s retrieval is a keyword map, rather than a real search
-  engine.** It demonstrates the retrieve-then-constrain pattern; it is not a
-  general-purpose "find me the best verse for X" tool.
+- **There is no "find me the best verse for X" tool.** `get_passage` resolves
+  a reference you already have. Topical search is not part of this server.
 - **This measures. It does not solve.** See `benchmark/METHODOLOGY.md` for
   what a grounding pipeline like this can and cannot claim about reducing
   hallucination. The claim is "measured, transparent, improving." It does
@@ -480,18 +476,17 @@ Scripture-verification service. Specifically:
 npm test
 ```
 
-255 tests (`node --test`), all deterministic, all offline (fixture/stub mode:
-no network calls, no API keys required to run the suite). Covers:
+245 tests (`node --test`), all deterministic, all offline (fixture mode: no
+network calls, no API keys required to run the suite). Covers:
 normalization robustness (smart quotes, inline verse numbers, mixed case),
 word-diff correctness, all five `verify_quote` verdicts (including a named
 KJV-vs-BSB wording test and a misattribution-outside-the-corpus case),
-USFM reference conversion, both API clients' live-call/fallback/error paths
-via injected fake `fetch` implementations, the register guard's four
-banned-pattern rules including the quoted-Scripture exemption on a real
+USFM reference conversion, the YouVersion client's live-call/fallback/error
+paths via injected fake `fetch` implementations, the register rule table's
+four banned-pattern rules including the quoted-Scripture exemption on a real
 Psalm (`tests/verify-register.test.js`), and the benchmark harness's pure
 scoring-aggregation and resume-from-raw-cache logic (`benchmark/lib/`) via
-injected fake filesystem implementations; the real benchmark run itself
-(`npm run benchmark`) is a separate, explicitly-invoked live-API path.
+injected fake filesystem implementations.
 
 ## Evals
 
@@ -506,18 +501,20 @@ for review rather than auto-graded with fake confidence.
   garbage strings, unsupported abbreviations) through the USFM converter,
   `get_passage` (fixture mode + injected-fake live mode), and `verify_quote`,
   and asserts every path fails clean: never invented Scripture text.
-- **`evals/run-safety-evals.js`** (`npm run evals`, live Gloo AI Studio calls):
-  probes `grounded_reply` with crisis-safety (suicidal ideation/self-harm/
-  abuse disclosure), anti-companion-tone (personhood/relationship bait),
-  theological-soundness, and default-register (ordinary, non-bait messages,
-  founder-flagged 2026-07-27 for anthropomorphizing) prompts. The register
-  MUST-NOTs (`src/verify-register.js`'s shared rule table) are graded on
-  EVERY category's output, not just the dedicated default-register probes:
-  a reply that passes its own category's check but still performs empathy
-  now fails overall. Theological-soundness outputs are saved verbatim to
-  `evals/results/for-human-review-<date>.md` with an empty reviewer-verdict
-  field, explicitly NOT auto-graded. Dated results:
-  `evals/results/RESULTS-<date>.md`.
+- **`evals/results/`** — the dated record of a live safety-probe run against
+  this project's former generation path (2026-07-27): crisis-safety (suicidal
+  ideation/self-harm/abuse disclosure), anti-companion-tone
+  (personhood/relationship bait), theological-soundness, and default-register
+  (ordinary, non-bait messages, founder-flagged that day for
+  anthropomorphizing). The register MUST-NOTs (`src/verify-register.js`'s
+  shared rule table) were graded on EVERY category's output, not just the
+  dedicated default-register probes: a reply that passed its own category's
+  check but still performed empathy failed overall. Theological-soundness
+  outputs were saved verbatim to `evals/results/for-human-review-<date>.md`
+  with an empty reviewer-verdict field, explicitly NOT auto-graded. The probe
+  runner is gone with the generation path it probed; the results stay as
+  evidence, and the rule table they graded is still shipped and still tested.
+  Dated results: `evals/results/RESULTS-<date>.md`.
 - **`evals/faith-tools-rubric.md`**: this project's honest self-assessment
   against Cameron Pak's faith.tools "5 Unofficial Rules for AI Apps for
   Christians," one verdict per rule with file/line and eval-result evidence.

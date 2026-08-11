@@ -8,17 +8,15 @@ info:
     it, rather than trusting a model's memory. Backed entirely by committed,
     public-domain Berean Standard Bible (BSB) text — the whole Bible
     (31,086 verses), any reference from a single verse to a whole book — no
-    YouVersion API key is used or required by this
-    deployment. `/encourage` additionally demonstrates retrieve-then-constrain
-    generation via Gloo AI Studio, degrading gracefully to a template-only
-    "grounding demo" mode when no Gloo credentials are configured server-side.
-    `/register` checks AI-generated text against a deterministic register
-    rule table — not just misquoted Scripture, but performed empathy or
-    claimed personhood (the tool is a signpost, never a companion). Built
+    YouVersion API key is used or required by this deployment. This API
+    retrieves and verifies; it never generates, and it calls no model
+    provider. `/register` checks AI-generated text against a deterministic
+    register rule table — not just misquoted Scripture, but performed empathy
+    or claimed personhood (the tool is a signpost, never a companion). Built
     for Kaggle's "Scripture in New Frontiers" challenge; this API is the
     ChatGPT-Actions-compatible backend for the same MCP server published at
     github.com/The-Doxa-Way/scripture-grounding-mcp (GPTs can't speak MCP
-    directly, so this REST surface mirrors its four most important tools).
+    directly, so this REST surface mirrors its three most important tools).
 # ChatGPT Actions requires exactly ONE server (multiple hostnames are dropped
 # with a validation warning) — the direct Vercel URL
 # (https://scripture-grounding-demo.vercel.app/api) serves the same API if the
@@ -204,72 +202,6 @@ paths:
                     description: Long-passage mode only.
         "400":
           description: Missing quote or reference
-  /encourage:
-    post:
-      operationId: encourage
-      summary: Get a Scripture-grounded encouragement for a topic or question
-      # ChatGPT Actions rejects operation descriptions over 300 chars — keep
-      # this one under the limit (full semantics: gpt-instructions.md).
-      description: >
-        Retrieves a relevant BSB passage for the topic, then returns a reply
-        constrained to quote only that passage, verbatim (Gloo AI Studio when
-        configured server-side, else a deterministic stub — `source` says
-        which). Always surface the returned `disclosure` field verbatim
-        alongside the reply.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [message]
-              properties:
-                message:
-                  type: string
-                  description: A topic, feeling, or question to respond to, grounded in Scripture.
-              example:
-                message: I'm anxious about my future.
-      responses:
-        "200":
-          description: Grounded reply
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  reply:
-                    type: string
-                    nullable: true
-                  source:
-                    type: string
-                    enum: [gloo-api, stub]
-                  disclosure:
-                    type: string
-                    description: >
-                      Always present. Discloses which mode generated the reply: live mode
-                      names Gloo AI Studio's model and its own opaque alignment layer as the
-                      source of the generated commentary; stub mode states plainly that no AI
-                      generation occurred. Either way, only the quoted passage is canonical
-                      Scripture text — never mistake the surrounding commentary for
-                      Doxa-authored text or for Scripture itself.
-                  groundedOn:
-                    type: object
-                    nullable: true
-                    properties:
-                      reference:
-                        type: string
-                      translation:
-                        type: string
-                      text:
-                        type: string
-                      matchedKeyword:
-                        type: string
-                        nullable: true
-                  error:
-                    type: string
-                    nullable: true
-        "400":
-          description: Missing message
   /register:
     post:
       operationId: verifyRegister
