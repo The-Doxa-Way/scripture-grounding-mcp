@@ -65,26 +65,31 @@ function observationsAt(ref, path) {
   } catch {
     return null; // file didn't exist at this ref — not this check's concern
   }
-  let data;
+  // Parse AND map-building share one try/catch (review 2026-08-13: an
+  // earlier split version wrapped only JSON.parse, so a valid-JSON-but-
+  // wrong-shape blob — e.g. the literal `null`, or observations that isn't
+  // an array — threw on `data.observations` OUTSIDE any try/catch here,
+  // escaping this function and aborting run()'s whole merge-commit loop
+  // instead of fail-opening for just this one ref).
   try {
-    data = JSON.parse(content);
-  } catch {
-    return null; // unparseable — not this check's concern (fail open)
-  }
-  if (!Array.isArray(data.observations)) return null;
-  const map = new Map();
-  for (const obs of data.observations) {
-    // A malformed observation (missing/non-string hash) is skipped, not
-    // indexed under a shared falsy/undefined key — review 2026-08-13: the
-    // prior version's `if (obs && obs.hash)` let a non-string hash (e.g. a
-    // hand-edited file with a numeric or duplicate-empty hash) collapse
-    // multiple observations onto one Map key, silently discarding the
-    // others INSIDE the very tool meant to catch silent discarding.
-    if (obs && typeof obs.hash === 'string' && obs.hash.length > 0) {
-      map.set(obs.hash, typeof obs.entityName === 'string' ? obs.entityName : '(unknown entity)');
+    const data = JSON.parse(content);
+    if (!data || !Array.isArray(data.observations)) return null;
+    const map = new Map();
+    for (const obs of data.observations) {
+      // A malformed observation (missing/non-string hash) is skipped, not
+      // indexed under a shared falsy/undefined key — review 2026-08-13: the
+      // prior version's `if (obs && obs.hash)` let a non-string hash (e.g. a
+      // hand-edited file with a numeric or duplicate-empty hash) collapse
+      // multiple observations onto one Map key, silently discarding the
+      // others INSIDE the very tool meant to catch silent discarding.
+      if (obs && typeof obs.hash === 'string' && obs.hash.length > 0) {
+        map.set(obs.hash, typeof obs.entityName === 'string' ? obs.entityName : '(unknown entity)');
+      }
     }
+    return map;
+  } catch {
+    return null; // unparseable/malformed — not this check's concern (fail open)
   }
-  return map;
 }
 
 function run(base, head) {

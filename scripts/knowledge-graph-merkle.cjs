@@ -709,21 +709,50 @@ function mergeResolve(oursPath, theirsPath) {
     process.exitCode = 1;
     return;
   }
-
-  const byHash = new Map();
-  let skippedMalformed = 0;
-  for (const obs of [...(ours.observations || []), ...(theirs.observations || [])]) {
-    // A missing/non-string hash can't be indexed at all: falling through to
-    // `byHash.set(undefined, obs)` would collapse every such observation onto
-    // ONE map key, silently discarding all but the last — exactly the class
-    // of data loss this whole tool exists to prevent, reintroduced inside
-    // the fix itself (review 2026-08-13). Skip and count instead.
-    if (!obs || typeof obs.hash !== 'string' || obs.hash.length === 0) {
-      skippedMalformed++;
-      continue;
-    }
-    byHash.set(obs.hash, obs); // hash-keyed: identical observations collapse, never duplicate
+  // A valid JSON literal (e.g. `null`) parses without throwing, so a plain
+  // parse try/catch doesn't catch it — review 2026-08-13: without this
+  // guard, `ours.observations` below throws an uncaught, unfriendly
+  // TypeError for exactly this shape, the failure mode item 5 exists to
+  // eliminate.
+  if (!ours || typeof ours !== 'object') {
+    console.log(`${c.red}"${oursPath}" did not contain a merkle-state object.${c.reset}`);
+    process.exitCode = 1;
+    return;
   }
+  if (!theirs || typeof theirs !== 'object') {
+    console.log(`${c.red}"${theirsPath}" did not contain a merkle-state object.${c.reset}`);
+    process.exitCode = 1;
+    return;
+  }
+
+  // Built per-side (not from one combined spread-loop) so onlyInOurs/
+  // onlyInTheirs below can be computed from the VALID hash sets, immune to
+  // malformed entries inflating the raw `.length` counts (review 2026-08-13:
+  // the combined-loop version undercounted — sometimes to 0, silently
+  // suppressing the message — whenever a malformed entry on one side wasn't
+  // matched by a real entry on the other).
+  const byHash = new Map();
+  const oursHashes = new Set();
+  const theirsHashes = new Set();
+  let skippedMalformed = 0;
+  const indexSide = (observations, hashSet) => {
+    for (const obs of observations || []) {
+      // A missing/non-string hash can't be indexed at all: falling through to
+      // `byHash.set(undefined, obs)` would collapse every such observation onto
+      // ONE map key, silently discarding all but the last — exactly the class
+      // of data loss this whole tool exists to prevent, reintroduced inside
+      // the fix itself (review 2026-08-13). Skip and count instead.
+      if (!obs || typeof obs.hash !== 'string' || obs.hash.length === 0) {
+        skippedMalformed++;
+        continue;
+      }
+      hashSet.add(obs.hash);
+      byHash.set(obs.hash, obs); // hash-keyed: identical observations collapse, never duplicate
+    }
+  };
+  indexSide(ours.observations, oursHashes);
+  indexSide(theirs.observations, theirsHashes);
+
   // Deterministic regardless of (ours, theirs) argument order: primary sort
   // by timestamp, but ties broken by hash (stable, unique, order-independent)
   // rather than by array insertion order — review 2026-08-13 found the
@@ -735,8 +764,10 @@ function mergeResolve(oursPath, theirsPath) {
 
   const oursCount = (ours.observations || []).length;
   const theirsCount = (theirs.observations || []).length;
-  const onlyInOurs = merged.length - theirsCount;
-  const onlyInTheirs = merged.length - oursCount;
+  let onlyInOurs = 0;
+  let onlyInTheirs = 0;
+  for (const h of oursHashes) if (!theirsHashes.has(h)) onlyInOurs++;
+  for (const h of theirsHashes) if (!oursHashes.has(h)) onlyInTheirs++;
 
   const state = {
     merkleRoot: buildMerkleTree(merged.map((o) => o.hash)),

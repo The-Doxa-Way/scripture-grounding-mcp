@@ -28,6 +28,62 @@ payload="$(cat 2>/dev/null)" || exit 0
 [ -n "$payload" ] || exit 0
 
 command -v jq >/dev/null 2>&1 || exit 0
+
+# ---------------------------------------------------------------------------
+# Merge-integrity check (2026-08-13, Garth: "standing doctrine and practice
+# across all repos"). Orthogonal to the "does this range have a kg-save at
+# all" checks below: it does not ask whether a kg-save happened, it asks
+# whether a MERGE inside the given directory's local range LOST one that
+# already did (real incident: a .knowledge-graph-merkle.json conflict
+# resolved with `git checkout --theirs` silently discarded a branch's own
+# observation — the observations array is an append log, so picking one side
+# of a conflict can only ever keep a subset).
+#
+# ONE shared function, called from BOTH landing paths below (review
+# 2026-08-13: two independently-maintained copies had already diverged —
+# only one validated repo identity before trusting local state — so this is
+# the single source of truth instead). Each caller must run it BEFORE any of
+# its OWN exit-0 paths, since this check's whole purpose is to catch what
+# those paths would otherwise wave through unconditionally.
+#
+# Fail-open on any tooling trouble (script missing, node missing, no
+# origin/main, empty range, unreadable/unidentifiable repo) — this must
+# never itself become the reason a legitimate landing is blocked.
+# ---------------------------------------------------------------------------
+check_kg_merge_integrity() {
+  local candidate_dir="$1"
+  [ -d "$candidate_dir" ] || return 0
+  git -C "$candidate_dir" rev-parse --is-inside-work-tree >/dev/null 2>&1 || return 0
+
+  # Identity guard: only trust candidate_dir as "this repo's checkout" when it
+  # is actually the SAME git repo this hook is installed in (compares the
+  # resolved --git-common-dir, which is worktree-aware). Without this, a
+  # session whose persistent cwd has drifted to a sibling repo would run this
+  # check against the WRONG repo's history — either false-blocking on
+  # unrelated commits, or silently finding nothing wrong in a range that was
+  # never the real PR's range at all (review 2026-08-13 finding).
+  local candidate_common self_common
+  candidate_common="$(git -C "$candidate_dir" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)"
+  self_common="$(cd "${CLAUDE_PROJECT_DIR:-$PWD}" 2>/dev/null && git rev-parse --path-format=absolute --git-common-dir 2>/dev/null)"
+  [ -n "$self_common" ] && [ "$candidate_common" != "$self_common" ] && return 0
+
+  local candidate_base
+  candidate_base="$(git -C "$candidate_dir" merge-base HEAD origin/main 2>/dev/null)"
+  [ -n "$candidate_base" ] || return 0
+  [ "$candidate_base" != "$(git -C "$candidate_dir" rev-parse HEAD 2>/dev/null)" ] || return 0
+  [ -f "$candidate_dir/scripts/check-kg-merge-integrity.cjs" ] || return 0
+  command -v node >/dev/null 2>&1 || return 0
+
+  local candidate_output candidate_status
+  candidate_output="$(cd "$candidate_dir" && node scripts/check-kg-merge-integrity.cjs "$candidate_base" HEAD 2>&1)"
+  candidate_status=$?
+  if [ "$candidate_status" -eq 1 ]; then
+    printf '%s\n' "$candidate_output" >&2
+    return 2
+  fi
+  return 0
+}
+
 # ---------------------------------------------------------------------------
 # GitHub MCP merge path — a PR merged through mcp__github__merge_pull_request
 # has no .tool_input.command, so the Bash-command extraction below finds
@@ -40,38 +96,11 @@ if [ "$tool_name" = "mcp__github__merge_pull_request" ]; then
   mcp_repo="$(printf '%s' "$payload" | jq -r '.tool_input.repo // empty' 2>/dev/null)"
   [ "$mcp_repo" = "scripture-grounding-mcp" ] || exit 0   # gate only this repo; siblings pass
 
-  # ---------------------------------------------------------------------------
-  # Merge-integrity check (2026-08-13, Garth: "standing doctrine and practice
-  # across all repos"; review 2026-08-13 PLACEMENT finding). Runs HERE,
-  # unconditionally, before EVERY exit-0 path below in this MCP-merge branch —
-  # this branch's own "PR diff already has a .knowledge-graph/ change" fast
-  # path further down would otherwise let a merge through without the check
-  # ever running, because this branch returns long before the Bash-command
-  # flow's copy of this same check (further down the file) is ever reached —
-  # an MCP-tool merge never extracts .tool_input.command at all, so a check
-  # placed only in that later flow is a complete blind spot for this one. This
-  # inspects the LOCAL checkout's git range (merge-base(origin/main, HEAD)..HEAD)
-  # via `git -C`, independent of the remote PR-diff check below — it protects
-  # any session that resolved a conflict in THIS checkout, whether it then
-  # lands via the GitHub MCP merge tool, `gh pr merge`, or `git push`. A merge
-  # landed with no local involvement (GitHub web UI, a bot with no checkout)
-  # has nothing local to check and is out of this hook's reach by
-  # construction. Fail-open on any tooling trouble.
-  # ---------------------------------------------------------------------------
+  # Runs before every exit-0 path below in this branch (see the function's own
+  # header comment for why this branch specifically needs its own call site).
   mcp_hook_cwd="$(printf '%s' "$payload" | jq -r '.cwd // empty' 2>/dev/null)"
-  mcp_dir="${mcp_hook_cwd:-${CLAUDE_PROJECT_DIR:-$PWD}}"
-  if [ -d "$mcp_dir" ] && git -C "$mcp_dir" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-    mcp_base="$(git -C "$mcp_dir" merge-base HEAD origin/main 2>/dev/null)"
-    if [ -n "$mcp_base" ] && [ "$mcp_base" != "$(git -C "$mcp_dir" rev-parse HEAD 2>/dev/null)" ] \
-       && [ -f "$mcp_dir/scripts/check-kg-merge-integrity.cjs" ] && command -v node >/dev/null 2>&1; then
-      mcp_integrity_output="$(cd "$mcp_dir" && node scripts/check-kg-merge-integrity.cjs "$mcp_base" HEAD 2>&1)"
-      mcp_integrity_status=$?
-      if [ "$mcp_integrity_status" -eq 1 ]; then
-        printf '%s\n' "$mcp_integrity_output" >&2
-        exit 2
-      fi
-    fi
-  fi
+  check_kg_merge_integrity "${mcp_hook_cwd:-${CLAUDE_PROJECT_DIR:-$PWD}}"
+  [ $? -eq 2 ] && exit 2
 
   pr_number="$(printf '%s' "$payload" | jq -r '(.tool_input.pullNumber // empty) | if type == "number" then floor else . end' 2>/dev/null)"
   mcp_owner="$(printf '%s' "$payload" | jq -r '.tool_input.owner // empty' 2>/dev/null)"
@@ -150,22 +179,10 @@ base="$(git merge-base HEAD origin/main 2>/dev/null)" || exit 0
 # Empty range (HEAD at or behind origin/main) -> nothing is landing -> allow.
 [ "$base" = "$(git rev-parse HEAD 2>/dev/null)" ] && exit 0
 
-# Merge-integrity check (2026-08-13, Garth: "standing doctrine and practice
-# across all repos"). Orthogonal to the "does this range have a kg-save at
-# all" checks below: it does not ask whether a kg-save happened, it asks
-# whether a MERGE inside this range LOST one that already did (real
-# incident: a .knowledge-graph-merkle.json conflict resolved with
-# `git checkout --theirs` silently discarded a branch's own observation —
-# the observations array is an append log, so picking one side of a
-# conflict can only ever keep a subset). Fail-open on any tooling trouble.
-if [ -f "$dir/scripts/check-kg-merge-integrity.cjs" ] && command -v node >/dev/null 2>&1; then
-  integrity_output="$(node "$dir/scripts/check-kg-merge-integrity.cjs" "$base" HEAD 2>&1)"
-  integrity_status=$?
-  if [ "$integrity_status" -eq 1 ]; then
-    printf '%s\n' "$integrity_output" >&2
-    exit 2
-  fi
-fi
+# Merge-integrity check — see check_kg_merge_integrity()'s header comment
+# above. Runs before every remaining exit-0 path below.
+check_kg_merge_integrity "$dir"
+[ $? -eq 2 ] && exit 2
 
 # Direct-to-main generated surfaces never require kg-save (the KG itself, and
 # genuinely generated state). If EVERY file in the range is such a path,
