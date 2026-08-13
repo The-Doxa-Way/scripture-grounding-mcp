@@ -5,6 +5,14 @@
 <!-- directly in .knowledge-graph/graph.json.                     -->
 <!-- Never read graph.json whole for a lookup.                    -->
 
+## Bug (1)
+
+- ReviewWorkflowDeadCondition — claude-code-review.yml (just added in #14) copied the pre-fix openclaw template's if: condition referencing g…
+
+## Fix (1)
+
+- KgMerkleFixesPropagated — Propagated the 2026-08-11 atomic-write and --type-guard fixes from doxa-cns's canonical knowledge-graph-merkl…
+
 ## Workflow (1)
 
 - LandingGatesInfra — Bootstrapped Doxa's standard landing-gate infrastructure for this repo: KG Guard + Claude Code Review GitHub …

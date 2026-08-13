@@ -147,13 +147,14 @@ function loadGraph() {
 }
 
 function saveGraph(graph) {
-  // Ensure the directory exists
-  const dir = path.dirname(GRAPH_FILE);
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  // Atomic write: tmp + rename
-  const tmp = GRAPH_FILE + '.tmp';
-  fs.writeFileSync(tmp, JSON.stringify(graph, null, 2));
-  fs.renameSync(tmp, GRAPH_FILE);
+  // Atomic write: pid+counter-unique tmp name + fsync (atomicWriteJSON),
+  // matching saveMerkleState below. The old inline `tmp = GRAPH_FILE +
+  // '.tmp'` + writeFileSync + renameSync had neither: a fixed, non-unique
+  // tmp filename that two concurrent `add` invocations can race on, and no
+  // fsync, so a crash mid-write could leave a torn or missing file.
+  // atomicWriteJSON creates its own parent dir, so no separate mkdir here.
+  // (2026-08-11 fix, ported from doxa-cns's canonical file.)
+  atomicWriteJSON(GRAPH_FILE, graph);
   // The generator owns its derived output: every graph write refreshes the
   // cheap navigation surface (.knowledge-graph/INDEX.md) so it can never
   // drift. Failure here must not lose the graph write itself — warn loud.
@@ -532,6 +533,20 @@ function add(args) {
       positional.push(args[i]);
     }
   }
+
+  // Guard: a trailing --type with no value falls through the loop above into
+  // `positional` as a plain string, since `args[i + 1]` is undefined and the
+  // `--type` branch never fires. Left unguarded, it silently becomes
+  // sourceFile/lineNumber/an extra positional below — for an EXISTING entity
+  // (--type is optional there) this used to persist a NaN line number into
+  // provenance with NO error surfaced at all. Reject loudly instead (2026-08-11
+  // fix, ported from doxa-cns's canonical file).
+  if (positional.includes('--type')) {
+    console.log(`${c.red}--type given with no value after it.${c.reset}\n` +
+      `${c.yellow}Usage: add <entity> <observation> <source-file> [line] --type <EntityType>${c.reset}`);
+    process.exitCode = 1;
+    return;
+  }
   const [entityName, observation, sourceFile, lineNumber] = positional;
 
   // Guard: an entity name starting with '-' is almost always a CLI flag that a
@@ -645,6 +660,67 @@ function runReconcile() {
     console.log(`${c.yellow}Created with type=Unknown:${c.reset}  ${result.typesGuessed}`);
     console.log(`${c.yellow}  (no entityType stored in merkle provenance; pass --type on future add calls)${c.reset}`);
   }
+}
+
+/**
+ * Merge-conflict resolver for .knowledge-graph-merkle.json (2026-08-13,
+ * Garth: "this should be standing doctrine and practice across all repos").
+ * Ported from doxa-cns's canonical knowledge-graph-merkle.js.
+ *
+ * The merkle observations array is an APPEND LOG: two branches can each add
+ * observations the other doesn't have. A conflict on this file is NEVER
+ * safe to resolve with `git checkout --ours`/`--theirs` — whichever side
+ * loses is silently dropped, code and all, with no error anywhere.
+ *
+ * mergeResolve(oursPath, theirsPath) unions both sides' observations by
+ * hash (each observation's hash is content-addressed and unique, so a
+ * hash-keyed union can never duplicate or silently prefer one side), sorts
+ * by timestamp for a deterministic result regardless of arg order, rebuilds
+ * the Merkle root from the unioned set, writes it as THIS repo's current
+ * merkle state, then reconciles graph.json from it.
+ */
+function mergeResolve(oursPath, theirsPath) {
+  if (!oursPath || !theirsPath) {
+    console.log(`${c.red}Usage: merge-resolve <ours-file> <theirs-file>${c.reset}`);
+    console.log(`${c.yellow}Typically: git show :2:.knowledge-graph-merkle.json > /tmp/ours.json${c.reset}`);
+    console.log(`${c.yellow}           git show :3:.knowledge-graph-merkle.json > /tmp/theirs.json${c.reset}`);
+    console.log(`${c.yellow}           node scripts/knowledge-graph-merkle.cjs merge-resolve /tmp/ours.json /tmp/theirs.json${c.reset}`);
+    process.exitCode = 1;
+    return;
+  }
+
+  const ours = JSON.parse(fs.readFileSync(oursPath, 'utf8'));
+  const theirs = JSON.parse(fs.readFileSync(theirsPath, 'utf8'));
+
+  const byHash = new Map();
+  for (const obs of [...(ours.observations || []), ...(theirs.observations || [])]) {
+    byHash.set(obs.hash, obs); // hash-keyed: identical observations collapse, never duplicate
+  }
+  const merged = [...byHash.values()].sort((a, b) =>
+    (a.timestamp || '').localeCompare(b.timestamp || ''));
+
+  const oursCount = (ours.observations || []).length;
+  const theirsCount = (theirs.observations || []).length;
+  const onlyInOurs = merged.length - theirsCount;
+  const onlyInTheirs = merged.length - oursCount;
+
+  const state = {
+    merkleRoot: buildMerkleTree(merged.map((o) => o.hash)),
+    observations: merged,
+    lastVerified: null,
+    version: 1,
+  };
+  saveMerkleState(state);
+
+  console.log(`\n${c.cyan}Merged merkle state: ${oursCount} (ours) + ${theirsCount} (theirs) -> ${merged.length} (unioned, deduped by hash)${c.reset}`);
+  if (onlyInOurs > 0) console.log(`${c.green}  ${onlyInOurs} observation(s) unique to ours — preserved${c.reset}`);
+  if (onlyInTheirs > 0) console.log(`${c.green}  ${onlyInTheirs} observation(s) unique to theirs — preserved${c.reset}`);
+
+  console.log(`\n${c.cyan}Reconciling .knowledge-graph/graph.json from the merged state...${c.reset}`);
+  const result = reconcile();
+  console.log(`${c.green}Entities created:${c.reset}        ${result.createdCount}`);
+  console.log(`${c.green}Observations appended:${c.reset}   ${result.appendedCount}`);
+  console.log(`\n${c.bright}Resolved. Now: git add .knowledge-graph-merkle.json .knowledge-graph/graph.json .knowledge-graph/INDEX.md${c.reset}`);
 }
 
 function verify() {
@@ -859,6 +935,9 @@ if (require.main === module) {
       break;
     case 'reconcile':
       runReconcile();
+      break;
+    case 'merge-resolve':
+      mergeResolve(args[0], args[1]);
       break;
     case 'help':
     case '--help':
