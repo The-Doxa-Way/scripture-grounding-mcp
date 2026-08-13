@@ -40,6 +40,39 @@ if [ "$tool_name" = "mcp__github__merge_pull_request" ]; then
   mcp_repo="$(printf '%s' "$payload" | jq -r '.tool_input.repo // empty' 2>/dev/null)"
   [ "$mcp_repo" = "scripture-grounding-mcp" ] || exit 0   # gate only this repo; siblings pass
 
+  # ---------------------------------------------------------------------------
+  # Merge-integrity check (2026-08-13, Garth: "standing doctrine and practice
+  # across all repos"; review 2026-08-13 PLACEMENT finding). Runs HERE,
+  # unconditionally, before EVERY exit-0 path below in this MCP-merge branch —
+  # this branch's own "PR diff already has a .knowledge-graph/ change" fast
+  # path further down would otherwise let a merge through without the check
+  # ever running, because this branch returns long before the Bash-command
+  # flow's copy of this same check (further down the file) is ever reached —
+  # an MCP-tool merge never extracts .tool_input.command at all, so a check
+  # placed only in that later flow is a complete blind spot for this one. This
+  # inspects the LOCAL checkout's git range (merge-base(origin/main, HEAD)..HEAD)
+  # via `git -C`, independent of the remote PR-diff check below — it protects
+  # any session that resolved a conflict in THIS checkout, whether it then
+  # lands via the GitHub MCP merge tool, `gh pr merge`, or `git push`. A merge
+  # landed with no local involvement (GitHub web UI, a bot with no checkout)
+  # has nothing local to check and is out of this hook's reach by
+  # construction. Fail-open on any tooling trouble.
+  # ---------------------------------------------------------------------------
+  mcp_hook_cwd="$(printf '%s' "$payload" | jq -r '.cwd // empty' 2>/dev/null)"
+  mcp_dir="${mcp_hook_cwd:-${CLAUDE_PROJECT_DIR:-$PWD}}"
+  if [ -d "$mcp_dir" ] && git -C "$mcp_dir" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    mcp_base="$(git -C "$mcp_dir" merge-base HEAD origin/main 2>/dev/null)"
+    if [ -n "$mcp_base" ] && [ "$mcp_base" != "$(git -C "$mcp_dir" rev-parse HEAD 2>/dev/null)" ] \
+       && [ -f "$mcp_dir/scripts/check-kg-merge-integrity.cjs" ] && command -v node >/dev/null 2>&1; then
+      mcp_integrity_output="$(cd "$mcp_dir" && node scripts/check-kg-merge-integrity.cjs "$mcp_base" HEAD 2>&1)"
+      mcp_integrity_status=$?
+      if [ "$mcp_integrity_status" -eq 1 ]; then
+        printf '%s\n' "$mcp_integrity_output" >&2
+        exit 2
+      fi
+    fi
+  fi
+
   pr_number="$(printf '%s' "$payload" | jq -r '(.tool_input.pullNumber // empty) | if type == "number" then floor else . end' 2>/dev/null)"
   mcp_owner="$(printf '%s' "$payload" | jq -r '.tool_input.owner // empty' 2>/dev/null)"
   case "$pr_number" in ''|*[!0-9]*) exit 0 ;; esac   # no usable PR number -> allow

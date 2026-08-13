@@ -1,5 +1,5 @@
 {
-  "merkleRoot": "d6bbad1c6ae0275cb683f767ed3d0f8ef7403063677490cd8c3c40e6fa72cec8",
+  "merkleRoot": "66d560fd1ab1723c710bd547b826166820e1c770bd0079fd08e0a0fae22f417f",
   "observations": [
     {
       "hash": "b245a371aaf9b3e02a55a7b77bff899cf704b06a684a84d49453afed0d7b0ec5",
@@ -36,41 +36,60 @@
       "timestamp": "2026-08-11T16:44:08.087Z"
     },
     {
-      "hash": "aca15ee9680e15d2826d9b9a0af36365b6df188645ea714f1152f53d480fcec3",
+      "hash": "31715c7986b987a24d515b35f8184ef9df492c4d56870559e8c8b83ad9766c59",
       "entityName": "KgMerkleFixesPropagated",
       "content": "Propagated the 2026-08-11 atomic-write and --type-guard fixes from doxa-cns's canonical knowledge-graph-merkle.js.",
       "provenance": {
         "sourceFile": "scripts/knowledge-graph-merkle.cjs",
         "lineNumber": 1,
         "lineRange": null,
-        "fileHash": "c46c2a327e7f191ef43c3f9b833cadb71163b0df0957307fcf078fdd88b18dc5",
-        "totalLines": 897,
+        "fileHash": "090aeda463e6c0a70c99f71268d5bf1c3262920e011a16647ade9fd2e97cf305",
+        "totalLines": 996,
         "extractedAt": "2026-08-11T21:04:00.398Z",
         "verificationStatus": "verified",
         "extractedBy": "knowledge-graph-merkle.cjs",
-        "entityType": "Fix"
+        "entityType": "Fix",
+        "rehashedAt": "2026-08-13T11:03:33.752Z"
       },
       "timestamp": "2026-08-11T21:04:00.399Z"
     },
     {
-      "hash": "9a9b12a81e52ef5c76d0c66126397c4625324710170fae98bea8506b4b2fa36f",
+      "hash": "c4691d286485a42b9b70840193ffac166939c23dd0747c6244a3d5491ff546a1",
       "entityName": "KgMergeIntegrityGuard",
       "content": "Ported the merge-resolve tool + mechanical merge-integrity guard from doxa-cns's canonical knowledge-graph-merkle.js (2026-08-13, Garth: 'standing doctrine and practice across all repos'). Used it to actually resolve this repo's own stalled PR #15 conflict (which had gone unmerged since 2026-08-11 for the same class of reason this guard exists to prevent).",
       "provenance": {
         "sourceFile": "scripts/check-kg-merge-integrity.cjs",
         "lineNumber": 1,
         "lineRange": null,
-        "fileHash": "6eeb3a0af92644021bea76be126212cdbeed94fa36306274079c69596ab9d96b",
-        "totalLines": 145,
+        "fileHash": "1859d4f466e874a8219ac63f9c9741f90dc23770b225d317594b94ca634f23ea",
+        "totalLines": 182,
         "extractedAt": "2026-08-13T10:21:48.539Z",
+        "verificationStatus": "verified",
+        "extractedBy": "knowledge-graph-merkle.cjs",
+        "entityType": "Fix",
+        "rehashedAt": "2026-08-13T11:03:33.754Z"
+      },
+      "timestamp": "2026-08-13T10:21:48.540Z"
+    },
+    {
+      "hash": "6546024c28686af5bfa8f773f62eea5f655f024bfdc7820fccfde9882b1d68cc",
+      "entityName": "KgMergeIntegrityGuard",
+      "content": "Hardened per /code-review high findings (doxa-cns 2026-08-13, ported via feat/kg-merge-resolve): (1) PLACEMENT — the merge-integrity check was unreachable from the mcp__github__merge_pull_request landing path (a separate branch that never extracts .tool_input.command), so it was added to run unconditionally at the top of that branch too, before its own PR-diff fast path. (2) check-kg-merge-integrity.cjs now wraps main() in try/catch and fails OPEN (exit 0) on any internal error instead of exit 1, which was indistinguishable from a confirmed violation. (3) observationsAt() now requires a non-empty string hash, so malformed observations are skipped instead of collapsing onto one Map key. (4) mergeResolve()'s sort now breaks timestamp ties by hash, making the result truly order-independent. (5) mergeResolve() guards JSON.parse with try/catch for friendly errors, and gained test coverage (tests/merge-resolve.test.cjs, tests/kg-save-gate-merge-integrity.test.cjs). Also fixed package.json's npm test glob, which was silently never running tests/check-kg-merge-integrity.test.cjs (a .cjs file the tests/**/*.test.js glob can't match) — the existing test had zero real coverage until this fix.",
+      "provenance": {
+        "sourceFile": ".claude/hooks/kg-save-gate.sh",
+        "lineNumber": null,
+        "lineRange": null,
+        "fileHash": "f21c9d56f645c9a3bf906c5937dd3578c529fb752682884b2566c39fa39f2603",
+        "totalLines": 218,
+        "extractedAt": "2026-08-13T11:03:14.233Z",
         "verificationStatus": "verified",
         "extractedBy": "knowledge-graph-merkle.cjs",
         "entityType": "Fix"
       },
-      "timestamp": "2026-08-13T10:21:48.540Z"
+      "timestamp": "2026-08-13T11:03:14.235Z"
     }
   ],
-  "lastVerified": null,
+  "lastVerified": "2026-08-13T11:03:33.889Z",
   "version": 1,
-  "lastModified": "2026-08-13T10:21:48.552Z"
+  "lastModified": "2026-08-13T11:03:33.890Z"
 }
