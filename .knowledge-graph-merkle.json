@@ -1,5 +1,5 @@
 {
-  "merkleRoot": "7231d2ceb623474dafda83dccfe5c951a6bfa376837ced73b385ecc99bd570d2",
+  "merkleRoot": "d6bbad1c6ae0275cb683f767ed3d0f8ef7403063677490cd8c3c40e6fa72cec8",
   "observations": [
     {
       "hash": "b245a371aaf9b3e02a55a7b77bff899cf704b06a684a84d49453afed0d7b0ec5",
@@ -51,9 +51,26 @@
         "entityType": "Fix"
       },
       "timestamp": "2026-08-11T21:04:00.399Z"
+    },
+    {
+      "hash": "9a9b12a81e52ef5c76d0c66126397c4625324710170fae98bea8506b4b2fa36f",
+      "entityName": "KgMergeIntegrityGuard",
+      "content": "Ported the merge-resolve tool + mechanical merge-integrity guard from doxa-cns's canonical knowledge-graph-merkle.js (2026-08-13, Garth: 'standing doctrine and practice across all repos'). Used it to actually resolve this repo's own stalled PR #15 conflict (which had gone unmerged since 2026-08-11 for the same class of reason this guard exists to prevent).",
+      "provenance": {
+        "sourceFile": "scripts/check-kg-merge-integrity.cjs",
+        "lineNumber": 1,
+        "lineRange": null,
+        "fileHash": "6eeb3a0af92644021bea76be126212cdbeed94fa36306274079c69596ab9d96b",
+        "totalLines": 145,
+        "extractedAt": "2026-08-13T10:21:48.539Z",
+        "verificationStatus": "verified",
+        "extractedBy": "knowledge-graph-merkle.cjs",
+        "entityType": "Fix"
+      },
+      "timestamp": "2026-08-13T10:21:48.540Z"
     }
   ],
   "lastVerified": null,
   "version": 1,
-  "lastModified": "2026-08-13T10:19:15.124Z"
+  "lastModified": "2026-08-13T10:21:48.552Z"
 }

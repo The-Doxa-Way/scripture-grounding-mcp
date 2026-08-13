@@ -5,13 +5,14 @@
 <!-- directly in .knowledge-graph/graph.json.                     -->
 <!-- Never read graph.json whole for a lookup.                    -->
 
+## Fix (2)
+
+- KgMergeIntegrityGuard — Ported the merge-resolve tool + mechanical merge-integrity guard from doxa-cns's canonical knowledge-graph-me…
+- KgMerkleFixesPropagated — Propagated the 2026-08-11 atomic-write and --type-guard fixes from doxa-cns's canonical knowledge-graph-merkl…
+
 ## Bug (1)
 
 - ReviewWorkflowDeadCondition — claude-code-review.yml (just added in #14) copied the pre-fix openclaw template's if: condition referencing g…
-
-## Fix (1)
-
-- KgMerkleFixesPropagated — Propagated the 2026-08-11 atomic-write and --type-guard fixes from doxa-cns's canonical knowledge-graph-merkl…
 
 ## Workflow (1)
 
