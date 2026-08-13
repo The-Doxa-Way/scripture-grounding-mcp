@@ -5,12 +5,18 @@ name: Claude Code Review
 # dispatch kept as the one automatic path — no pull_request trigger, to match
 # doxa-cns/openclaw's cost-conscious doctrine (a floating pull_request trigger
 # burns CI minutes on every PR whether or not a human is waiting on it).
+#
+# No `if:` on the job: a pull_request-shaped condition (fork check, draft
+# check) always evaluates false on workflow_dispatch, since
+# github.event.pull_request is null then, so the job would silently never
+# run. Whoever can dispatch this workflow already has write access, so
+# there's no fork/draft case to guard against here. (Same bug found and
+# fixed the same day in doxa-cns, openclaw, and doxa-shared's copies.)
 on:
   workflow_dispatch: {}
 
 jobs:
   review:
-    if: ${{ github.event.pull_request.head.repo.fork == false && github.actor != 'dependabot[bot]' && github.event.pull_request.draft == false }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
 

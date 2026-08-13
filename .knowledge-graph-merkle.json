@@ -1,5 +1,5 @@
 {
-  "merkleRoot": "70889bc8a27b930c82be9462ad2c7ac7d1a753c84e723e01e2392b23dd8b1a42",
+  "merkleRoot": "d6bbad1c6ae0275cb683f767ed3d0f8ef7403063677490cd8c3c40e6fa72cec8",
   "observations": [
     {
       "hash": "b245a371aaf9b3e02a55a7b77bff899cf704b06a684a84d49453afed0d7b0ec5",
@@ -19,6 +19,23 @@
       "timestamp": "2026-08-11T16:39:05.206Z"
     },
     {
+      "hash": "c6a272388d2112ba0554d4b9dae8b72d25664e2e4928b3b83fc06a54ce71fb92",
+      "entityName": "ReviewWorkflowDeadCondition",
+      "content": "claude-code-review.yml (just added in #14) copied the pre-fix openclaw template's if: condition referencing github.event.pull_request.* while the trigger is workflow_dispatch only, which always evaluates false. Confirmed by an async /code-review that returned after #14 merged. Same bug independently fixed the same day in doxa-cns, openclaw, and doxa-shared.",
+      "provenance": {
+        "sourceFile": ".github/workflows/claude-code-review.yml",
+        "lineNumber": 1,
+        "lineRange": null,
+        "fileHash": "a5684b65700052591bbc7c01abb6458339e6b30017759a5f193a3ac96c25e780",
+        "totalLines": 110,
+        "extractedAt": "2026-08-11T16:44:08.086Z",
+        "verificationStatus": "verified",
+        "extractedBy": "knowledge-graph-merkle.cjs",
+        "entityType": "Bug"
+      },
+      "timestamp": "2026-08-11T16:44:08.087Z"
+    },
+    {
       "hash": "aca15ee9680e15d2826d9b9a0af36365b6df188645ea714f1152f53d480fcec3",
       "entityName": "KgMerkleFixesPropagated",
       "content": "Propagated the 2026-08-11 atomic-write and --type-guard fixes from doxa-cns's canonical knowledge-graph-merkle.js.",
@@ -34,10 +51,26 @@
         "entityType": "Fix"
       },
       "timestamp": "2026-08-11T21:04:00.399Z"
+    },
+    {
+      "hash": "9a9b12a81e52ef5c76d0c66126397c4625324710170fae98bea8506b4b2fa36f",
+      "entityName": "KgMergeIntegrityGuard",
+      "content": "Ported the merge-resolve tool + mechanical merge-integrity guard from doxa-cns's canonical knowledge-graph-merkle.js (2026-08-13, Garth: 'standing doctrine and practice across all repos'). Used it to actually resolve this repo's own stalled PR #15 conflict (which had gone unmerged since 2026-08-11 for the same class of reason this guard exists to prevent).",
+      "provenance": {
+        "sourceFile": "scripts/check-kg-merge-integrity.cjs",
+        "lineNumber": 1,
+        "lineRange": null,
+        "fileHash": "6eeb3a0af92644021bea76be126212cdbeed94fa36306274079c69596ab9d96b",
+        "totalLines": 145,
+        "extractedAt": "2026-08-13T10:21:48.539Z",
+        "verificationStatus": "verified",
+        "extractedBy": "knowledge-graph-merkle.cjs",
+        "entityType": "Fix"
+      },
+      "timestamp": "2026-08-13T10:21:48.540Z"
     }
   ],
-  "lastVerified": "2026-08-11T16:39:10.177Z",
+  "lastVerified": null,
   "version": 1,
-  "createdAt": "2026-08-11T16:38:58.788Z",
-  "lastModified": "2026-08-11T21:04:00.407Z"
+  "lastModified": "2026-08-13T10:21:48.552Z"
 }

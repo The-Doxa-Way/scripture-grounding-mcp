@@ -117,6 +117,23 @@ base="$(git merge-base HEAD origin/main 2>/dev/null)" || exit 0
 # Empty range (HEAD at or behind origin/main) -> nothing is landing -> allow.
 [ "$base" = "$(git rev-parse HEAD 2>/dev/null)" ] && exit 0
 
+# Merge-integrity check (2026-08-13, Garth: "standing doctrine and practice
+# across all repos"). Orthogonal to the "does this range have a kg-save at
+# all" checks below: it does not ask whether a kg-save happened, it asks
+# whether a MERGE inside this range LOST one that already did (real
+# incident: a .knowledge-graph-merkle.json conflict resolved with
+# `git checkout --theirs` silently discarded a branch's own observation —
+# the observations array is an append log, so picking one side of a
+# conflict can only ever keep a subset). Fail-open on any tooling trouble.
+if [ -f "$dir/scripts/check-kg-merge-integrity.cjs" ] && command -v node >/dev/null 2>&1; then
+  integrity_output="$(node "$dir/scripts/check-kg-merge-integrity.cjs" "$base" HEAD 2>&1)"
+  integrity_status=$?
+  if [ "$integrity_status" -eq 1 ]; then
+    printf '%s\n' "$integrity_output" >&2
+    exit 2
+  fi
+fi
+
 # Direct-to-main generated surfaces never require kg-save (the KG itself, and
 # genuinely generated state). If EVERY file in the range is such a path,
 # nothing hand-authored is landing -> allow.

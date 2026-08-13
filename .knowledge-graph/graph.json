@@ -13,6 +13,20 @@
       "observations": [
         "Propagated the 2026-08-11 atomic-write and --type-guard fixes from doxa-cns's canonical knowledge-graph-merkle.js."
       ]
+    },
+    {
+      "name": "ReviewWorkflowDeadCondition",
+      "entityType": "Bug",
+      "observations": [
+        "claude-code-review.yml (just added in #14) copied the pre-fix openclaw template's if: condition referencing github.event.pull_request.* while the trigger is workflow_dispatch only, which always evaluates false. Confirmed by an async /code-review that returned after #14 merged. Same bug independently fixed the same day in doxa-cns, openclaw, and doxa-shared."
+      ]
+    },
+    {
+      "name": "KgMergeIntegrityGuard",
+      "entityType": "Fix",
+      "observations": [
+        "Ported the merge-resolve tool + mechanical merge-integrity guard from doxa-cns's canonical knowledge-graph-merkle.js (2026-08-13, Garth: 'standing doctrine and practice across all repos'). Used it to actually resolve this repo's own stalled PR #15 conflict (which had gone unmerged since 2026-08-11 for the same class of reason this guard exists to prevent)."
+      ]
     }
   ],
   "relations": []
