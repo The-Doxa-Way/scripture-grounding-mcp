@@ -675,9 +675,14 @@ function runReconcile() {
  * mergeResolve(oursPath, theirsPath) unions both sides' observations by
  * hash (each observation's hash is content-addressed and unique, so a
  * hash-keyed union can never duplicate or silently prefer one side), sorts
- * by timestamp for a deterministic result regardless of arg order, rebuilds
- * the Merkle root from the unioned set, writes it as THIS repo's current
- * merkle state, then reconciles graph.json from it.
+ * by timestamp with ties broken by hash (deterministic regardless of arg
+ * order — see the sort comment below), rebuilds the Merkle root from the
+ * unioned set, writes it as THIS repo's current merkle state, then
+ * reconciles graph.json from it — so a graph.json conflict alongside it
+ * needs no separate handling: just take either side (checkout --ours is
+ * fine there) and let this command regenerate it correctly. graph.json is a
+ * pure projection of the merkle log, never a second source of truth, so it
+ * cannot itself lose data that isn't already lost from merkle.json.
  */
 function mergeResolve(oursPath, theirsPath) {
   if (!oursPath || !theirsPath) {
@@ -689,20 +694,80 @@ function mergeResolve(oursPath, theirsPath) {
     return;
   }
 
-  const ours = JSON.parse(fs.readFileSync(oursPath, 'utf8'));
-  const theirs = JSON.parse(fs.readFileSync(theirsPath, 'utf8'));
-
-  const byHash = new Map();
-  for (const obs of [...(ours.observations || []), ...(theirs.observations || [])]) {
-    byHash.set(obs.hash, obs); // hash-keyed: identical observations collapse, never duplicate
+  let ours, theirs;
+  try {
+    ours = JSON.parse(fs.readFileSync(oursPath, 'utf8'));
+  } catch (err) {
+    console.log(`${c.red}Could not read/parse ours-file "${oursPath}": ${err.message}${c.reset}`);
+    process.exitCode = 1;
+    return;
   }
+  try {
+    theirs = JSON.parse(fs.readFileSync(theirsPath, 'utf8'));
+  } catch (err) {
+    console.log(`${c.red}Could not read/parse theirs-file "${theirsPath}": ${err.message}${c.reset}`);
+    process.exitCode = 1;
+    return;
+  }
+  // A valid JSON literal (e.g. `null`) parses without throwing, so a plain
+  // parse try/catch doesn't catch it — review 2026-08-13: without this
+  // guard, `ours.observations` below throws an uncaught, unfriendly
+  // TypeError for exactly this shape, the failure mode item 5 exists to
+  // eliminate.
+  if (!ours || typeof ours !== 'object') {
+    console.log(`${c.red}"${oursPath}" did not contain a merkle-state object.${c.reset}`);
+    process.exitCode = 1;
+    return;
+  }
+  if (!theirs || typeof theirs !== 'object') {
+    console.log(`${c.red}"${theirsPath}" did not contain a merkle-state object.${c.reset}`);
+    process.exitCode = 1;
+    return;
+  }
+
+  // Built per-side (not from one combined spread-loop) so onlyInOurs/
+  // onlyInTheirs below can be computed from the VALID hash sets, immune to
+  // malformed entries inflating the raw `.length` counts (review 2026-08-13:
+  // the combined-loop version undercounted — sometimes to 0, silently
+  // suppressing the message — whenever a malformed entry on one side wasn't
+  // matched by a real entry on the other).
+  const byHash = new Map();
+  const oursHashes = new Set();
+  const theirsHashes = new Set();
+  let skippedMalformed = 0;
+  const indexSide = (observations, hashSet) => {
+    for (const obs of observations || []) {
+      // A missing/non-string hash can't be indexed at all: falling through to
+      // `byHash.set(undefined, obs)` would collapse every such observation onto
+      // ONE map key, silently discarding all but the last — exactly the class
+      // of data loss this whole tool exists to prevent, reintroduced inside
+      // the fix itself (review 2026-08-13). Skip and count instead.
+      if (!obs || typeof obs.hash !== 'string' || obs.hash.length === 0) {
+        skippedMalformed++;
+        continue;
+      }
+      hashSet.add(obs.hash);
+      byHash.set(obs.hash, obs); // hash-keyed: identical observations collapse, never duplicate
+    }
+  };
+  indexSide(ours.observations, oursHashes);
+  indexSide(theirs.observations, theirsHashes);
+
+  // Deterministic regardless of (ours, theirs) argument order: primary sort
+  // by timestamp, but ties broken by hash (stable, unique, order-independent)
+  // rather than by array insertion order — review 2026-08-13 found the
+  // timestamp-only sort was NOT actually order-independent for observations
+  // sharing a timestamp, contradicting this function's own documented
+  // determinism guarantee.
   const merged = [...byHash.values()].sort((a, b) =>
-    (a.timestamp || '').localeCompare(b.timestamp || ''));
+    (a.timestamp || '').localeCompare(b.timestamp || '') || a.hash.localeCompare(b.hash));
 
   const oursCount = (ours.observations || []).length;
   const theirsCount = (theirs.observations || []).length;
-  const onlyInOurs = merged.length - theirsCount;
-  const onlyInTheirs = merged.length - oursCount;
+  let onlyInOurs = 0;
+  let onlyInTheirs = 0;
+  for (const h of oursHashes) if (!theirsHashes.has(h)) onlyInOurs++;
+  for (const h of theirsHashes) if (!oursHashes.has(h)) onlyInTheirs++;
 
   const state = {
     merkleRoot: buildMerkleTree(merged.map((o) => o.hash)),
@@ -715,6 +780,7 @@ function mergeResolve(oursPath, theirsPath) {
   console.log(`\n${c.cyan}Merged merkle state: ${oursCount} (ours) + ${theirsCount} (theirs) -> ${merged.length} (unioned, deduped by hash)${c.reset}`);
   if (onlyInOurs > 0) console.log(`${c.green}  ${onlyInOurs} observation(s) unique to ours — preserved${c.reset}`);
   if (onlyInTheirs > 0) console.log(`${c.green}  ${onlyInTheirs} observation(s) unique to theirs — preserved${c.reset}`);
+  if (skippedMalformed > 0) console.log(`${c.yellow}  ${skippedMalformed} malformed observation(s) (no valid hash) skipped — could not be merged safely${c.reset}`);
 
   console.log(`\n${c.cyan}Reconciling .knowledge-graph/graph.json from the merged state...${c.reset}`);
   const result = reconcile();
