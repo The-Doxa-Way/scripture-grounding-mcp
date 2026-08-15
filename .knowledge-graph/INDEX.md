@@ -14,6 +14,10 @@
 
 - ReviewWorkflowDeadCondition — claude-code-review.yml (just added in #14) copied the pre-fix openclaw template's if: condition referencing g…
 
+## Decision (1)
+
+- KgGuardRequiredCheckNaming — The kg-guard job now carries an explicit 'name: KG Guard'. Without it the job reports its check-run under the…
+
 ## Workflow (1)
 
 - LandingGatesInfra — Bootstrapped Doxa's standard landing-gate infrastructure for this repo: KG Guard + Claude Code Review GitHub …
