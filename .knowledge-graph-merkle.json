@@ -1,5 +1,5 @@
 {
-  "merkleRoot": "d82c7b9ade612c10f73f8c03bab99908fb3dd8bd43db0f838afac3b9baaf152a",
+  "merkleRoot": "6b6c81bd6675ed54433dd306d305ab116dfe7f65055b0909dafe01c727106c6b",
   "observations": [
     {
       "hash": "b245a371aaf9b3e02a55a7b77bff899cf704b06a684a84d49453afed0d7b0ec5",
@@ -122,9 +122,26 @@
         "entityType": "Decision"
       },
       "timestamp": "2026-08-15T20:43:37.908Z"
+    },
+    {
+      "hash": "ac49ace2fbe2ae8ebd56fea61d7dd4ade4470a7b8157df98ac0eb5277c2fcad0",
+      "entityName": "DemoVercelArtifacts",
+      "content": "demo/ is deployed with Vercel, so a .vercel/ directory appears there on every local deploy. demo/.gitignore keeps it out of the tree — it was sitting untracked and unbanked until the 2026-09-02 fleet sweep.",
+      "provenance": {
+        "sourceFile": "demo/.gitignore",
+        "lineNumber": null,
+        "lineRange": null,
+        "fileHash": "56537ebe03160a28fdb6e59ae18f408d6f8aba609df73c45917c9358fd3bad52",
+        "totalLines": 2,
+        "extractedAt": "2026-09-02T17:06:24.903Z",
+        "verificationStatus": "verified",
+        "extractedBy": "knowledge-graph-merkle.cjs",
+        "entityType": "Reference"
+      },
+      "timestamp": "2026-09-02T17:06:24.907Z"
     }
   ],
   "lastVerified": "2026-08-13T11:23:38.575Z",
   "version": 1,
-  "lastModified": "2026-08-15T20:43:37.916Z"
+  "lastModified": "2026-09-02T17:06:24.916Z"
 }
