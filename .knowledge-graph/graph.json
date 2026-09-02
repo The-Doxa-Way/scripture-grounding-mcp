@@ -36,6 +36,13 @@
       "observations": [
         "The kg-guard job now carries an explicit 'name: KG Guard'. Without it the job reports its check-run under the bare job id 'check' — which is what a branch ruleset's required-status-check has to match on, so requiring it was both ambiguous (any other workflow with a job id 'check' collides) and unreadable in the PR checks list. Prerequisite for the 2026-08-15 fleet-wide enforcement pass: KG Guard ran on PRs in every repo but was a REQUIRED check in none of them, so the banking doctrine rested entirely on the merger choosing to wait for green — the local .claude/hooks/kg-save-gate.sh only binds Claude sessions in that checkout, and web-UI merges bypass everything."
       ]
+    },
+    {
+      "name": "DemoVercelArtifacts",
+      "entityType": "Reference",
+      "observations": [
+        "demo/ is deployed with Vercel, so a .vercel/ directory appears there on every local deploy. demo/.gitignore keeps it out of the tree — it was sitting untracked and unbanked until the 2026-09-02 fleet sweep."
+      ]
     }
   ],
   "relations": []

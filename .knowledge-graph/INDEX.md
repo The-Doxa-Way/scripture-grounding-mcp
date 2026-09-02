@@ -18,6 +18,10 @@
 
 - KgGuardRequiredCheckNaming — The kg-guard job now carries an explicit 'name: KG Guard'. Without it the job reports its check-run under the…
 
+## Reference (1)
+
+- DemoVercelArtifacts — demo/ is deployed with Vercel, so a .vercel/ directory appears there on every local deploy. demo/.gitignore k…
+
 ## Workflow (1)
 
 - LandingGatesInfra — Bootstrapped Doxa's standard landing-gate infrastructure for this repo: KG Guard + Claude Code Review GitHub …
