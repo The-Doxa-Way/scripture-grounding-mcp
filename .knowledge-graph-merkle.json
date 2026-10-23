@@ -1,5 +1,5 @@
 {
-  "merkleRoot": "6b6c81bd6675ed54433dd306d305ab116dfe7f65055b0909dafe01c727106c6b",
+  "merkleRoot": "69f462ab7281857caa3b7ab7e850692ab0ce4cdf3e92ad64d93dcca9d563b839",
   "observations": [
     {
       "hash": "b245a371aaf9b3e02a55a7b77bff899cf704b06a684a84d49453afed0d7b0ec5",
@@ -139,9 +139,26 @@
         "entityType": "Reference"
       },
       "timestamp": "2026-09-02T17:06:24.907Z"
+    },
+    {
+      "hash": "41cb4a8a52c5161892fdd893247ece2a7c558a5dbf8170eabc841415da8bf7be",
+      "entityName": "ReviewGatePrHeadResolution",
+      "content": "2026-10-24: review-gate.sh narrows attestation candidates to the merged PR's real head SHA (wrapper merge_gate_head_sha, else gh pr view on MCP pullNumber or the gh-pr-merge argument); unresolved = fail-open to local tips. Fixes gate-health NO_PR_HEAD_RESOLUTION (doxa-openclaw #631). Shared snippet with doxa-cns #1844; test scripts/review-gate-head.test.mjs.",
+      "provenance": {
+        "sourceFile": ".claude/hooks/review-gate.sh",
+        "lineNumber": 1,
+        "lineRange": null,
+        "fileHash": "fddc92348bc20139fbd04b4272a2d3b09ea469e187836f358d05f4311b10a4d3",
+        "totalLines": 135,
+        "extractedAt": "2026-10-23T23:24:55.198Z",
+        "verificationStatus": "verified",
+        "extractedBy": "knowledge-graph-merkle.cjs",
+        "entityType": "Pattern"
+      },
+      "timestamp": "2026-10-23T23:24:55.199Z"
     }
   ],
   "lastVerified": "2026-08-13T11:23:38.575Z",
   "version": 1,
-  "lastModified": "2026-09-02T17:06:24.916Z"
+  "lastModified": "2026-10-23T23:24:55.208Z"
 }

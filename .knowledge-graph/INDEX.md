@@ -18,6 +18,10 @@
 
 - KgGuardRequiredCheckNaming — The kg-guard job now carries an explicit 'name: KG Guard'. Without it the job reports its check-run under the…
 
+## Pattern (1)
+
+- ReviewGatePrHeadResolution — 2026-10-24: review-gate.sh narrows attestation candidates to the merged PR's real head SHA (wrapper merge_gat…
+
 ## Reference (1)
 
 - DemoVercelArtifacts — demo/ is deployed with Vercel, so a .vercel/ directory appears there on every local deploy. demo/.gitignore k…

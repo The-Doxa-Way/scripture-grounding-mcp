@@ -43,6 +43,13 @@
       "observations": [
         "demo/ is deployed with Vercel, so a .vercel/ directory appears there on every local deploy. demo/.gitignore keeps it out of the tree — it was sitting untracked and unbanked until the 2026-09-02 fleet sweep."
       ]
+    },
+    {
+      "name": "ReviewGatePrHeadResolution",
+      "entityType": "Pattern",
+      "observations": [
+        "2026-10-24: review-gate.sh narrows attestation candidates to the merged PR's real head SHA (wrapper merge_gate_head_sha, else gh pr view on MCP pullNumber or the gh-pr-merge argument); unresolved = fail-open to local tips. Fixes gate-health NO_PR_HEAD_RESOLUTION (doxa-openclaw #631). Shared snippet with doxa-cns #1844; test scripts/review-gate-head.test.mjs."
+      ]
     }
   ],
   "relations": []
