@@ -5,6 +5,11 @@
 <!-- directly in .knowledge-graph/graph.json.                     -->
 <!-- Never read graph.json whole for a lookup.                    -->
 
+## Decision (2)
+
+- FleetSecurityBaseline20261103 — 2026-11-03 fleet security baseline (doxa-cns config/fleet.yaml): .github/workflows/secret-scan.yml runs gitle…
+- KgGuardRequiredCheckNaming — The kg-guard job now carries an explicit 'name: KG Guard'. Without it the job reports its check-run under the…
+
 ## Fix (2)
 
 - KgMergeIntegrityGuard — Ported the merge-resolve tool + mechanical merge-integrity guard from doxa-cns's canonical knowledge-graph-me…
@@ -13,10 +18,6 @@
 ## Bug (1)
 
 - ReviewWorkflowDeadCondition — claude-code-review.yml (just added in #14) copied the pre-fix openclaw template's if: condition referencing g…
-
-## Decision (1)
-
-- KgGuardRequiredCheckNaming — The kg-guard job now carries an explicit 'name: KG Guard'. Without it the job reports its check-run under the…
 
 ## Pattern (1)
 
