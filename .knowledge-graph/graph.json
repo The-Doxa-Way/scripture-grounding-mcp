@@ -50,6 +50,13 @@
       "observations": [
         "2026-10-24: review-gate.sh narrows attestation candidates to the merged PR's real head SHA (wrapper merge_gate_head_sha, else gh pr view on MCP pullNumber or the gh-pr-merge argument); unresolved = fail-open to local tips. Fixes gate-health NO_PR_HEAD_RESOLUTION (doxa-openclaw #631). Shared snippet with doxa-cns #1844; test scripts/review-gate-head.test.mjs."
       ]
+    },
+    {
+      "name": "FleetSecurityBaseline20261103",
+      "entityType": "Decision",
+      "observations": [
+        "2026-11-03 fleet security baseline (doxa-cns config/fleet.yaml): .github/workflows/secret-scan.yml runs gitleaks 8.30.1 (job id 'gitleaks' = required check of the org ruleset 'fleet: PR + secret scan') on PR commits, and on all history weekly (Mon 04:17 UTC) and on dispatch; config .gitleaks.toml (default rules); classified history findings live in .gitleaksignore pinned to their commit. .github/dependabot.yml: weekly, limit 5, minor+patch grouped. Dependabot ecosystems: npm /, pip /notebook, github-actions (demo/package.json has no deps). Full-history scan: 0 findings. Media capture uses puppeteer-core, not Playwright."
+      ]
     }
   ],
   "relations": []
