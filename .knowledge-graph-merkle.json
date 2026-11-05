@@ -1,5 +1,5 @@
 {
-  "merkleRoot": "c8101915b63de0cb20027052b06b6c6771f473c893b316fd2f6522c1b4d5aa77",
+  "merkleRoot": "15d80b92a23e6446e6d29ac5759b2b614c834df5f132a0db0ba740334a66fe4e",
   "observations": [
     {
       "hash": "b245a371aaf9b3e02a55a7b77bff899cf704b06a684a84d49453afed0d7b0ec5",
@@ -190,9 +190,26 @@
         "entityType": "Workflow"
       },
       "timestamp": "2026-11-05T16:05:25.592Z"
+    },
+    {
+      "hash": "22f6d3ceeb8b5e405a13eb22bf5b1c3b4a8f7826e1cc58f9fcda62e8b910e57d",
+      "entityName": "FleetGates",
+      "content": "2026-11-05: re-rendered kg-save-gate.sh and review-gate.sh from The-Doxa-Way-CNS fleet/gates templates (CNS PR #2391): a GitHub origin is this repo only when the owner is the fleet org; a gh pr merge branch ref must appear verbatim or the merge is refused (merge by PR number).",
+      "provenance": {
+        "sourceFile": ".claude/hooks/kg-save-gate.sh",
+        "lineNumber": 1,
+        "lineRange": null,
+        "fileHash": "880ffc79091ee2d6fe265482b14259b5f9a98d675d85e8aed25811780dec893c",
+        "totalLines": 631,
+        "extractedAt": "2026-11-05T16:37:38.868Z",
+        "verificationStatus": "verified",
+        "extractedBy": "knowledge-graph-merkle.cjs",
+        "entityType": "Reference"
+      },
+      "timestamp": "2026-11-05T16:37:38.871Z"
     }
   ],
   "lastVerified": "2026-11-03T09:12:40.002Z",
   "version": 1,
-  "lastModified": "2026-11-05T16:05:25.599Z"
+  "lastModified": "2026-11-05T16:37:38.880Z"
 }
