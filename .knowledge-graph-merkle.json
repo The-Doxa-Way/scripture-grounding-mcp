@@ -1,5 +1,5 @@
 {
-  "merkleRoot": "70471b5e5c9d7ab60059bb89f1c3fb2eedf14e1cfbdaa32d3fc512c9307ad71d",
+  "merkleRoot": "c8101915b63de0cb20027052b06b6c6771f473c893b316fd2f6522c1b4d5aa77",
   "observations": [
     {
       "hash": "b245a371aaf9b3e02a55a7b77bff899cf704b06a684a84d49453afed0d7b0ec5",
@@ -173,9 +173,26 @@
         "entityType": "Decision"
       },
       "timestamp": "2026-11-03T09:12:32.747Z"
+    },
+    {
+      "hash": "a94d48ed7da6f4969ec907b6b2565791adc7b172768a09b78c3158e812f87495",
+      "entityName": "CanonicalFleetGates",
+      "content": "2026-11-05: this repo's five fleet gates (kg-save-gate.sh, review-gate.sh, test-gate.sh, scripts/attest-review.sh, kg-guard.yml) are now GENERATED from The-Doxa-Way-CNS fleet/gates/*.tmpl by scripts/generate-fleet-gates.mjs --repo scripture-grounding-mcp (decision docs/decisions/2026-11-05-canonical-fleet-gates.md; template fix PR #2379). Never hand-edit them here: fix the template and regenerate; check-hook-drift.mjs compares this copy on main daily. What the old copy lacked: old attest-review.sh had no blocked: rule; kg-guard.yml grep-under-pipefail; codeRe now covers scripts/*.cjs (its KG scripts), so changes to them need a test. Carries Wamemba me's no-re-review-of-a-blocked-commit rule: attest-review.sh 'blocked: <findings>' records SHA+tree and that code can never be attested.",
+      "provenance": {
+        "sourceFile": ".claude/hooks/kg-save-gate.sh",
+        "lineNumber": 1,
+        "lineRange": null,
+        "fileHash": "08262eb25c96a8e5ffe2e7224c84797c2c9ca0894ad470b5cbd59212681e576e",
+        "totalLines": 620,
+        "extractedAt": "2026-11-05T16:05:25.591Z",
+        "verificationStatus": "verified",
+        "extractedBy": "knowledge-graph-merkle.cjs",
+        "entityType": "Workflow"
+      },
+      "timestamp": "2026-11-05T16:05:25.592Z"
     }
   ],
   "lastVerified": "2026-11-03T09:12:40.002Z",
   "version": 1,
-  "lastModified": "2026-11-03T09:12:40.003Z"
+  "lastModified": "2026-11-05T16:05:25.599Z"
 }
