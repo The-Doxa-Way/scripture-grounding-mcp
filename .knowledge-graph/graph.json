@@ -1,40 +1,10 @@
 {
   "entities": [
     {
-      "name": "LandingGatesInfra",
+      "name": "ScriptureGroundingLandingGatesInfra",
       "entityType": "Workflow",
       "observations": [
         "Bootstrapped Doxa's standard landing-gate infrastructure for this repo: KG Guard + Claude Code Review GitHub Actions workflows, kg-save-gate/review-gate/test-gate PreToolUse hooks, session-start-kg-import + pre-compact-kg-export hooks, attest-review.sh + knowledge-graph-merkle.cjs (CommonJS, this repo's package.json has type:module), and this initial .knowledge-graph/graph.json. Ported from openclaw's landing-gates suite per doxa-cns CLAUDE.md PR-visibility/bank-the-gold/kg-save-on-every-merge doctrine. claude-code-review.yml's ANTHROPIC_API_KEY secret is NOT yet configured on GitHub — workflow is inert until Garth adds it."
-      ]
-    },
-    {
-      "name": "KgMerkleFixesPropagated",
-      "entityType": "Fix",
-      "observations": [
-        "Propagated the 2026-08-11 atomic-write and --type-guard fixes from doxa-cns's canonical knowledge-graph-merkle.js."
-      ]
-    },
-    {
-      "name": "ReviewWorkflowDeadCondition",
-      "entityType": "Bug",
-      "observations": [
-        "claude-code-review.yml (just added in #14) copied the pre-fix openclaw template's if: condition referencing github.event.pull_request.* while the trigger is workflow_dispatch only, which always evaluates false. Confirmed by an async /code-review that returned after #14 merged. Same bug independently fixed the same day in doxa-cns, openclaw, and doxa-shared."
-      ]
-    },
-    {
-      "name": "KgMergeIntegrityGuard",
-      "entityType": "Fix",
-      "observations": [
-        "Ported the merge-resolve tool + mechanical merge-integrity guard from doxa-cns's canonical knowledge-graph-merkle.js (2026-08-13, Garth: 'standing doctrine and practice across all repos'). Used it to actually resolve this repo's own stalled PR #15 conflict (which had gone unmerged since 2026-08-11 for the same class of reason this guard exists to prevent).",
-        "Hardened per /code-review high findings (doxa-cns 2026-08-13, ported via feat/kg-merge-resolve): (1) PLACEMENT — the merge-integrity check was unreachable from the mcp__github__merge_pull_request landing path (a separate branch that never extracts .tool_input.command), so it was added to run unconditionally at the top of that branch too, before its own PR-diff fast path. (2) check-kg-merge-integrity.cjs now wraps main() in try/catch and fails OPEN (exit 0) on any internal error instead of exit 1, which was indistinguishable from a confirmed violation. (3) observationsAt() now requires a non-empty string hash, so malformed observations are skipped instead of collapsing onto one Map key. (4) mergeResolve()'s sort now breaks timestamp ties by hash, making the result truly order-independent. (5) mergeResolve() guards JSON.parse with try/catch for friendly errors, and gained test coverage (tests/merge-resolve.test.cjs, tests/kg-save-gate-merge-integrity.test.cjs). Also fixed package.json's npm test glob, which was silently never running tests/check-kg-merge-integrity.test.cjs (a .cjs file the tests/**/*.test.js glob can't match) — the existing test had zero real coverage until this fix.",
-        "Fix round for /code-review high findings on the hardening PR itself (2026-08-13): (1) the two independent kg-save-gate.sh copies of the merge-integrity check had already diverged (only one validated repo identity) — collapsed into one shared check_kg_merge_integrity() function, called from both the MCP-merge and Bash-command landing paths, now with a git-common-dir identity guard so a drifted persistent cwd can't point the check at the wrong repo. (2) observationsAt() in check-kg-merge-integrity.cjs had its try/catch narrowed to JSON.parse only, so a valid-JSON-wrong-shape blob (e.g. literal null) threw past the function and aborted the whole merge-commit loop instead of fail-opening for just that ref — restored one try/catch around parse+map-build. (3) mergeResolve()'s onlyInOurs/onlyInTheirs counts used raw ours.length/theirs.length, undercounting (sometimes to 0, suppressing the message) when a malformed entry on one side wasn't matched on the other — now computed from per-side valid-hash Sets. (4) mergeResolve() parsed ours/theirs but didn't guard against a valid-JSON non-object (e.g. null), which threw an uncaught TypeError on .observations access — the exact raw-stack-trace failure the JSON.parse guard was meant to eliminate; added an explicit object-shape check with a friendly error."
-      ]
-    },
-    {
-      "name": "KgGuardRequiredCheckNaming",
-      "entityType": "Decision",
-      "observations": [
-        "The kg-guard job now carries an explicit 'name: KG Guard'. Without it the job reports its check-run under the bare job id 'check' — which is what a branch ruleset's required-status-check has to match on, so requiring it was both ambiguous (any other workflow with a job id 'check' collides) and unreadable in the PR checks list. Prerequisite for the 2026-08-15 fleet-wide enforcement pass: KG Guard ran on PRs in every repo but was a REQUIRED check in none of them, so the banking doctrine rested entirely on the merger choosing to wait for green — the local .claude/hooks/kg-save-gate.sh only binds Claude sessions in that checkout, and web-UI merges bypass everything."
       ]
     },
     {
@@ -45,35 +15,10 @@
       ]
     },
     {
-      "name": "ReviewGatePrHeadResolution",
-      "entityType": "Pattern",
-      "observations": [
-        "2026-10-24: review-gate.sh narrows attestation candidates to the merged PR's real head SHA (wrapper merge_gate_head_sha, else gh pr view on MCP pullNumber or the gh-pr-merge argument); unresolved = fail-open to local tips. Fixes gate-health NO_PR_HEAD_RESOLUTION (doxa-openclaw #631). Shared snippet with doxa-cns #1844; test scripts/review-gate-head.test.mjs."
-      ]
-    },
-    {
-      "name": "FleetSecurityBaseline20261103",
+      "name": "ScriptureGroundingKgFederation",
       "entityType": "Decision",
       "observations": [
-        "2026-11-03 fleet security baseline (doxa-cns config/fleet.yaml): .github/workflows/secret-scan.yml runs gitleaks 8.30.1 (job id 'gitleaks' = required check of the org ruleset 'fleet: PR + secret scan') on PR commits, and on all history weekly (Mon 04:17 UTC) and on dispatch; config .gitleaks.toml (default rules); classified history findings live in .gitleaksignore pinned to their commit. .github/dependabot.yml: weekly, limit 5, minor+patch grouped. Dependabot ecosystems: npm /, pip /notebook, github-actions (demo/package.json has no deps). Full-history scan: 0 findings. Media capture uses puppeteer-core, not Playwright."
-      ]
-    },
-    {
-      "name": "CanonicalFleetGates",
-      "entityType": "Workflow",
-      "observations": [
-        "2026-11-05: this repo's five fleet gates (kg-save-gate.sh, review-gate.sh, test-gate.sh, scripts/attest-review.sh, kg-guard.yml) are now GENERATED from The-Doxa-Way-CNS fleet/gates/*.tmpl by scripts/generate-fleet-gates.mjs --repo scripture-grounding-mcp (decision docs/decisions/2026-11-05-canonical-fleet-gates.md; template fix PR #2379). Never hand-edit them here: fix the template and regenerate; check-hook-drift.mjs compares this copy on main daily. What the old copy lacked: old attest-review.sh had no blocked: rule; kg-guard.yml grep-under-pipefail; codeRe now covers scripts/*.cjs (its KG scripts), so changes to them need a test. Carries Wamemba me's no-re-review-of-a-blocked-commit rule: attest-review.sh 'blocked: <findings>' records SHA+tree and that code can never be attested."
-      ]
-    },
-    {
-      "name": "FleetGates",
-      "entityType": "Reference",
-      "observations": [
-        "2026-11-05: re-rendered kg-save-gate.sh and review-gate.sh from The-Doxa-Way-CNS fleet/gates templates (CNS PR #2391): a GitHub origin is this repo only when the owner is the fleet org; a gh pr merge branch ref must appear verbatim or the merge is refused (merge by PR number).",
-        "2026-11-05: re-rendered the gate hooks from The-Doxa-Way-CNS fleet/gates templates at 971d0c9245 (CNS #2417, #2391). Merge-message text is data; the repo of a merge comes only from that merge's own command; any doubt applies this repo's gates.",
-        "2026-11-05: gate hooks re-rendered from The-Doxa-Way-CNS@848eaf8860 (#2424): a Bash gh pr merge must name one literal PR number or PR URL in a plain command, anything else blocks; gate hooks never run code from the checkout they judge.",
-        "2026-11-06: gate hooks re-rendered from The-Doxa-Way-CNS@65ff05174b (#2453): stricter merge contract (literal PR ref; no redirection, shell comment or empty quote; every repo flag read) and push prefilter.",
-        "2026-11-06: gate hooks re-rendered from The-Doxa-Way-CNS@46cc70a524 (#2453, #2517): literal-PR merge contract (no redirection at all, shell comment or empty quote; every repo flag read; a masked cd target or a cd/pushd the hook cannot follow blocks) and push prefilter."
+        "2026-11-06 (The-Doxa-Way-CNS spec the-doxa-way-control-tower F6): this repo's KG becomes CNS source scripture-grounding-mcp (authority/registry.yaml). Fleet-wide facts are held by the CNS meta-KG or by the other CNS sources (doxa-app, openclaw, doxa-shared), so this repo's copies were removed (federated, they opened conflicts; the Decision ones queue for Garth): ReviewWorkflowDeadCondition, KgMergeIntegrityGuard, ReviewGatePrHeadResolution, FleetSecurityBaseline20261103, CanonicalFleetGates, FleetGates, KgMerkleFixesPropagated, KgGuardRequiredCheckNaming. LandingGatesInfra (two other repos held different facts under that name) was renamed ScriptureGroundingLandingGatesInfra. Rule: kg-save only facts about THIS repo here, under a repo-scoped name. A gate or fleet fact is a kg-save in The-Doxa-Way-CNS; a gate re-render PR here carries no KG change (title it chore(sync): ..., which KG Guard exempts)."
       ]
     }
   ],
