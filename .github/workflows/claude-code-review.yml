@@ -36,7 +36,7 @@ jobs:
       # actually POSTED (tracking comment + summary); classify_inline_comments
       # false means comments are posted immediately instead of buffered and
       # possibly dropped as "test/probe" noise.
-      - uses: anthropics/claude-code-action@v1.0.152
+      - uses: anthropics/claude-code-action@v1.0.266
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           claude_args: "--model claude-opus-4-8"
