@@ -20,6 +20,13 @@
       "observations": [
         "2026-11-06 (The-Doxa-Way-CNS spec the-doxa-way-control-tower F6): this repo's KG becomes CNS source scripture-grounding-mcp (authority/registry.yaml). Fleet-wide facts are held by the CNS meta-KG or by the other CNS sources (doxa-app, openclaw, doxa-shared), so this repo's copies were removed (federated, they opened conflicts; the Decision ones queue for Garth): ReviewWorkflowDeadCondition, KgMergeIntegrityGuard, ReviewGatePrHeadResolution, FleetSecurityBaseline20261103, CanonicalFleetGates, FleetGates, KgMerkleFixesPropagated, KgGuardRequiredCheckNaming. LandingGatesInfra (two other repos held different facts under that name) was renamed ScriptureGroundingLandingGatesInfra. Rule: kg-save only facts about THIS repo here, under a repo-scoped name. A gate or fleet fact is a kg-save in The-Doxa-Way-CNS; a gate re-render PR here carries no KG change (title it chore(sync): ..., which KG Guard exempts)."
       ]
+    },
+    {
+      "name": "MaxReviewBeforePushGate",
+      "entityType": "Reference",
+      "observations": [
+        "Garth 2026-11-11 order: one /code-review max pass before every push of code. This repo now runs the fleet-template PreToolUse hook .claude/hooks/push-review-gate.sh (rendered from doxa-cns fleet/gates; doxa-cns KG MaxReviewBeforePushDoctrine, PR #2905): a git push of new code commits (not on main) needs ATTEST_REVIEW_LEVEL=max scripts/attest-review.sh <verdict>, or a logged 'waived:' row (docs-only: 'waived: docs-only: <reason>'), or PUSH_GATE_WAIVE=<reason> for a human-review-only push (no attestation, no merge authority). Exempt: deletes, tags, notes, a tip already on main, KG-only commits. Baseline 7 days to 2026-11-11: 36 runs, 0 failures, 0 reruns."
+      ]
     }
   ],
   "relations": []

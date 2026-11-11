@@ -5,13 +5,14 @@
 <!-- directly in .knowledge-graph/graph.json.                     -->
 <!-- Never read graph.json whole for a lookup.                    -->
 
+## Reference (2)
+
+- DemoVercelArtifacts — demo/ is deployed with Vercel, so a .vercel/ directory appears there on every local deploy. demo/.gitignore k…
+- MaxReviewBeforePushGate — Garth 2026-11-11 order: one /code-review max pass before every push of code. This repo now runs the fleet-tem…
+
 ## Decision (1)
 
 - ScriptureGroundingKgFederation — 2026-11-06 (The-Doxa-Way-CNS spec the-doxa-way-control-tower F6): this repo's KG becomes CNS source scripture…
-
-## Reference (1)
-
-- DemoVercelArtifacts — demo/ is deployed with Vercel, so a .vercel/ directory appears there on every local deploy. demo/.gitignore k…
 
 ## Workflow (1)
 
