@@ -4,58 +4,63 @@ This codebase is yours: what it's for and how it's built are your call, and you'
 
 ## What this is
 
-An open-source MCP server of the Doxa business (doxa.app) that retrieves Scripture text and
-checks quotes against it, so a model never quotes from memory. It grounds; it does not generate:
-no tool calls a model provider. `README.md` has the tools, the corpus and the layout. `demo/` is
-the public demo (a Vercel app whose API routes import `src/*.js`).
+An open-source MCP server of the Doxa business (doxa.app). It retrieves Scripture text and
+checks quotes against it, so a model does not have to quote from memory. It grounds; it does
+not generate. No tool calls a model provider. `README.md` has the tools, the corpus and the
+layout. `demo/` is the public demo. It is a Vercel app, and its API routes import `src/*.js`.
 
 The repo is PUBLIC (MIT). Never commit a secret. The brand and voice rules live in doxa-brand
-(The-Doxa-Way/doxa-brand). Apply them; do not copy them here.
+(The-Doxa-Way/doxa-brand, private). Apply them; do not copy them here.
 
 ## How to verify
 
-- `npm ci`, then `npm test` (`node --test` on `tests/**/*.test.js`, `tests/**/*.test.cjs` and
-  `evals/*.test.js`). The tests are hermetic: they run keyless on the committed BSB corpus.
+- `npm ci`, then `env -u YOUVERSION_APP_KEY npm test`. It runs `node --test` on
+  `tests/**/*.test.js`, `tests/**/*.test.cjs` and `evals/*.test.js`. The tests are keyless only
+  when `YOUVERSION_APP_KEY` is not set; with it set, some make live YouVersion calls.
 - `npm run test:books` reads all 66 books through `verify_quote` and checks that a planted
   corruption is caught (about 40 s).
-- There is no lint and no build step (plain ESM JavaScript).
+- There is no lint and no build step (ESM, except the `.cjs` KG scripts and their tests).
 - CI does NOT run the tests. Run them yourself before you push.
 
 ## Gotchas
 
 - `YOUVERSION_APP_KEY` is optional. `src/env.js` loads it on a local machine from
   `~/.config/doxa/youversion-api.env`, outside the repo. Never print it. Without it the server
-  runs keyless on `data/bsb.txt` (provenance: `data/PROVENANCE.md`).
-- The YouVersion terms forbid AI output to users without their written approval. Every surface
-  we host stays keyless on public-domain text, and `YOUVERSION_MULTI_VERSION` ships off. Read
-  the README section on this before you change either.
-- The demo deploys with `vercel --local-config demo/vercel.json` from the repo root (see the
-  `.vercelignore` header), Vercel project `scripture-grounding-demo`. Wrap any `vercel` call in
-  the hard timeout the CNS CLAUDE.md gives.
+  serves `fixtures/bsb/` first, then `data/bsb.txt` (provenance: `data/PROVENANCE.md`).
+- The YouVersion terms forbid AI output to users without YouVersion's prior written approval.
+  Every surface we host stays keyless on public-domain text, and `YOUVERSION_MULTI_VERSION`
+  ships off. Read the README section "Multi-version detection" before you change either.
+- The Vercel project `scripture-grounding-demo` (Root Directory `demo`) has no git link, so a
+  merge does not update the live demo. Deploy with
+  `vercel --prod --local-config demo/vercel.json` from the root of the main checkout, which holds
+  the `.vercel/` link. Wrap every `vercel` call in the hard timeout in `~/.claude/CLAUDE.md`.
 
-## Landing
+## Landing doctrine
 
 The production branch is `main`. Every change lands by branch, PR, independent review, merge.
 Self-review never counts.
 
-- Review: one `/code-review max` pass on the final diff on claude-opus-5-5, at most one fix
-  round, then `ATTEST_REVIEW_LEVEL=max scripts/attest-review.sh "<verdict>"` before you push.
-  `.github/workflows/claude-code-review.yml` runs only on manual dispatch.
-- Hooks in `.claude/hooks/` enforce this: `push-review-gate.sh` (max review before `git push`),
-  `review-gate.sh` (attestation before merge), `test-gate.sh` (a code change needs a test change,
-  or `scripts/attest-review.sh "waived-tests: <reason>"`) and `kg-save-gate.sh`.
-- kg-save: KG Guard CI fails a PR with no `.knowledge-graph/` change. Record it with
-  `node scripts/knowledge-graph-merkle.cjs add "<Entity>" "<what and why>" <source-file> --type <Type>`
-  and commit it in the same PR. Use `[skip-kg]` in the PR title only for a knowledge-free change.
-- The org ruleset requires `gitleaks` (secret-scan). `kg-save-gate.sh` refuses `gh pr merge`
-  while KG Guard is red or pending. Never merge over a red or pending check.
-- An attestation is merge authority: the fleet auto-lander (openclaw `land-prs.mjs`) merges an
-  attested, green PR.
-- The gate hooks and `scripts/attest-review.sh` are rendered from The-Doxa-Way-CNS
-  `fleet/gates/`. Fix the template there, never the copy here.
+- Order: commit the change and its kg-save. Then run one `/code-review max` pass on the final
+  diff on claude-opus-5-5, with at most one fix round. Then attest and push.
+- Attest with `ATTEST_REVIEW_LEVEL=max ATTEST_REVIEWER_MODEL=claude-opus-5-5 scripts/attest-review.sh "<verdict>"`.
+  An attestation is for one SHA. Attest again after any later commit.
+- kg-save: `node scripts/knowledge-graph-merkle.cjs add "<Entity>" "<what and why>" <source-file> --type <Type>`.
+  Commit `.knowledge-graph/` and `.knowledge-graph-merkle.json`. Save only facts about this repo,
+  under a repo-scoped name. Fleet and gate facts go to the CNS KG.
+- `[skip-kg]` is only for a knowledge-free change, in the PR title and in the push command.
+- `.claude/hooks/`: `push-review-gate.sh` blocks a push with no max attestation. `kg-save-gate.sh`
+  blocks a push, PR or merge with no KG change, and a merge while KG Guard is red or pending.
+  `review-gate.sh` blocks a merge with no attestation. `test-gate.sh` blocks a `src/` or
+  `scripts/` change with no test change (waiver: `scripts/attest-review.sh "waived-tests: <reason>"`).
+- GitHub requires a PR and `gitleaks` only. `claude-code-review.yml` runs only on manual dispatch.
+- An attestation is merge authority: the fleet auto-lander (doxa-openclaw `scripts/land-prs.mjs`)
+  merges an attested, green PR.
+- The gate hooks, `scripts/attest-review.sh` and `.github/workflows/kg-guard.yml` are rendered
+  from The-Doxa-Way/The-Doxa-Way-CNS `fleet/gates/`. Fix the template there, never the copy here.
 
 ## Standing orders
 
-Cross-repo rules, the standing orders and the fleet map live in The-Doxa-Way-CNS: its
-`CLAUDE.md` and `docs/org-map.md`. The CNS CLAUDE.md is the authority. If this file and the CNS
-disagree, the CNS wins.
+Fleet-wide standing orders, cross-repo rules and the fleet map live in
+The-Doxa-Way/The-Doxa-Way-CNS (private; local `~/Developer/Projects/doxa-cns`): its `CLAUDE.md`
+and `docs/org-map.md`. The CNS CLAUDE.md is the authority on cross-repo rules. If this file and
+the CNS disagree, the CNS wins.

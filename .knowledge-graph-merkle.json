@@ -1,5 +1,5 @@
 {
-  "merkleRoot": "272e7d279579adbffae16e87d52459bbc565394850f176f74c3111ca72d7ad87",
+  "merkleRoot": "bde9e84f0fb0e6f405db02923bab5d5dc1b3c41481da182b6b264b8f01ffbe69",
   "observations": [
     {
       "hash": "63a13eb9ffc5ec28d891987ef92b68c9a28dbc2f1aaedc693917be5b6926ac56",
@@ -68,9 +68,26 @@
         "entityType": "Reference"
       },
       "timestamp": "2026-11-11T15:30:54.210Z"
+    },
+    {
+      "hash": "81386b868b5b12287babd73506d97c69adb6f705a5506f9ff14e49653128684e",
+      "entityName": "ScriptureGroundingClaudeMd",
+      "content": "2026-11-14 (CEO order: the 13-14 Nov work applies to ALL repos): first CLAUDE.md for this repo. CEO ownership line; what the server is (grounds, never generates); real verify commands (env -u YOUVERSION_APP_KEY npm test, keyless only without the key; npm run test:books; no lint, no build; CI runs no tests); gotchas (YOUVERSION_APP_KEY by name from ~/.config/doxa, YouVersion prior written approval for AI output so hosted surfaces stay keyless, demo Vercel project scripture-grounding-demo has no git link so deploy is vercel --prod --local-config demo/vercel.json from the main checkout under the hard timeout); landing doctrine (kg-save, max review, attest exact head SHA, push, merge). Points to The-Doxa-Way-CNS. AGENTS.md generated from it by doxa-cns generate-agents-md.mjs.",
+      "provenance": {
+        "sourceFile": "CLAUDE.md",
+        "lineNumber": null,
+        "lineRange": null,
+        "fileHash": "eb5b95d570e8eb1aaf02ff373370d8a789e5531d7683b9f1b38e5d7d59f8ab27",
+        "totalLines": 67,
+        "extractedAt": "2026-11-14T08:56:17.019Z",
+        "verificationStatus": "verified",
+        "extractedBy": "knowledge-graph-merkle.cjs",
+        "entityType": "Reference"
+      },
+      "timestamp": "2026-11-14T08:56:17.020Z"
     }
   ],
-  "lastVerified": "2026-11-06T04:51:18.285Z",
+  "lastVerified": "2026-11-14T08:56:17.100Z",
   "version": 1,
-  "lastModified": "2026-11-11T15:30:54.218Z"
+  "lastModified": "2026-11-14T08:56:17.101Z"
 }
