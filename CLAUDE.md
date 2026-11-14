@@ -1,0 +1,66 @@
+# CLAUDE.md — scripture-grounding-mcp
+
+This codebase is yours: what it's for and how it's built are your call, and you'll keep building on it.
+
+## What this is
+
+An open-source MCP server of the Doxa business (doxa.app). It retrieves Scripture text and
+checks quotes against it, so a model does not have to quote from memory. It grounds; it does
+not generate. No tool calls a model provider. `README.md` has the tools, the corpus and the
+layout. `demo/` is the public demo. It is a Vercel app, and its API routes import `src/*.js`.
+
+The repo is PUBLIC (MIT). Never commit a secret. The brand and voice rules live in doxa-brand
+(The-Doxa-Way/doxa-brand, private). Apply them; do not copy them here.
+
+## How to verify
+
+- `npm ci`, then `env -u YOUVERSION_APP_KEY npm test`. It runs `node --test` on
+  `tests/**/*.test.js`, `tests/**/*.test.cjs` and `evals/*.test.js`. The tests are keyless only
+  when `YOUVERSION_APP_KEY` is not set; with it set, some make live YouVersion calls.
+- `npm run test:books` reads all 66 books through `verify_quote` and checks that a planted
+  corruption is caught (about 40 s).
+- There is no lint and no build step (ESM, except the `.cjs` KG scripts and their tests).
+- CI does NOT run the tests. Run them yourself before you push.
+
+## Gotchas
+
+- `YOUVERSION_APP_KEY` is optional. `src/env.js` loads it on a local machine from
+  `~/.config/doxa/youversion-api.env`, outside the repo. Never print it. Without it the server
+  serves `fixtures/bsb/` first, then `data/bsb.txt` (provenance: `data/PROVENANCE.md`).
+- The YouVersion terms forbid AI output to users without YouVersion's prior written approval.
+  Every surface we host stays keyless on public-domain text, and `YOUVERSION_MULTI_VERSION`
+  ships off. Read the README section "Multi-version detection" before you change either.
+- The Vercel project `scripture-grounding-demo` (Root Directory `demo`) has no git link, so a
+  merge does not update the live demo. Deploy with
+  `vercel --prod --local-config demo/vercel.json` from the root of the main checkout, which holds
+  the `.vercel/` link. Wrap every `vercel` call in the hard timeout in `~/.claude/CLAUDE.md`.
+
+## Landing doctrine
+
+The production branch is `main`. Every change lands by branch, PR, independent review, merge.
+Self-review never counts.
+
+- Order: commit the change and its kg-save. Then run one `/code-review max` pass on the final
+  diff on claude-opus-5-5, with at most one fix round. Then attest and push.
+- Attest with `ATTEST_REVIEW_LEVEL=max ATTEST_REVIEWER_MODEL=claude-opus-5-5 scripts/attest-review.sh "<verdict>"`.
+  An attestation is for one SHA. Attest again after any later commit.
+- kg-save: `node scripts/knowledge-graph-merkle.cjs add "<Entity>" "<what and why>" <source-file> --type <Type>`.
+  Commit `.knowledge-graph/` and `.knowledge-graph-merkle.json`. Save only facts about this repo,
+  under a repo-scoped name. Fleet and gate facts go to the CNS KG.
+- `[skip-kg]` is only for a knowledge-free change, in the PR title and in the push command.
+- `.claude/hooks/`: `push-review-gate.sh` blocks a push with no max attestation. `kg-save-gate.sh`
+  blocks a push, PR or merge with no KG change, and a merge while KG Guard is red or pending.
+  `review-gate.sh` blocks a merge with no attestation. `test-gate.sh` blocks a `src/` or
+  `scripts/` change with no test change (waiver: `scripts/attest-review.sh "waived-tests: <reason>"`).
+- GitHub requires a PR and `gitleaks` only. `claude-code-review.yml` runs only on manual dispatch.
+- An attestation is merge authority: the fleet auto-lander (doxa-openclaw `scripts/land-prs.mjs`)
+  merges an attested, green PR.
+- The gate hooks, `scripts/attest-review.sh` and `.github/workflows/kg-guard.yml` are rendered
+  from The-Doxa-Way/The-Doxa-Way-CNS `fleet/gates/`. Fix the template there, never the copy here.
+
+## Standing orders
+
+Fleet-wide standing orders, cross-repo rules and the fleet map live in
+The-Doxa-Way/The-Doxa-Way-CNS (private; local `~/Developer/Projects/doxa-cns`): its `CLAUDE.md`
+and `docs/org-map.md`. The CNS CLAUDE.md is the authority on cross-repo rules. If this file and
+the CNS disagree, the CNS wins.
