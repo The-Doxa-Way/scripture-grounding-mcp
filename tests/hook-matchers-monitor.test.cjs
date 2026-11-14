@@ -23,8 +23,8 @@ test('every PreToolUse hook that fires for Bash also fires for Monitor', () => {
   const settings = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '.claude', 'settings.json'), 'utf8'));
   assert.deepEqual(bashOnly(settings).map((e) => e.matcher), [], 'register shell-command hooks on "Bash|Monitor"');
   for (const g of ['kg-save-gate.sh', 'review-gate.sh', 'push-review-gate.sh', 'test-gate.sh']) {
-    const on = settings.hooks.PreToolUse.some((e) => matcherSelects(e.matcher, 'Monitor') && (e.hooks || []).some((h) => String(h.command).split(/[\s"'/]+/).includes(g)));
-    assert.ok(on, `${g} must fire for Monitor`);
+    const on = settings.hooks.PreToolUse.some((e) => matcherSelects(e.matcher, 'Bash') && matcherSelects(e.matcher, 'Monitor') && (e.hooks || []).some((h) => String(h.command).split(/[\s"'/]+/).includes(g)));
+    assert.ok(on, `${g} must fire for Bash and Monitor`);
   }
 });
 
