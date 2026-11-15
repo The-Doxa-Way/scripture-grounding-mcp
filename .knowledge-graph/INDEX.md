@@ -17,6 +17,10 @@
 
 - ScriptureGroundingKgFederation — 2026-11-06 (The-Doxa-Way-CNS spec the-doxa-way-control-tower F6): this repo's KG becomes CNS source scripture…
 
+## System (1)
+
+- FleetGateReviewModes — 2026-11-15: gates re-rendered from doxa-cns #3050. fixtures/ (the shipped Scripture text) tiers max via confi…
+
 ## Workflow (1)
 
 - ScriptureGroundingLandingGatesInfra — Bootstrapped Doxa's standard landing-gate infrastructure for this repo: KG Guard + Claude Code Review GitHub …
