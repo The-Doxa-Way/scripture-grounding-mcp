@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# kg-save-gate.sh — PreToolUse(Bash) hook for scripture-grounding-mcp.
+# kg-save-gate.sh — PreToolUse(Bash|Monitor + GitHub MCP merge) hook for scripture-grounding-mcp.
 # GENERATED from doxa-cns fleet/gates/.claude/hooks/kg-save-gate.sh (spec
 # the-doxa-way-control-tower S4). Edit the template, never this copy.
 #
