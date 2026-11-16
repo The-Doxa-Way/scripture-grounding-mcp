@@ -1,5 +1,5 @@
 {
-  "merkleRoot": "f79752176b7f3bd4397fa3d00e1fe3287dc1d00e49a695b6b28f8beded0d4b3e",
+  "merkleRoot": "6154d71650b7c3e6858c3c4d5b168c64ec0ae432116a188419196eb1d61eb989",
   "observations": [
     {
       "hash": "63a13eb9ffc5ec28d891987ef92b68c9a28dbc2f1aaedc693917be5b6926ac56",
@@ -119,9 +119,26 @@
         "entityType": "Reference"
       },
       "timestamp": "2026-11-15T11:03:18.936Z"
+    },
+    {
+      "hash": "a2d493dc418aacd1c99b475829b9936efe8abc97f1853b52c3038efc18effada",
+      "entityName": "FleetGateReviewModes",
+      "content": "2026-11-15: gates re-rendered from doxa-cns #3050. fixtures/ (the shipped Scripture text) tiers max via config/fleet.yaml maxTierPaths, no longer medium. Max diffs: ONE opus-reviewer pass (prompt 'review-mode max <worktree>'); max-fanout (money/auth/SQL/user data/safety/gate machinery): /code-review max fan-out. attest-review.sh fails closed to max-fanout when it cannot read the tier; tests/attest-review-blocked.test.cjs moved to max-fanout.",
+      "provenance": {
+        "sourceFile": "tests/attest-review-blocked.test.cjs",
+        "lineNumber": 1,
+        "lineRange": null,
+        "fileHash": "c854a54fb5a4af800cfa1c6d2f34ead32386079fc1026099e5bc48aa9bb30b9b",
+        "totalLines": 95,
+        "extractedAt": "2026-11-15T13:51:46.876Z",
+        "verificationStatus": "verified",
+        "extractedBy": "knowledge-graph-merkle.cjs",
+        "entityType": "System"
+      },
+      "timestamp": "2026-11-15T13:51:46.879Z"
     }
   ],
   "lastVerified": "2026-11-14T08:56:17.100Z",
   "version": 1,
-  "lastModified": "2026-11-15T11:03:18.944Z"
+  "lastModified": "2026-11-15T13:51:46.893Z"
 }
